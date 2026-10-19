@@ -10,210 +10,155 @@
     --bg:#12101a; --panel:#1e1b29; --user:#4a3f6b; --oracle:#2a2438;
     --text:#e8e3f0; --muted:#9a92b0; --accent:#d4af7a; --border:#3d3552;
     --danger:#e05353;
+    --card-char-size: 60px;
+    --bg-image: none;
   }
   *{box-sizing:border-box}
   html,body{height:100%;margin:0}
   body{
     display:flex;flex-direction:column;height:100dvh;
-    background:var(--bg);color:var(--text);
-    font-family:system-ui,-apple-system,"PingFang SC","Noto Sans SC",sans-serif;
+    color:var(--text); font-family:system-ui,-apple-system,"PingFang SC",sans-serif;
+    position: relative; background-color: var(--bg); overflow: hidden;
   }
+
+  #bgLayer { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-image: var(--bg-image); background-size: cover; background-position: center; z-index: -2; }
+  #bgMask { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(18, 16, 26, 0.85); z-index: -1; }
   
-  /* ====== 顶部导航（聊天软件风格） ====== */
-  header{
-    display:flex;align-items:center;justify-content:space-between;
-    padding:10px 16px;background:var(--panel);border-bottom:1px solid var(--border);
-    z-index:10;
-  }
+  /* 顶部 */
+  header{ display:flex; align-items:center; justify-content:space-between; padding:10px 16px; background:rgba(30,27,41,0.9); border-bottom:1px solid var(--border); z-index:10; backdrop-filter: blur(5px); }
   .header-left { display: flex; align-items: center; gap: 12px; }
-  .avatar {
-    width: 42px; height: 42px; border-radius: 50%;
-    background: var(--border); display: flex; justify-content: center; align-items: center;
-    font-size: 24px; overflow: hidden; border: 1px solid var(--accent);
-  }
+  .avatar { width: 42px; height: 42px; border-radius: 50%; background: var(--border); display: flex; justify-content: center; align-items: center; font-size: 24px; overflow: hidden; border: 1px solid var(--accent); flex-shrink: 0; }
   .avatar img { width: 100%; height: 100%; object-fit: cover; }
   .info-box { display: flex; flex-direction: column; }
   .info-name { font-size: 16px; font-weight: 600; color: var(--text); }
   .info-status { font-size: 12px; color: var(--accent); display: flex; align-items: center; gap: 4px; }
-  .info-status::before { content: "●"; font-size: 10px; color: #4caf50; } /* 绿点表示在线 */
-  
-  .header-btns button{
-    background:transparent;border:1px solid var(--border);color:var(--muted);
-    padding:6px 10px;border-radius:14px;font-size:13px;margin-left:6px;
-  }
+  .info-status::before { content: "●"; font-size: 10px; color: #4caf50; }
+  .header-btns button{ background:transparent; border:1px solid var(--border); color:var(--muted); padding:6px 10px; border-radius:14px; font-size:13px; margin-left:6px; }
 
-  /* ====== 聊天区域 ====== */
-  #messages{
-    flex:1;overflow-y:auto;padding:16px;
-    display:flex;flex-direction:column;gap:16px;
-  }
-  
-  .msg-row { display: flex; align-items: flex-start; gap: 10px; max-width: 90%; animation: fade .3s ease;}
+  /* 聊天区 */
+  #messages{ flex:1; overflow-y:auto; padding:16px; display:flex; flex-direction:column; gap:16px; scroll-behavior: smooth; }
+  .msg-row { display: flex; align-items: flex-start; gap: 10px; max-width: 90%; animation: fade .3s ease; }
   .msg-row.user { align-self: flex-end; flex-direction: row-reverse; }
   .msg-row.oracle { align-self: flex-start; }
-
   @keyframes fade{from{opacity:0;transform:translateY(10px)}to{opacity:1}}
   
-  .msg-bubble {
-    padding: 12px 16px; border-radius: 18px; line-height: 1.6; font-size: 15px;
-    word-break: break-word; position: relative;
-  }
-  .msg-row.user .msg-bubble {
-    background: var(--user); border-top-right-radius: 4px; color: #fff;
-  }
-  .msg-row.oracle .msg-bubble {
-    background: var(--oracle); border: 1px solid var(--border); border-top-left-radius: 4px;
-    min-width: 200px;
-  }
+  .msg-bubble { padding: 12px 16px; border-radius: 18px; line-height: 1.6; font-size: 15px; word-break: break-word; position: relative; }
+  .msg-row.user .msg-bubble { background: var(--user); border-top-right-radius: 4px; color: #fff; }
+  .msg-row.oracle .msg-bubble { background: rgba(42, 36, 56, 0.9); border: 1px solid var(--border); border-top-left-radius: 4px; min-width: 100px; backdrop-filter: blur(5px); }
   
-  /* 卡片专属样式 */
-  .card-char{font-size:60px;text-align:center;color:var(--accent);line-height:1.1;margin:4px 0;text-shadow: 0 2px 10px rgba(212,175,122,0.3);}
-  .card-pinyin{text-align:center;color:var(--muted);font-size:14px;letter-spacing: 1px;}
-  .card-keyword{text-align:center;font-size:15px;margin:8px 0 12px;letter-spacing:1px;color:var(--text);font-weight: 500;}
-  .card-reading{font-size:14px;color:#c9c2db;border-top:1px dashed var(--border);padding-top:10px;margin-top:8px;}
-  .card-image{width:100%;max-height:180px;object-fit:contain;border-radius:8px;margin-top:10px;background:#000}
+  /* 聊天中的图片 */
+  .chat-img { max-width: 100%; max-height: 200px; border-radius: 8px; display: block; margin-top: 5px;}
   
+  /* 字卡样式 */
+  .card-char{ font-size:var(--card-char-size); text-align:center; color:var(--accent); line-height:1.1; margin:4px 0; text-shadow: 0 2px 10px rgba(212,175,122,0.3); transition: font-size 0.3s ease; }
+  .card-pinyin{ text-align:center; color:var(--muted); font-size:14px; letter-spacing: 1px; }
+  .card-keyword{ text-align:center; font-size:15px; margin:8px 0 12px; letter-spacing:1px; color:var(--text); font-weight: 500; }
+  .card-reading{ font-size:14px; color:#c9c2db; border-top:1px dashed var(--border); padding-top:10px; margin-top:8px; }
   .msg.typing{ color: var(--muted); font-size: 14px; font-style: italic;}
 
-  /* ====== 底部输入 ====== */
-  form{
-    display:flex;gap:8px;padding:10px 12px calc(10px + env(safe-area-inset-bottom));
-    background:var(--panel);border-top:1px solid var(--border);z-index:10;
-  }
-  input{
-    flex:1;padding:12px 16px;border-radius:24px;border:1px solid var(--border);
-    background:#12101a;color:var(--text);font-size:16px;outline:none;
-  }
-  input:focus{border-color:var(--accent)}
-  button.send{
-    padding:0 20px;border-radius:24px;border:none;
-    background:var(--accent);color:#1a1625;font-size:16px;font-weight:600;
-  }
-  button.send:disabled{opacity:.5}
+  /* 底部输入区 */
+  .input-area { background: rgba(30,27,41,0.95); border-top:1px solid var(--border); z-index:10; backdrop-filter: blur(5px); display: flex; flex-direction: column; }
+  .emoji-bar { display: none; padding: 10px; gap: 12px; overflow-x: auto; border-bottom: 1px solid var(--border); font-size: 24px; background: var(--bg); }
+  .emoji-bar.show { display: flex; }
+  .emoji-bar span { cursor: pointer; }
+  
+  form{ display:flex; gap:8px; padding:10px 12px calc(10px + env(safe-area-inset-bottom)); align-items: center;}
+  .btn-tool { background: transparent; border: none; font-size: 22px; color: var(--muted); padding: 0 5px; }
+  input[type="text"]{ flex:1; padding:12px 16px; border-radius:24px; border:1px solid var(--border); background:rgba(18,16,26,0.8); color:var(--text); font-size:16px; outline:none; }
+  input[type="text"]:focus{ border-color:var(--accent) }
+  button.send{ padding:0 20px; border-radius:24px; border:none; background:var(--accent); color:#1a1625; font-size:16px; font-weight:600; height: 44px; }
+  button.send:disabled{ opacity:.5 }
 
-  /* ====== 管理面板 ====== */
-  #adminPanel{
-    position:fixed;top:0;left:0;width:100%;height:100%;background:var(--bg);
-    z-index:100;display:none;flex-direction:column;
-  }
-  #adminPanel.show{display:flex}
-  .admin-header{
-    display:flex;justify-content:space-between;align-items:center;
-    padding:12px 16px;background:var(--panel);border-bottom:1px solid var(--border);
-  }
-  .admin-header h2{font-size:16px;margin:0;color:var(--accent)}
-  .admin-header button{background:none;border:none;color:var(--text);font-size:16px}
-  
-  .admin-content{flex:1;overflow-y:auto;padding:16px;}
-  .section-title {font-size:15px; color:var(--text); margin:24px 0 10px 0; border-bottom:1px solid var(--border); padding-bottom:6px;}
+  /* 管理面板 */
+  #adminPanel{ position:fixed; top:0; left:0; width:100%; height:100%; background:var(--bg); z-index:100; display:none; flex-direction:column; }
+  #adminPanel.show{ display:flex }
+  .admin-header{ display:flex; justify-content:space-between; align-items:center; padding:12px 16px; background:var(--panel); border-bottom:1px solid var(--border); }
+  .admin-header h2{ font-size:16px; margin:0; color:var(--accent) }
+  .admin-header button{ background:none; border:none; color:var(--text); font-size:16px }
+  .admin-content{ flex:1; overflow-y:auto; padding:16px; }
+  .section-title { font-size:15px; color:var(--text); margin:24px 0 10px 0; border-bottom:1px solid var(--border); padding-bottom:6px; }
   .section-title:first-child { margin-top: 0; }
-  
-  .form-group{margin-bottom:12px}
-  .form-group label{display:block;font-size:13px;color:var(--muted);margin-bottom:4px}
-  .form-group input[type="text"]{
-    width:100%;padding:10px;border-radius:8px;border:1px solid var(--border);
-    background:#1f1a2e;color:#fff;font-size:15px;
-  }
-  .form-group input[type="file"]{font-size:14px;color:var(--muted);}
-  
-  .admin-btn{
-    width:100%;padding:12px;border-radius:8px;border:none;
-    background:var(--accent);color:#1a1625;font-size:16px;font-weight:600;margin-top:5px;
-  }
-  
-  /* 列表通用样式 */
-  .list-item{
-    display:flex;justify-content:space-between;align-items:center;
-    padding:10px;background:var(--panel);border-radius:8px;margin-bottom:8px;
-  }
-  .list-item-info{flex:1;overflow:hidden;white-space:nowrap;text-overflow:ellipsis;}
-  .btn-delete{
-    background:var(--danger);color:#fff;border:none;border-radius:6px;
-    padding:6px 10px;font-size:12px;margin-left:10px; flex-shrink: 0;
-  }
-  
-  .data-btn-group{display:flex;gap:10px;margin-top:20px; margin-bottom: 40px;}
-  .data-btn-group button, .data-btn-group label{
-    flex:1;text-align:center;padding:10px;border-radius:8px;border:1px solid var(--border);
-    background:transparent;color:var(--text);font-size:14px;cursor:pointer;
-  }
+  .form-group{ margin-bottom:12px }
+  .form-group label{ display:block; font-size:13px; color:var(--muted); margin-bottom:4px }
+  .form-group input[type="text"]{ width:100%; padding:10px; border-radius:8px; border:1px solid var(--border); background:#1f1a2e; color:#fff; font-size:15px; flex: none; }
+  .form-group input[type="file"]{ font-size:14px; color:var(--muted); }
+  .form-group input[type="range"]{ width:100%; margin-top:8px; }
+  .admin-btn{ width:100%; padding:12px; border-radius:8px; border:none; background:var(--accent); color:#1a1625; font-size:16px; font-weight:600; margin-top:5px; }
+  .list-item{ display:flex; justify-content:space-between; align-items:center; padding:10px; background:var(--panel); border-radius:8px; margin-bottom:8px; }
+  .list-item-info{ flex:1; overflow:hidden; white-space:nowrap; text-overflow:ellipsis; }
+  .btn-delete{ background:var(--danger); color:#fff; border:none; border-radius:6px; padding:6px 10px; font-size:12px; margin-left:10px; flex-shrink: 0; }
+  .data-btn-group{ display:flex; gap:10px; margin-top:20px; margin-bottom: 40px; }
+  .data-btn-group button, .data-btn-group label{ flex:1; text-align:center; padding:10px; border-radius:8px; border:1px solid var(--border); background:transparent; color:var(--text); font-size:14px; cursor:pointer; }
 </style>
 </head>
 <body>
 
-<!-- 顶部聊天对象信息 -->
+<div id="bgLayer"></div><div id="bgMask"></div>
+
 <header>
   <div class="header-left">
     <div class="avatar" id="oracleAvatar">🔮</div>
     <div class="info-box">
-      <div class="info-name">梦占灵体</div>
+      <div class="info-name" id="oracleName">梦占灵体</div>
       <div class="info-status" id="oracleStatus">等待你的呼唤...</div>
     </div>
   </div>
   <div class="header-btns">
-    <button id="openAdmin">管理</button>
+    <button id="openAdmin">设置</button>
     <button id="clear">清空</button>
   </div>
 </header>
 
-<!-- 聊天区 -->
 <main id="messages"></main>
 
-<!-- 底部输入 -->
-<form id="inputBar">
-  <input id="input" placeholder="写下你想问的事…" autocomplete="off" enterkeyhint="send">
-  <button class="send" type="submit">发送</button>
-</form>
-
-<!-- 管理面板 -->
-<div id="adminPanel">
-  <div class="admin-header">
-    <h2>系统管理</h2>
-    <button id="closeAdmin">关闭</button>
+<div class="input-area">
+  <!-- 表情面板 -->
+  <div class="emoji-bar" id="emojiBar">
+    <span>🔮</span><span>🌙</span><span>✨</span><span>🌿</span><span>🕯️</span><span>🫧</span><span>🌊</span><span>🔥</span><span>🤔</span><span>😌</span><span>💤</span><span>🌌</span>
   </div>
   
-  <div class="admin-content">
-    <!-- 头像设置 -->
-    <div class="section-title">聊天对象头像（可选）</div>
-    <div class="form-group">
-      <input type="file" id="avatarUpload" accept="image/*">
-    </div>
+  <form id="inputBar">
+    <button type="button" class="btn-tool" id="imgBtn">🖼️</button>
+    <input type="file" id="chatImgUpload" accept="image/*" style="display:none;">
+    
+    <input type="text" id="input" placeholder="写下你想说的话…" autocomplete="off" enterkeyhint="send">
+    
+    <button type="button" class="btn-tool" id="emojiBtn">😀</button>
+    <button class="send" type="submit">发送</button>
+  </form>
+</div>
 
-    <!-- 添加状态 -->
+<!-- 管理面板（结构同上一版，稍微折叠一下省空间） -->
+<div id="adminPanel">
+  <div class="admin-header">
+    <h2>系统设置</h2>
+    <button id="closeAdmin">关闭</button>
+  </div>
+  <div class="admin-content">
+    <div class="section-title">基础设置</div>
+    <div class="form-group"><label>对方称呼</label><input type="text" id="settingOracleName"></div>
+    <button class="admin-btn" id="saveNamesBtn" style="margin-bottom: 16px;">保存称呼</button>
+    <div class="form-group"><label>字卡大小 (<span id="sizeLabel">60</span>px)</label><input type="range" id="settingCardSize" min="40" max="120" step="5"></div>
+    <div class="form-group"><label>更换背景图片</label><input type="file" id="bgUpload" accept="image/*"></div>
+    <button class="admin-btn" id="resetBgBtn" style="background: transparent; border: 1px solid var(--danger); color: var(--danger); margin-bottom: 16px;">恢复默认纯色背景</button>
+    
+    <div class="section-title">聊天对象头像</div>
+    <div class="form-group"><input type="file" id="avatarUpload" accept="image/*"></div>
+
     <div class="section-title">添加随机状态</div>
-    <div class="form-group">
-      <label>状态文字（例如：正在凝视深渊）</label>
-      <input type="text" id="newStatus" placeholder="输入一句状态语...">
-    </div>
+    <div class="form-group"><input type="text" id="newStatus" placeholder="输入一句状态语..."></div>
     <button class="admin-btn" id="saveStatusBtn">保存状态</button>
     <div id="statusList"></div>
 
-    <!-- 添加卡片 -->
     <div class="section-title">添加新字卡</div>
-    <div class="form-group">
-      <label>汉字（必填）</label>
-      <input type="text" id="newChar" placeholder="例如：花">
-    </div>
-    <div class="form-group">
-      <label>拼音</label>
-      <input type="text" id="newPinyin" placeholder="例如：huā">
-    </div>
-    <div class="form-group">
-      <label>关键词</label>
-      <input type="text" id="newKeyword" placeholder="例如：绽放 · 结果">
-    </div>
-    <div class="form-group">
-      <label>解读（必填）</label>
-      <input type="text" id="newReading" placeholder="写下解卦的文案...">
-    </div>
-    <div class="form-group">
-      <label>上传配图（可选）</label>
-      <input type="file" id="newImage" accept="image/*">
-    </div>
+    <div class="form-group"><label>汉字（必填）</label><input type="text" id="newChar"></div>
+    <div class="form-group"><label>拼音</label><input type="text" id="newPinyin"></div>
+    <div class="form-group"><label>关键词</label><input type="text" id="newKeyword"></div>
+    <div class="form-group"><label>解读（必填）</label><input type="text" id="newReading"></div>
+    <div class="form-group"><label>上传配图（可选）</label><input type="file" id="newImage" accept="image/*"></div>
     <button class="admin-btn" id="saveCardBtn">保存字卡</button>
     <div id="customList"></div>
 
-    <!-- 导入导出 -->
     <div class="data-btn-group">
       <button id="exportBtn">导出所有数据</button>
       <label>导入数据 <input type="file" id="importFile" accept=".json" style="display:none;"></label>
@@ -222,93 +167,83 @@
 </div>
 
 <script>
-/* ===== 1. 默认数据 ===== */
+/* ===== 1. 数据定义 ===== */
 const DEFAULT_CARDS = [];
-
 const DEFAULT_STATUSES = ["正在冥想", "倾听风的声音", "为你翻阅命运", "沉睡中...", "刚刚苏醒"];
-const DEFAULT_AVATAR = "🔮"; // 默认头像使用 Emoji
+const REACTIONS = ["让我看看...", "我感受到了一股波动...", "这个问题很有意思。", "嗯…", "稍等。"];
 
-/* ===== 2. 数据读取 ===== */
-const KEY_CHAT = "dream_oracle_chat_v1";
-const KEY_CUSTOM = "dream_oracle_custom_v1";
-const KEY_STATUS = "dream_oracle_status_v1";
-const KEY_AVATAR = "dream_oracle_avatar_v1";
+const KEY_CHAT = "dream_oracle_chat_v1", KEY_CUSTOM = "dream_oracle_custom_v1", KEY_STATUS = "dream_oracle_status_v1", KEY_AVATAR = "dream_oracle_avatar_v1", KEY_SETTINGS = "dream_oracle_settings_v1";
 
 let messages = JSON.parse(localStorage.getItem(KEY_CHAT) || "[]");
 let customCards = JSON.parse(localStorage.getItem(KEY_CUSTOM) || "[]");
 let customStatuses = JSON.parse(localStorage.getItem(KEY_STATUS) || "[]");
-let currentAvatar = localStorage.getItem(KEY_AVATAR) || DEFAULT_AVATAR;
+let currentAvatar = localStorage.getItem(KEY_AVATAR) || "🔮";
+let settings = JSON.parse(localStorage.getItem(KEY_SETTINGS) || '{"oracleName":"梦角","myName":"我","cardSize":60,"bgImage":""}');
 let bag = []; 
 
-function getAllCards() { return [...DEFAULT_CARDS, ...customCards]; }
-function getAllStatuses() { return [...DEFAULT_STATUSES, ...customStatuses]; }
+const $messages = document.getElementById("messages"), $form = document.getElementById("inputBar"), $input = document.getElementById("input");
+const $statusText = document.getElementById("oracleStatus"), $avatarBox = document.getElementById("oracleAvatar"), $oracleNameDisplay = document.getElementById("oracleName");
+const $emojiBar = document.getElementById("emojiBar");
 
-/* ===== 3. DOM 元素 ===== */
-const $messages = document.getElementById("messages");
-const $form = document.getElementById("inputBar");
-const $input = document.getElementById("input");
-const $clear = document.getElementById("clear");
-const $adminPanel = document.getElementById("adminPanel");
-const $statusText = document.getElementById("oracleStatus");
-const $avatarBox = document.getElementById("oracleAvatar");
-
-/* ===== 4. 工具 ===== */
-function saveChat(){ localStorage.setItem(KEY_CHAT, JSON.stringify(messages)); }
-function saveCustom(){ localStorage.setItem(KEY_CUSTOM, JSON.stringify(customCards)); }
-function saveStatus(){ localStorage.setItem(KEY_STATUS, JSON.stringify(customStatuses)); }
+/* ===== 2. 核心工具 ===== */
+const getAllCards = () => [...DEFAULT_CARDS, ...customCards];
+const getAllStatuses = () => [...DEFAULT_STATUSES, ...customStatuses];
+const save = (key, data) => localStorage.setItem(key, JSON.stringify(data));
 
 function shuffle(arr){
   const a = arr.slice();
-  for (let i = a.length - 1; i > 0; i--){
-    const j = Math.floor(Math.random() * (i + 1));
-    [a[i], a[j]] = [a[j], a[i]];
-  }
+  for (let i = a.length - 1; i > 0; i--){ const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; }
   return a;
 }
 
 function drawCard(){
   const allCards = getAllCards();
   if (bag.length === 0) bag = shuffle(allCards.map(c => c.id));
-  const id = bag.pop();
-  return allCards.find(c => c.id === id) || allCards[0];
+  return allCards.find(c => c.id === bag.pop()) || allCards[0];
 }
 
-// 更新头像显示
+function applySettings() {
+  $oracleNameDisplay.textContent = settings.oracleName;
+  document.getElementById("settingOracleName").value = settings.oracleName;
+  document.documentElement.style.setProperty('--card-char-size', settings.cardSize + 'px');
+  document.getElementById("settingCardSize").value = settings.cardSize;
+  document.getElementById("sizeLabel").textContent = settings.cardSize;
+  document.documentElement.style.setProperty('--bg-image', settings.bgImage ? `url(${settings.bgImage})` : 'none');
+}
+
 function renderAvatar() {
-  if (currentAvatar.startsWith("data:image")) {
-    $avatarBox.innerHTML = `<img src="${currentAvatar}" alt="avatar">`;
-  } else {
-    $avatarBox.textContent = currentAvatar;
-  }
+  $avatarBox.innerHTML = currentAvatar.startsWith("data:image") ? `<img src="${currentAvatar}">` : currentAvatar;
 }
 
-// 随机切换状态
 function rollStatus() {
   const list = getAllStatuses();
   $statusText.textContent = list[Math.floor(Math.random() * list.length)];
 }
 
-/* ===== 5. 渲染聊天 ===== */
+/* ===== 3. 渲染逻辑（支持图文、表情、打字机） ===== */
 function renderMessage(m){
   const row = document.createElement("div");
-  
-  if (m.role === "user"){
+  if (m.role === "user") {
     row.className = "msg-row user";
-    // 用户只有气泡，不需要头像（或者你可以加一个固定头像）
-    row.innerHTML = `<div class="msg-bubble">${m.text}</div>`;
+    let content = m.text ? `<div>${m.text}</div>` : "";
+    if (m.image) content += `<img src="${m.image}" class="chat-img">`;
+    row.innerHTML = `<div class="msg-bubble">${content}</div>`;
     return row;
   }
-  
-  // 占卜师（对方）的消息
+
   row.className = "msg-row oracle";
   const allCards = getAllCards();
   const c = allCards.find(card => card.id === m.cardId) || allCards[0];
-  let imgHtml = c.image ? `<img src="${c.image}" class="card-image" alt="卡面">` : "";
-  
-  let avatarContent = currentAvatar.startsWith("data:image") 
-    ? `<img src="${currentAvatar}">` 
-    : currentAvatar;
+  let imgHtml = c.image ? `<img src="${c.image}" class="card-image">` : "";
+  let avatarContent = currentAvatar.startsWith("data:image") ? `<img src="${currentAvatar}">` : currentAvatar;
 
+  // 如果只有文字（非字卡），只渲染文字
+  if (m.text && !m.cardId) {
+    row.innerHTML = `<div class="avatar">${avatarContent}</div><div class="msg-bubble">${m.text}</div>`;
+    return row;
+  }
+
+  // 渲染字卡
   row.innerHTML = `
     <div class="avatar">${avatarContent}</div>
     <div class="msg-bubble">
@@ -329,225 +264,178 @@ function renderAll(){
 }
 function scrollBottom(){ requestAnimationFrame(() => { $messages.scrollTop = $messages.scrollHeight; }); }
 
-/* ===== 6. 聊天发送流程 ===== */
-$form.addEventListener("submit", e => {
-  e.preventDefault();
-  const text = $input.value.trim(); if (!text) return;
-  $input.value = ""; $input.disabled = true; $form.querySelector(".send").disabled = true;
-
-  // 发送用户消息
-  const userMsg = { role:"user", text, t: Date.now() };
-  messages.push(userMsg); $messages.appendChild(renderMessage(userMsg)); saveChat(); scrollBottom();
-
-  // 对方状态切换 & 打字提示
-  rollStatus(); // 每次发消息，随机换个状态
-  const typingRow = document.createElement("div");
-  typingRow.className = "msg-row oracle";
+// 辅助：生成一个“正在输入/打字”的临时气泡
+function createTypingBubble() {
+  const row = document.createElement("div");
+  row.className = "msg-row oracle";
   let avatarContent = currentAvatar.startsWith("data:image") ? `<img src="${currentAvatar}">` : currentAvatar;
-  typingRow.innerHTML = `
-    <div class="avatar">${avatarContent}</div>
-    <div class="msg-bubble msg typing">输入0中...</div>
-  `;
+  row.innerHTML = `<div class="avatar">${avatarContent}</div><div class="msg-bubble msg typing" id="typingText">…</div>`;
+  return row;
+}
+
+/* ===== 4. 发送与智能回复逻辑 ===== */
+let isProcessing = false;
+
+async function handleSend(text, imageBase64 = null) {
+  if (isProcessing || (!text && !imageBase64)) return;
+  isProcessing = true;
+  $input.value = "";
+  
+  // 1. 把用户消息推入界面
+  const userMsg = { role:"user", text: text || "", image: imageBase64, t: Date.now() };
+  messages.push(userMsg); $messages.appendChild(renderMessage(userMsg)); save(KEY_CHAT, messages); scrollBottom();
+
+  // 2. 对面状态改变
+  rollStatus();
+
+  // 3. 模拟“对面正在思考”
+  const typingRow = createTypingBubble();
   $messages.appendChild(typingRow); scrollBottom();
+  const $typingText = typingRow.querySelector("#typingText");
+  
+  const delay = (ms) => new Promise(r => setTimeout(r, ms));
+  const randomChoice = (arr) => arr[Math.floor(Math.random() * arr.length)];
 
-  // 延迟后出结果
-  setTimeout(() => {
-    typingRow.remove();
-    const card = drawCard();
-    const oracleMsg = { role:"oracle", cardId: card.id, t: Date.now() };
-    messages.push(oracleMsg); $messages.appendChild(renderMessage(oracleMsg)); saveChat(); scrollBottom();
-    $input.disabled = false; $form.querySelector(".send").disabled = false; $input.focus();
-  }, 1200 + Math.random() * 500);
-});
+  // 4. 对面先说话（打字机效果）
+  await delay(800 + Math.random() * 500);
+  
+  let preText = "";
+  if (imageBase64) {
+    preText = "正在浏览中... ";
+  } else {
+    preText = randomChoice(REACTIONS) + " ";
+  }
 
-/* ===== 7. 管理面板逻辑 ===== */
-document.getElementById("openAdmin").onclick = () => {
-  renderCustomList();
-  renderStatusList();
-  $adminPanel.classList.add("show");
+  // 打字机效果
+  for (let i = 0; i < preText.length; i++) {
+    $typingText.textContent = preText.substring(0, i + 1);
+    scrollBottom();
+    await delay(50 + Math.random() * 50);
+  }
+  
+  await delay(400); // 停顿一下
+  typingRow.remove();
+  
+  // 把前面的“铺垫”作为一条消息存入
+  const preMsg = { role: "oracle", text: preText.trim(), t: Date.now() };
+  messages.push(preMsg); $messages.appendChild(renderMessage(preMsg)); save(KEY_CHAT, messages); scrollBottom();
+
+  // 5. 再次显示“输入中...”
+  await delay(400);
+  const typingRow2 = createTypingBubble();
+  typingRow2.querySelector("#typingText").textContent = "起卦中...";
+  $messages.appendChild(typingRow2); scrollBottom();
+
+  await delay(1000 + Math.random() * 800);
+  typingRow2.remove();
+
+  // 6. 抽出卡片并展示
+  const card = drawCard();
+  const oracleMsg = { role:"oracle", cardId: card.id, t: Date.now() };
+  messages.push(oracleMsg); $messages.appendChild(renderMessage(oracleMsg)); save(KEY_CHAT, messages); scrollBottom();
+  
+  // 7. 偶尔（20%概率）发个表情
+  if (Math.random() < 0.2) {
+    await delay(800);
+    const emojis = ["🔮", "✨", "🌙", "🌿"];
+    const emojiMsg = { role: "oracle", text: randomChoice(emojis), t: Date.now() };
+    messages.push(emojiMsg); $messages.appendChild(renderMessage(emojiMsg)); save(KEY_CHAT, messages); scrollBottom();
+  }
+
+  isProcessing = false;
+  $input.focus();
+}
+
+// 提交表单（文字发送）
+$form.onsubmit = (e) => {
+  e.preventDefault();
+  const text = $input.value.trim();
+  if (text) handleSend(text);
 };
-document.getElementById("closeAdmin").onclick = () => $adminPanel.classList.remove("show");
 
-// 上传头像
-document.getElementById("avatarUpload").onchange = (e) => {
-  const file = e.target.files[0]; if(!file) return;
+// 图片发送
+document.getElementById("imgBtn").onclick = () => document.getElementById("chatImgUpload").click();
+document.getElementById("chatImgUpload").onchange = (e) => {
+  const file = e.target.files[0]; if (!file) return;
   const reader = new FileReader();
-  reader.onload = (event) => {
-    currentAvatar = event.target.result;
-    localStorage.setItem(KEY_AVATAR, currentAvatar);
-    renderAvatar();
-    renderAll(); // 刷新聊天记录里的头像
-    alert("头像更新成功！");
+  reader.onload = (ev) => {
+    handleSend("", ev.target.result);
+    e.target.value = ""; // 清空以便下次选择
   };
   reader.readAsDataURL(file);
 };
 
-// === 状态管理 ===
-document.getElementById("saveStatusBtn").onclick = () => {
-  const statusText = document.getElementById("newStatus").value.trim();
-  if (!statusText) return alert("状态不能为空哦！");
-  customStatuses.push(statusText);
-  saveStatus();
-  document.getElementById("newStatus").value = "";
-  renderStatusList();
-  alert("状态添加成功！");
-};
-
-function renderStatusList() {
-  const $list = document.getElementById("statusList");
-  $list.innerHTML = "";
-  if (customStatuses.length === 0) return;
-  
-  customStatuses.forEach((status, index) => {
-    const div = document.createElement("div");
-    div.className = "list-item";
-    div.innerHTML = `
-      <div class="list-item-info" style="color:var(--muted); font-size:14px;">${status}</div>
-      <button class="btn-delete" onclick="deleteStatus(${index})">删除</button>
-    `;
-    $list.appendChild(div);
-  });
-}
-
-window.deleteStatus = (index) => {
-  if (confirm(`确定删除状态【${customStatuses[index]}】吗？`)) {
-    customStatuses.splice(index, 1);
-    saveStatus();
-    renderStatusList();
+// 表情面板交互
+document.getElementById("emojiBtn").onclick = () => $emojiBar.classList.toggle("show");
+$emojiBar.onclick = (e) => {
+  if (e.target.tagName === "SPAN") {
+    $input.value += e.target.textContent;
+    $input.focus();
   }
 };
 
-// === 卡片管理 ===
+/* ===== 5. 管理面板（保留上一版功能） ===== */
+document.getElementById("openAdmin").onclick = () => { renderCustomList(); renderStatusList(); document.getElementById("adminPanel").classList.add("show"); };
+document.getElementById("closeAdmin").onclick = () => document.getElementById("adminPanel").classList.remove("show");
+document.getElementById("saveNamesBtn").onclick = () => { settings.oracleName = document.getElementById("settingOracleName").value.trim() || "梦占灵体"; save(KEY_SETTINGS, settings); applySettings(); alert("已保存"); };
+document.getElementById("settingCardSize").oninput = (e) => { document.getElementById("sizeLabel").textContent = e.target.value; document.documentElement.style.setProperty('--card-char-size', e.target.value + 'px'); settings.cardSize = parseInt(e.target.value); save(KEY_SETTINGS, settings); };
+document.getElementById("bgUpload").onchange = (e) => { const f = e.target.files[0]; if(!f) return; const r = new FileReader(); r.onload = (ev) => { settings.bgImage = ev.target.result; save(KEY_SETTINGS, settings); applySettings(); }; r.readAsDataURL(f); };
+document.getElementById("resetBgBtn").onclick = () => { settings.bgImage = ""; save(KEY_SETTINGS, settings); applySettings(); };
+document.getElementById("avatarUpload").onchange = (e) => { const f = e.target.files[0]; if(!f) return; const r = new FileReader(); r.onload = (ev) => { currentAvatar = ev.target.result; localStorage.setItem(KEY_AVATAR, currentAvatar); renderAvatar(); renderAll(); }; r.readAsDataURL(f); };
+
+// 状态与卡片管理
+function renderStatusList() { const $l = document.getElementById("statusList"); $l.innerHTML = ""; customStatuses.forEach((s, i) => { const d = document.createElement("div"); d.className = "list-item"; d.innerHTML = `<div class="list-item-info">${s}</div><button class="btn-delete" onclick="delStatus(${i})">删除</button>`; $l.appendChild(d); }); }
+window.delStatus = (i) => { if(confirm("删除此状态？")) { customStatuses.splice(i,1); save(KEY_STATUS, customStatuses); renderStatusList(); } };
+document.getElementById("saveStatusBtn").onclick = () => { const v = document.getElementById("newStatus").value.trim(); if(v) { customStatuses.push(v); save(KEY_STATUS, customStatuses); document.getElementById("newStatus").value = ""; renderStatusList(); } };
+
+function renderCustomList() { const $l = document.getElementById("customList"); $l.innerHTML = ""; customCards.forEach(card => { const d = document.createElement("div"); d.className = "list-item"; d.innerHTML = `<div class="list-item-info"><span style="color:var(--accent);font-weight:bold;">${card.char}</span> ${card.keyword||''}</div><button class="btn-delete" onclick="delCard('${card.id}')">删除</button>`; $l.appendChild(d); }); }
+window.delCard = (id) => { if(confirm("删除此字卡？")) { customCards = customCards.filter(c => c.id !== id); save(KEY_CUSTOM, customCards); renderCustomList(); bag = []; } };
 document.getElementById("saveCardBtn").onclick = () => {
-  const char = document.getElementById("newChar").value.trim();
-  const pinyin = document.getElementById("newPinyin").value.trim();
-  const keyword = document.getElementById("newKeyword").value.trim();
-  const reading = document.getElementById("newReading").value.trim();
-  const imageFile = document.getElementById("newImage").files[0];
-
-  if (!char || !reading) return alert("汉字和解读不能为空哦！");
-
-  const processCard = (imageBase64) => {
-    const newCard = { id: "c_" + Date.now(), char, pinyin, keyword, reading, image: imageBase64 || "" };
-    customCards.push(newCard);
-    saveCustom();
-    
-    // 清空表单
-    document.getElementById("newChar").value = "";
-    document.getElementById("newPinyin").value = "";
-    document.getElementById("newKeyword").value = "";
-    document.getElementById("newReading").value = "";
-    document.getElementById("newImage").value = "";
-
-    bag = []; 
-    renderCustomList(); 
-    alert("字卡添加成功！");
+  const char = document.getElementById("newChar").value.trim(), reading = document.getElementById("newReading").value.trim();
+  if(!char || !reading) return alert("汉字和解读必填");
+  const imgFile = document.getElementById("newImage").files[0];
+  const process = (imgBase64) => {
+    customCards.push({ id:"c_"+Date.now(), char, pinyin:document.getElementById("newPinyin").value.trim(), keyword:document.getElementById("newKeyword").value.trim(), reading, image:imgBase64||"" });
+    save(KEY_CUSTOM, customCards); bag = []; renderCustomList();
+    ["newChar","newPinyin","newKeyword","newReading","newImage"].forEach(id => document.getElementById(id).value = "");
+    alert("添加成功");
   };
-
-  if (imageFile) {
-    const reader = new FileReader();
-    reader.onload = (e) => processCard(e.target.result);
-    reader.readAsDataURL(imageFile);
-  } else {
-    processCard(null);
-  }
+  if(imgFile) { const r = new FileReader(); r.onload = (e) => process(e.target.result); r.readAsDataURL(imgFile); } else { process(null); }
 };
 
-function renderCustomList() {
-  const $list = document.getElementById("customList");
-  $list.innerHTML = "";
-  if (customCards.length === 0) return;
-  
-  customCards.forEach((card) => {
-    const div = document.createElement("div");
-    div.className = "list-item";
-    div.innerHTML = `
-      <div class="list-item-info">
-        <span style="font-size:18px;color:var(--accent);font-weight:bold;margin-right:8px;">${card.char}</span>
-        <span style="font-size:13px;color:var(--muted);">${card.keyword || card.reading}</span>
-      </div>
-      <button class="btn-delete" onclick="deleteCard('${card.id}')">删除</button>
-    `;
-    $list.appendChild(div);
-  });
-}
-
-window.deleteCard = (id) => {
-  if (confirm("确定要删除这张字卡吗？")) {
-    customCards = customCards.filter(c => c.id !== id);
-    saveCustom();
-    renderCustomList();
-    bag = []; 
-  }
-};
-
-// === 导入导出（合并了卡片和状态） ===
+// 导入导出
 document.getElementById("exportBtn").onclick = () => {
-  const data = { cards: customCards, statuses: customStatuses, avatar: currentAvatar };
-  const blob = new Blob([JSON.stringify(data, null, 2)], {type: "application/json"});
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement("a");
-  a.href = url;
-  a.download = "my_oracle_data.json";
-  a.click();
-  URL.revokeObjectURL(url);
+  const data = { cards: customCards, statuses: customStatuses, avatar: currentAvatar, settings };
+  const a = document.createElement("a"); a.href = URL.createObjectURL(new Blob([JSON.stringify(data)], {type:"application/json"})); a.download = "oracle_backup.json"; a.click();
 };
-
 document.getElementById("importFile").onchange = (e) => {
-  const file = e.target.files[0]; if(!file) return;
-  const reader = new FileReader();
-  reader.onload = (event) => {
+  const file = e.target.files[0]; if(!file) return; const r = new FileReader();
+  r.onload = (ev) => {
     try {
-      const data = JSON.parse(event.target.result);
-      
-      if (data.cards) {
-        data.cards.forEach(imp => {
-          if(!customCards.find(c => c.id === imp.id)) customCards.push(imp);
-        });
-        saveCustom();
-      }
-      if (data.statuses) {
-        data.statuses.forEach(s => {
-          if(!customStatuses.includes(s)) customStatuses.push(s);
-        });
-        saveStatus();
-      }
-      if (data.avatar) {
-        currentAvatar = data.avatar;
-        localStorage.setItem(KEY_AVATAR, currentAvatar);
-        renderAvatar();
-      }
-      
-      bag = [];
-      renderCustomList(); renderStatusList(); renderAll();
-      alert("数据导入成功！");
-    } catch (err) { alert("导入失败，文件格式不正确。"); }
+      const data = JSON.parse(ev.target.result);
+      if(data.cards) { data.cards.forEach(c => !customCards.find(x => x.id === c.id) && customCards.push(c)); save(KEY_CUSTOM, customCards); }
+      if(data.statuses) { data.statuses.forEach(s => !customStatuses.includes(s) && customStatuses.push(s)); save(KEY_STATUS, customStatuses); }
+      if(data.avatar) { currentAvatar = data.avatar; localStorage.setItem(KEY_AVATAR, currentAvatar); renderAvatar(); }
+      if(data.settings) { settings = { ...settings, ...data.settings }; save(KEY_SETTINGS, settings); applySettings(); }
+      bag = []; renderAll(); alert("导入成功"); document.getElementById("adminPanel").classList.remove("show");
+    } catch(e) { alert("文件格式错误"); }
   };
-  reader.readAsText(file);
+  r.readAsText(file);
 };
 
-/* ===== 8. 初始化 ===== */
-$clear.addEventListener("click", () => {
-  if (!confirm("确定清空全部对话记录？")) return;
-  messages = []; bag = []; localStorage.removeItem(KEY_CHAT); renderAll();
-});
+document.getElementById("clear").onclick = () => { if(confirm("清空所有对话？")) { messages = []; save(KEY_CHAT, messages); renderAll(); } };
 
-// 启动
-renderAvatar();
-if (messages.length === 0){
-  rollStatus();
-  const introRow = document.createElement("div");
-  introRow.className = "msg-row oracle";
-  let avatarContent = currentAvatar.startsWith("data:image") ? `<img src="${currentAvatar}">` : currentAvatar;
-  introRow.innerHTML = `
-    <div class="avatar">${avatarContent}</div>
-    <div class="msg-bubble" style="color:var(--muted);">请输入文本</div>
-  `;
-  $messages.appendChild(introRow);
-} else { renderAll(); rollStatus(); }
+/* ===== 6. 启动 ===== */
+applySettings(); renderAvatar(); rollStatus();
+if (messages.length === 0) {
+  const intro = { role: "oracle", text: "想说什么....", t: Date.now() };
+  messages.push(intro); save(KEY_CHAT, messages);
+}
+renderAll();
 </script>
 </body>
 </html>
+
  
 
 
