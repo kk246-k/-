@@ -124,7 +124,7 @@
 <main id="messages"></main>
 
 <form id="inputBar">
-  <input id="input" placeholder="写下你的问题…" autocomplete="off" enterkeyhint="send">
+  <input id="input" placeholder="请输入…" autocomplete="off" enterkeyhint="send">
   <button class="send" type="submit">问</button>
 </form>
 
@@ -253,7 +253,7 @@ $form.addEventListener("submit", e => {
   messages.push(userMsg); $messages.appendChild(renderMessage(userMsg)); saveChat(); scrollBottom();
 
   const typing = document.createElement("div");
-  typing.className = "msg oracle typing"; typing.textContent = "对方正在输入…";
+  typing.className = "msg oracle typing"; typing.textContent = "对方正在输入中…";
   $messages.appendChild(typing); scrollBottom();
 
   setTimeout(() => {
