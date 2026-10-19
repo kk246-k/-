@@ -169,13 +169,11 @@
     
     <div class="section-title">基础与外观设置</div>
     
-    <!-- 名字修改：实时生效，无需点保存 -->
     <div class="form-group">
       <label>对方称呼 (输入即生效)</label>
       <input type="text" id="settingOracleName" placeholder="梦占灵体">
     </div>
     
-    <!-- 头像修改：选完图立刻生效 -->
     <div class="form-group" style="margin-top:10px;">
       <label>聊天对象头像 (选图即生效)</label>
       <input type="file" id="avatarUpload" accept="image/*">
@@ -291,7 +289,6 @@ const DEFAULT_INVITES = ["看一会儿月亮", "听一场雨", "去夜空下散�
 const DEFAULT_GIFTS = ["一颗星星", "一片枫叶", "一个拥抱", "一朵发光的花"];
 const DEFAULT_PROACTIVE = ["在干嘛？", "今天过得怎么样？", "突然想见你。", "我刚刚好像感应到了你的想法。", "怎么不理我？"];
 
-// 数据版本统一降到 v13
 const KEY_CHAT = "dream_oracle_chat_v13", KEY_CUSTOM = "dream_oracle_custom_v13", KEY_STATUS = "dream_oracle_status_v13", KEY_INVITE = "dream_oracle_invite_v13", KEY_GIFT = "dream_oracle_gift_v13", KEY_PROACTIVE = "dream_oracle_proactive_v13", KEY_EMOJI = "dream_oracle_emoji_v13", KEY_AVATAR = "dream_oracle_avatar_v13", KEY_SETTINGS = "dream_oracle_settings_v13";
 
 let messages = JSON.parse(localStorage.getItem(KEY_CHAT) || "[]");
@@ -313,28 +310,20 @@ const $messages = document.getElementById("messages"), $form = document.getEleme
 const $statusText = document.getElementById("oracleStatus"), $avatarBox = document.getElementById("oracleAvatar"), $oracleNameDisplay = document.getElementById("oracleName");
 const $emojiBar = document.getElementById("emojiBar");
 
-/* ===== 2. 核心工具 ===== */
+function save(key, data) {
+  try { localStorage.setItem(key, JSON.stringify(data)); } 
+  catch (e) { alert("【存储空间已满】无法保存数据！\n请点击设置最底部的红色按钮清理旧数据。"); }
+}
+function saveRaw(key, data) {
+  try { localStorage.setItem(key, data); } 
+  catch (e) { alert("【存储空间已满】无法保存图片！\n请点击设置最底部的红色按钮清理旧数据。"); }
+}
+
 const getAllCards = () => [...DEFAULT_CARDS, ...customCards];
 const getAllStatuses = () => [...DEFAULT_STATUSES, ...customStatuses];
 const getAllInvites = () => [...DEFAULT_INVITES, ...customInvites];
 const getAllGifts = () => [...DEFAULT_GIFTS, ...customGifts];
 const getAllProactive = () => [...DEFAULT_PROACTIVE, ...customProactive];
-
-// 加入异常捕获，防止空间满导致死机
-function save(key, data) {
-  try {
-    localStorage.setItem(key, JSON.stringify(data));
-  } catch (e) {
-    alert("【存储空间已满】无法保存数据！\n请点击下方红色的【强制清理旧版本数据】按钮，或者清空一些聊天记录、表情包。");
-  }
-}
-function saveRaw(key, data) {
-  try {
-    localStorage.setItem(key, data);
-  } catch (e) {
-    alert("【存储空间已满】无法保存图片！\n请点击下方红色的【强制清理旧版本数据】按钮。");
-  }
-}
 
 const randomChoice = (arr) => arr.length ? arr[Math.floor(Math.random() * arr.length)] : "……";
 const delay = (ms) => new Promise(r => setTimeout(r, ms));
@@ -624,7 +613,6 @@ document.getElementById("openAdmin").onclick = () => {
 };
 document.getElementById("closeAdmin").onclick = () => document.getElementById("adminPanel").classList.remove("show");
 
-// 【修改1】：名字修改实时生效
 document.getElementById("settingOracleName").oninput = (e) => { 
   settings.oracleName = e.target.value.trim() || "梦占灵体"; 
   $oracleNameDisplay.textContent = settings.oracleName;
@@ -647,7 +635,6 @@ document.getElementById("bgUpload").onchange = (e) => {
   const f = e.target.files[0]; if(!f) return; 
   const r = new FileReader(); 
   r.onload = (ev) => { 
-    // 背景图也做个压缩，控制在 1080p 内
     const img = new Image();
     img.onload = () => {
       const canvas = document.createElement('canvas');
@@ -668,7 +655,6 @@ document.getElementById("bgUpload").onchange = (e) => {
 };
 document.getElementById("resetBgBtn").onclick = () => { settings.bgImage = ""; save(KEY_SETTINGS, settings); applySettings(); };
 
-// 【修改2】：选完头像立刻生效
 document.getElementById("avatarUpload").onchange = (e) => { 
   const f = e.target.files[0]; if(!f) return; 
   const r = new FileReader(); 
@@ -695,17 +681,15 @@ document.getElementById("avatarUpload").onchange = (e) => {
   r.readAsDataURL(f); 
 };
 
-// 【修改3】：强制清理旧版数据（解决空间满了的问题）
 document.getElementById("clearOldDataBtn").onclick = () => {
   if(confirm("这会清理掉以前旧版本遗留的废弃缓存，不会删除现在的聊天和卡片。确定清理吗？")) {
     for (let i = 0; i < localStorage.length; i++) {
       const key = localStorage.key(i);
-      // 如果包含 dream_oracle 但不是 v13，就删掉
       if (key.includes("dream_oracle") && !key.includes("v13")) {
         localStorage.removeItem(key);
       }
     }
-    alert("清理完毕！现在的保存功能应该恢复正常了。");
+    alert("清理完毕！保存功能应该恢复正常了。");
   }
 };
 
@@ -733,6 +717,7 @@ document.getElementById("saveStatusBtn").onclick = () => batchAdd("newStatusBatc
 function renderStatusList() { renderList("statusList", customStatuses, "delStatus"); }
 window.delStatus = (i) => { if(confirm("删除？")) { customStatuses.splice(i,1); save(KEY_STATUS, customStatuses); renderStatusList(); } };
 
+// 【核心修复】：批量添加和删除自定义卡片
 document.getElementById("saveCardBtn").onclick = () => {
   const text = document.getElementById("newCardBatch").value.trim(); if (!text) return;
   const lines = text.split("\n").map(s => s.trim()).filter(s => s);
@@ -740,7 +725,14 @@ document.getElementById("saveCardBtn").onclick = () => {
   save(KEY_CUSTOM, customCards); document.getElementById("newCardBatch").value = ""; bag = []; renderCustomList(); alert(`成功添加 ${lines.length} 张字卡！`);
 };
 function renderCustomList() { renderList("customList", customCards, "delCard"); }
-window.delCard = (id) => { if(confirm("删除？")) { customCards = customCards.filter(c => c.id !== id); save(KEY_CUSTOM, customCards); renderCustomList(); bag = []; } };
+window.delCard = (i) => { 
+  if(confirm("确定要删除这张字卡吗？")) { 
+    customCards.splice(i, 1); // 修复：使用索引删除，而不是用 id
+    save(KEY_CUSTOM, customCards); 
+    renderCustomList(); 
+    bag = []; 
+  } 
+};
 
 document.getElementById("saveInviteBtn").onclick = () => batchAdd("newInviteBatch", customInvites, KEY_INVITE, renderInviteList);
 function renderInviteList() { renderList("inviteList", customInvites, "delInvite"); }
