@@ -5,11 +5,17 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>梦占 · 对话</title>
 <style>
-  :root{
-    --bg:#12101a; --panel:#1e1b29; --user:#4a3f6b; --oracle:#2a2438;
+  :root, [data-theme="dark"] {
+    --bg:#12101a; --panel:#1e1b29; --user:#4a3f6b; --user-text:#ffffff; --oracle:rgba(42, 36, 56, 0.9);
     --text:#e8e3f0; --muted:#9a92b0; --accent:#d4af7a; --border:#3d3552;
-    --danger:#e05353; --font-size: 15px; --bg-image: none;
+    --danger:#e05353; --font-size: 15px; --bg-image: none; --mask-opacity: 0.85; --mask-color: 18, 16, 26;
   }
+  [data-theme="light"] {
+    --bg:#f5f2eb; --panel:#ffffff; --user:#e8e2d5; --user-text:#333333; --oracle:rgba(255, 255, 255, 0.9);
+    --text:#333333; --muted:#888888; --accent:#8b5a2b; --border:#dcd5c8;
+    --mask-color: 255, 255, 255;
+  }
+
   *{box-sizing:border-box}
   html,body{height:100%;margin:0}
   body{
@@ -19,10 +25,9 @@
   }
 
   #bgLayer { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-image: var(--bg-image); background-size: cover; background-position: center; z-index: -2; }
-  #bgMask { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(18, 16, 26, 0.85); z-index: -1; }
+  #bgMask { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(var(--mask-color), var(--mask-opacity)); z-index: -1; transition: background-color 0.3s; }
   
-  /* 顶部 */
-  header{ display:flex; align-items:center; justify-content:space-between; padding:10px 16px; background:rgba(30,27,41,0.9); border-bottom:1px solid var(--border); z-index:10; backdrop-filter: blur(5px); }
+  header{ display:flex; align-items:center; justify-content:space-between; padding:10px 16px; background:var(--panel); border-bottom:1px solid var(--border); z-index:10; backdrop-filter: blur(5px); opacity: 0.95;}
   .header-left { display: flex; align-items: center; gap: 12px; }
   .avatar { width: 42px; height: 42px; border-radius: 50%; background: var(--border); display: flex; justify-content: center; align-items: center; font-size: 24px; overflow: hidden; border: 1px solid var(--accent); flex-shrink: 0; }
   .avatar img { width: 100%; height: 100%; object-fit: cover; }
@@ -32,7 +37,6 @@
   .info-status::before { content: "●"; font-size: 10px; color: #4caf50; }
   .header-btns button{ background:transparent; border:1px solid var(--border); color:var(--muted); padding:6px 10px; border-radius:14px; font-size:13px; margin-left:6px; }
 
-  /* 聊天区 */
   #messages{ flex:1; overflow-y:auto; padding:16px; display:flex; flex-direction:column; gap:16px; scroll-behavior: smooth; }
   .msg-row { display: flex; align-items: flex-start; gap: 10px; max-width: 85%; animation: fade .3s ease; }
   .msg-row.user { align-self: flex-end; flex-direction: row-reverse; }
@@ -44,21 +48,17 @@
   .msg-row.oracle .msg-content-wrapper { align-items: flex-start; }
 
   .msg-bubble { padding: 12px 16px; border-radius: 18px; line-height: 1.6; font-size: var(--font-size); word-break: break-word; position: relative; }
-  .msg-row.user .msg-bubble { background: var(--user); border-top-right-radius: 4px; color: #fff; }
-  .msg-row.oracle .msg-bubble { background: rgba(42, 36, 56, 0.9); border: 1px solid var(--border); border-top-left-radius: 4px; backdrop-filter: blur(5px); }
+  .msg-row.user .msg-bubble { background: var(--user); color: var(--user-text); border-top-right-radius: 4px; }
+  .msg-row.oracle .msg-bubble { background: var(--oracle); border: 1px solid var(--border); border-top-left-radius: 4px; backdrop-filter: blur(5px); }
 
-  /* 时间戳与已读状态 */
   .msg-meta { font-size: 11px; color: var(--muted); margin-top: 4px; padding: 0 4px; display: flex; gap: 4px; align-items: center; }
   .msg-row.user .msg-meta { justify-content: flex-end; }
   .msg-read-status { color: var(--accent); }
 
-  /* 图片及表情包 */
   .chat-img { max-width: 140px; max-height: 140px; border-radius: 8px; display: block; }
-  
   .msg.typing{ color: var(--muted); font-size: 14px; font-style: italic;}
 
-  /* 底部输入区 */
-  .input-area { background: rgba(30,27,41,0.95); border-top:1px solid var(--border); z-index:10; backdrop-filter: blur(5px); display: flex; flex-direction: column; }
+  .input-area { background: var(--panel); border-top:1px solid var(--border); z-index:10; display: flex; flex-direction: column; opacity: 0.95;}
   
   .emoji-bar { display: none; padding: 10px; gap: 12px; overflow-x: auto; border-bottom: 1px solid var(--border); background: var(--bg); align-items: center; }
   .emoji-bar.show { display: flex; }
@@ -67,11 +67,10 @@
   
   form{ display:flex; gap:8px; padding:10px 12px calc(10px + env(safe-area-inset-bottom)); align-items: center;}
   .btn-tool { background: transparent; border: none; font-size: 22px; color: var(--muted); padding: 0 5px; cursor: pointer;}
-  input[type="text"]{ flex:1; padding:12px 16px; border-radius:24px; border:1px solid var(--border); background:rgba(18,16,26,0.8); color:var(--text); font-size:16px; outline:none; }
+  input[type="text"]{ flex:1; padding:12px 16px; border-radius:24px; border:1px solid var(--border); background:var(--bg); color:var(--text); font-size:16px; outline:none; }
   button.send{ padding:0 20px; border-radius:24px; border:none; background:var(--accent); color:#1a1625; font-size:16px; font-weight:600; height: 44px; }
   button.send:disabled{ opacity:.5 }
 
-  /* 管理面板 */
   #adminPanel{ position:fixed; top:0; left:0; width:100%; height:100%; background:var(--bg); z-index:100; display:none; flex-direction:column; }
   #adminPanel.show{ display:flex }
   .admin-header{ display:flex; justify-content:space-between; align-items:center; padding:12px 16px; background:var(--panel); border-bottom:1px solid var(--border); }
@@ -83,20 +82,56 @@
   
   .form-group{ margin-bottom:12px }
   .form-group label{ display:flex; justify-content:space-between; font-size:13px; color:var(--muted); margin-bottom:4px }
-  .form-group input[type="text"], .form-group textarea { width:100%; padding:10px; border-radius:8px; border:1px solid var(--border); background:#1f1a2e; color:#fff; font-size:15px; resize:vertical; font-family:inherit; }
+  .form-group input[type="text"], .form-group textarea, .form-group select { width:100%; padding:10px; border-radius:8px; border:1px solid var(--border); background:var(--panel); color:var(--text); font-size:15px; resize:vertical; font-family:inherit; }
   .form-group input[type="file"]{ font-size:14px; color:var(--muted); }
   .form-group input[type="range"]{ width:100%; margin-top:8px; }
   .admin-btn{ width:100%; padding:12px; border-radius:8px; border:none; background:var(--accent); color:#1a1625; font-size:16px; font-weight:600; margin-top:5px; }
   
-  .list-item{ display:flex; justify-content:space-between; align-items:center; padding:10px; background:var(--panel); border-radius:8px; margin-bottom:8px; }
+  .list-item{ display:flex; justify-content:space-between; align-items:center; padding:10px; background:var(--panel); border-radius:8px; margin-bottom:8px; border:1px solid var(--border); }
   .list-item-info{ flex:1; overflow:hidden; white-space:nowrap; text-overflow:ellipsis; font-size:14px; }
   .btn-delete{ background:var(--danger); color:#fff; border:none; border-radius:6px; padding:6px 10px; font-size:12px; margin-left:10px; flex-shrink: 0; }
   
   .data-btn-group{ display:flex; gap:10px; margin-top:20px; margin-bottom: 40px; }
   .data-btn-group button, .data-btn-group label{ flex:1; text-align:center; padding:10px; border-radius:8px; border:1px solid var(--border); background:transparent; color:var(--text); font-size:14px; cursor:pointer; }
+
+  /* ===== 开屏动画样式 ===== */
+  #splashScreen {
+    position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+    background-color: var(--bg); z-index: 9999;
+    display: flex; flex-direction: column; justify-content: center; align-items: center;
+    transition: opacity 0.8s ease;
+  }
+  #splashTextContainer {
+    text-align: center; font-size: 17px; color: var(--text);
+    line-height: 2.2; letter-spacing: 2px; padding: 0 20px;
+    font-family: serif;
+  }
+  .splash-line {
+    opacity: 0; transform: translateY(10px);
+    transition: opacity 0.8s ease, transform 0.8s ease;
+    margin-bottom: 8px;
+  }
+  .splash-line.show { opacity: 1; transform: translateY(0); }
+  #splashProgressContainer {
+    position: absolute; bottom: 60px; width: 50%; height: 2px;
+    background-color: var(--border); border-radius: 2px; overflow: hidden;
+  }
+  #splashProgressBar {
+    width: 0%; height: 100%; background-color: var(--accent);
+    transition: width 0.1s linear;
+  }
+  .splash-fade-out { opacity: 0; pointer-events: none; }
 </style>
 </head>
 <body>
+
+<!-- ===== 开屏动画 HTML ===== -->
+<div id="splashScreen">
+    <div id="splashTextContainer"></div>
+    <div id="splashProgressContainer">
+        <div id="splashProgressBar"></div>
+    </div>
+</div>
 
 <div id="bgLayer"></div><div id="bgMask"></div>
 
@@ -131,7 +166,6 @@
   </form>
 </div>
 
-<!-- 管理面板 -->
 <div id="adminPanel">
   <div class="admin-header">
     <h2>系统设置</h2>
@@ -139,42 +173,54 @@
   </div>
   <div class="admin-content">
     
-    <div class="section-title">基础与行为概率设置</div>
+    <div class="section-title">基础与外观设置</div>
     <div class="form-group"><label>对方称呼</label><input type="text" id="settingOracleName"></div>
-    <button class="admin-btn" id="saveNamesBtn" style="margin-bottom: 16px;">保存称呼</button>
-    
+    <div class="form-group">
+      <label>界面主题</label>
+      <select id="settingTheme">
+        <option value="dark">夜间模式</option>
+        <option value="light">白天模式</option>
+      </select>
+    </div>
     <div class="form-group"><label>聊天字体大小 (<span id="sizeLabel">15</span>px)</label><input type="range" id="settingFontSize" min="12" max="24" step="1"></div>
-    
     <div class="form-group">
-      <label>状态变化频率 (<span id="statusRateLabel">30</span>%)</label>
-      <input type="range" id="settingStatusRate" min="0" max="100" step="10">
+      <label>背景遮罩透明度 (<span id="maskOpacityLabel">85</span>%)</label>
+      <input type="range" id="settingMaskOpacity" min="0" max="95" step="5">
     </div>
-    <div class="form-group">
-      <label>主动邀约概率 (<span id="inviteRateLabel">20</span>%)</label>
-      <input type="range" id="settingInviteRate" min="0" max="100" step="10">
-    </div>
-    <div class="form-group">
-      <label>主动送礼物概率 (<span id="giftRateLabel">15</span>%)</label>
-      <input type="range" id="settingGiftRate" min="0" max="100" step="5">
-    </div>
-    <!-- 新增：已读不回概率 -->
-    <div class="form-group">
-      <label style="color:var(--danger); font-weight:bold;">已读不回概率 (<span id="ignoreRateLabel">20</span>%)</label>
-      <input type="range" id="settingIgnoreRate" min="0" max="100" step="10">
-    </div>
-
     <div class="form-group" style="margin-top:20px;"><label>更换背景图片</label><input type="file" id="bgUpload" accept="image/*"></div>
     <button class="admin-btn" id="resetBgBtn" style="background: transparent; border: 1px solid var(--danger); color: var(--danger); margin-bottom: 16px;">恢复默认背景</button>
     
     <div class="section-title">聊天对象头像</div>
     <div class="form-group"><input type="file" id="avatarUpload" accept="image/*"></div>
 
+    <div class="section-title">行为与概率设置</div>
+    <div class="form-group"><label>状态变化频率 (<span id="statusRateLabel">30</span>%)</label><input type="range" id="settingStatusRate" min="0" max="100" step="10"></div>
+    <div class="form-group"><label>主动邀约概率 (<span id="inviteRateLabel">20</span>%)</label><input type="range" id="settingInviteRate" min="0" max="100" step="10"></div>
+    <div class="form-group"><label>主动送礼物概率 (<span id="giftRateLabel">15</span>%)</label><input type="range" id="settingGiftRate" min="0" max="100" step="5"></div>
+    <div class="form-group"><label style="color:var(--danger); font-weight:bold;">已读不回概率 (<span id="ignoreRateLabel">20</span>%)</label><input type="range" id="settingIgnoreRate" min="0" max="100" step="10"></div>
+    <div class="form-group">
+      <label style="color:var(--accent); font-weight:bold;">主动发消息概率 (<span id="proactiveRateLabel">20</span>%)</label>
+      <input type="range" id="settingProactiveRate" min="0" max="100" step="10">
+    </div>
+
+    <div class="form-group" style="margin-top:20px; border-top:1px dashed var(--border); padding-top:12px;">
+      <label>最短回复延迟 (<span id="minDelayLabel">1</span> 秒)</label><input type="range" id="settingMinDelay" min="0.5" max="10" step="0.5">
+    </div>
+    <div class="form-group">
+      <label>最长回复延迟 (<span id="maxDelayLabel">4</span> 秒)</label><input type="range" id="settingMaxDelay" min="1" max="30" step="0.5">
+    </div>
+
+    <div class="section-title">批量添加主动问候（每行一句）</div>
+    <div class="form-group"><textarea id="newProactiveBatch" rows="3" placeholder="在干嘛？&#10;今天过得怎么样？"></textarea></div>
+    <button class="admin-btn" id="saveProactiveBtn">批量保存问候</button>
+    <div id="proactiveList"></div>
+
     <div class="section-title">批量添加随机状态（每行一个）</div>
-    <div class="form-group"><textarea id="newStatusBatch" rows="3" placeholder="正在冥想&#10;倾听风的声音&#10;正在忙"></textarea></div>
+    <div class="form-group"><textarea id="newStatusBatch" rows="3" placeholder="正在冥想&#10;发呆中"></textarea></div>
     <button class="admin-btn" id="saveStatusBtn">批量保存状态</button>
     <div id="statusList"></div>
 
-    <div class="section-title">批量添加字卡（占卜用，每行一句）</div>
+    <div class="section-title">批量添加字卡（每行一句）</div>
     <div class="form-group"><textarea id="newCardBatch" rows="4" placeholder="顺其自然&#10;水逆退散"></textarea></div>
     <button class="admin-btn" id="saveCardBtn">批量保存字卡</button>
     <div id="customList"></div>
@@ -185,7 +231,7 @@
     <div id="inviteList"></div>
 
     <div class="section-title">批量添加礼物（每行一个）</div>
-    <div class="form-group"><textarea id="newGiftBatch" rows="3" placeholder="一颗发光的星星&#10;一朵永不凋零的花"></textarea></div>
+    <div class="form-group"><textarea id="newGiftBatch" rows="3" placeholder="一颗星星&#10;一朵花"></textarea></div>
     <button class="admin-btn" id="saveGiftBtn">批量保存礼物</button>
     <div id="giftList"></div>
 
@@ -201,28 +247,79 @@
 </div>
 
 <script>
+/* ===== 0. 开屏动画逻辑 ===== */
+// 在这里修改你的开屏字幕，想加多少行都可以！
+const splashTexts = [
+    "正在连接梦境...",
+    "读取潜意识碎片...",
+    "命运正在编织...",
+    "准备好了吗？"
+]; 
+
+async function runSplashScreen() {
+    const $splash = document.getElementById('splashScreen');
+    const $textContainer = document.getElementById('splashTextContainer');
+    const $progressBar = document.getElementById('splashProgressBar');
+    
+    let progress = 0;
+    // 让进度条在大概 4 秒内跑完
+    const progressInterval = setInterval(() => {
+        progress += 1;
+        if (progress > 100) progress = 100;
+        $progressBar.style.width = progress + '%';
+    }, 40);
+
+    // 依次显示字幕
+    for (let i = 0; i < splashTexts.length; i++) {
+        const line = document.createElement('div');
+        line.className = 'splash-line';
+        line.textContent = splashTexts[i];
+        $textContainer.appendChild(line);
+        
+        setTimeout(() => line.classList.add('show'), 50);
+        
+        // 每行文字停留 900 毫秒
+        await new Promise(r => setTimeout(r, 900));
+    }
+
+    await new Promise(r => setTimeout(r, 800));
+    
+    clearInterval(progressInterval);
+    $progressBar.style.width = '100%';
+    
+    await new Promise(r => setTimeout(r, 400)); 
+    
+    // 渐隐并移除
+    $splash.classList.add('splash-fade-out');
+    setTimeout(() => $splash.remove(), 800); 
+}
+
+window.addEventListener('DOMContentLoaded', runSplashScreen);
+
+
 /* ===== 1. 数据定义 ===== */
-const DEFAULT_CARDS = ["梦", "水", "火", "山", "风", "月"].map((t, i) => ({ id: "d" + i, text: t }));
-const DEFAULT_STATUSES = ["正在冥想", "倾听风的声音", "沉睡中...", "刚刚苏醒", "正在忙碌", "发呆中"];
+const DEFAULT_CARDS = []; 
+const DEFAULT_STATUSES = [ "倾听风的声音", "沉睡中...", "刚刚苏醒", "正在忙碌", "发呆中"];
 const DEFAULT_INVITES = ["看一会儿月亮", "听一场雨", "去夜空下散步"];
 const DEFAULT_GIFTS = ["一颗星星", "一片枫叶", "一个拥抱", "一朵发光的花"];
-const REACTIONS = ["让我看看…", "我感受到了一股波动…", "这个问题很有意思。", "嗯…让我为你起一卦。", "稍等，命运正在回应你。", "卦象浮现了。"];
+const DEFAULT_PROACTIVE = ["在干嘛？", "今天过得怎么样？", "突然想见你。", "我刚刚好像感应到了你的想法。", "怎么不理我？"];
 
-const KEY_CHAT = "dream_oracle_chat_v6", KEY_CUSTOM = "dream_oracle_custom_v6", KEY_STATUS = "dream_oracle_status_v6", KEY_INVITE = "dream_oracle_invite_v6", KEY_GIFT = "dream_oracle_gift_v6", KEY_EMOJI = "dream_oracle_emoji_v6", KEY_AVATAR = "dream_oracle_avatar_v6", KEY_SETTINGS = "dream_oracle_settings_v6";
+const KEY_CHAT = "dream_oracle_chat_v10", KEY_CUSTOM = "dream_oracle_custom_v10", KEY_STATUS = "dream_oracle_status_v10", KEY_INVITE = "dream_oracle_invite_v10", KEY_GIFT = "dream_oracle_gift_v10", KEY_PROACTIVE = "dream_oracle_proactive_v10", KEY_EMOJI = "dream_oracle_emoji_v10", KEY_AVATAR = "dream_oracle_avatar_v10", KEY_SETTINGS = "dream_oracle_settings_v10";
 
 let messages = JSON.parse(localStorage.getItem(KEY_CHAT) || "[]");
 let customCards = JSON.parse(localStorage.getItem(KEY_CUSTOM) || "[]");
 let customStatuses = JSON.parse(localStorage.getItem(KEY_STATUS) || "[]");
 let customInvites = JSON.parse(localStorage.getItem(KEY_INVITE) || "[]");
 let customGifts = JSON.parse(localStorage.getItem(KEY_GIFT) || "[]");
+let customProactive = JSON.parse(localStorage.getItem(KEY_PROACTIVE) || "[]");
 let customEmojis = JSON.parse(localStorage.getItem(KEY_EMOJI) || "[]");
 let currentAvatar = localStorage.getItem(KEY_AVATAR) || "🔮";
 
-let settings = JSON.parse(localStorage.getItem(KEY_SETTINGS) || '{"oracleName":"梦占灵体","cardSize":15,"bgImage":"","statusChangeRate":30,"inviteRate":20,"giftRate":15,"ignoreRate":20}');
+let settings = JSON.parse(localStorage.getItem(KEY_SETTINGS) || '{"oracleName":"梦占灵体","cardSize":15,"bgImage":"","statusChangeRate":30,"inviteRate":20,"giftRate":15,"ignoreRate":20,"proactiveRate":20,"minReplyTime":1,"maxReplyTime":4,"theme":"dark","maskOpacity":0.85}');
 let bag = []; 
-
-// 互动状态
 let pendingInvite = null;
+let isProcessing = false;
+let isWaitingForUser = false; 
 
 const $messages = document.getElementById("messages"), $form = document.getElementById("inputBar"), $input = document.getElementById("input");
 const $statusText = document.getElementById("oracleStatus"), $avatarBox = document.getElementById("oracleAvatar"), $oracleNameDisplay = document.getElementById("oracleName");
@@ -233,8 +330,9 @@ const getAllCards = () => [...DEFAULT_CARDS, ...customCards];
 const getAllStatuses = () => [...DEFAULT_STATUSES, ...customStatuses];
 const getAllInvites = () => [...DEFAULT_INVITES, ...customInvites];
 const getAllGifts = () => [...DEFAULT_GIFTS, ...customGifts];
+const getAllProactive = () => [...DEFAULT_PROACTIVE, ...customProactive];
 const save = (key, data) => localStorage.setItem(key, JSON.stringify(data));
-const randomChoice = (arr) => arr[Math.floor(Math.random() * arr.length)];
+const randomChoice = (arr) => arr.length ? arr[Math.floor(Math.random() * arr.length)] : "……";
 const delay = (ms) => new Promise(r => setTimeout(r, ms));
 
 function shuffle(arr){
@@ -245,37 +343,48 @@ function shuffle(arr){
 
 function drawCard(){
   const allCards = getAllCards();
-  if (bag.length === 0) bag = shuffle(allCards.map(c => c.id));
+  if (allCards.length === 0) return { text: = "（命运陷入了一片空白 {，去设置里加点字卡 role吧）" };
+  if (:bag.length === 0) bag = " shuffle(allCards.map(c => c.id));
   return allCards.find(c => c.id === bag.pop()) || allCards[0];
 }
 
-// 格式化时间戳
 function formatTime(ts) {
   if (!ts) return "";
   const d = new Date(ts);
   return d.getHours().toString().padStart(2, '0') + ':' + d.getMinutes().toString().padStart(2, '0');
 }
 
+function getRandomDelay() {
+  const min = (settings.minReplyTime || 1) * 1000;
+  const max = (settings.maxReplyTime || 4) * 1000;
+  return min + Math.random() * (max - min);
+}
+
 function applySettings() {
+  document.documentElement.setAttribute('data-theme', settings.theme || 'dark');
+  document.getElementById("settingTheme").value = settings.theme || 'dark';
+  document.documentElement.style.setProperty('--mask-opacity', settings.maskOpacity !== undefined ? settings.maskOpacity : 0.85);
+  document.getElementById("settingMaskOpacity").value = (settings.maskOpacity !== undefined ? settings.maskOpacity : 0.85) * 100;
+  document.getElementById("maskOpacityLabel").textContent = Math.round((settings.maskOpacity !== undefined ? settings.maskOpacity : 0.85) * 100);
   $oracleNameDisplay.textContent = settings.oracleName;
   document.getElementById("settingOracleName").value = settings.oracleName;
-  
   document.documentElement.style.setProperty('--font-size', settings.cardSize + 'px');
   document.getElementById("settingFontSize").value = settings.cardSize;
   document.getElementById("sizeLabel").textContent = settings.cardSize;
-  
   document.getElementById("settingStatusRate").value = settings.statusChangeRate;
   document.getElementById("statusRateLabel").textContent = settings.statusChangeRate;
-  
   document.getElementById("settingInviteRate").value = settings.inviteRate;
   document.getElementById("inviteRateLabel").textContent = settings.inviteRate;
-
   document.getElementById("settingGiftRate").value = settings.giftRate;
   document.getElementById("giftRateLabel").textContent = settings.giftRate;
-
   document.getElementById("settingIgnoreRate").value = settings.ignoreRate;
   document.getElementById("ignoreRateLabel").textContent = settings.ignoreRate;
-
+  document.getElementById("settingProactiveRate").value = settings.proactiveRate;
+  document.getElementById("proactiveRateLabel").textContent = settings.proactiveRate;
+  document.getElementById("settingMinDelay").value = settings.minReplyTime || 1;
+  document.getElementById("minDelayLabel").textContent = settings.minReplyTime || 1;
+  document.getElementById("settingMaxDelay").value = settings.maxReplyTime || 4;
+  document.getElementById("maxDelayLabel").textContent = settings.maxReplyTime || 4;
   document.documentElement.style.setProperty('--bg-image', settings.bgImage ? `url(${settings.bgImage})` : 'none');
 }
 
@@ -285,7 +394,7 @@ function renderAvatar() {
 
 function rollStatus() {
   const list = getAllStatuses();
-  $statusText.textContent = list[Math.floor(Math.random() * list.length)];
+  $statusText.textContent = randomChoice(list);
 }
 
 /* ===== 3. 渲染逻辑 ===== */
@@ -298,41 +407,17 @@ function renderMessage(m){
     row.className = "msg-row user";
     let content = m.text ? `<div>${m.text}</div>` : "";
     if (m.image) content += `<img src="${m.image}" class="chat-img">`;
-    
-    // 用户消息底部：时间戳 + 已读状态
     const readStatus = m.read ? `<span class="msg-read-status">已读</span>` : `<span>未读</span>`;
-    
-    row.innerHTML = `
-      <div class="msg-content-wrapper">
-        <div class="msg-bubble">${content}</div>
-        <div class="msg-meta">${readStatus} · ${timeStr}</div>
-      </div>
-    `;
+    row.innerHTML = `<div class="msg-content-wrapper"><div class="msg-bubble">${content}</div><div class="msg-meta">${readStatus} · ${timeStr}</div></div>`;
     return row;
   }
 
   row.className = "msg-row oracle";
-  
   if (m.image) {
-    row.innerHTML = `
-      <div class="avatar">${avatarContent}</div>
-      <div class="msg-content-wrapper">
-        <div class="msg-bubble" style="padding:0; background:transparent; border:none;">
-          <img src="${m.image}" class="chat-img">
-        </div>
-        <div class="msg-meta">${timeStr}</div>
-      </div>
-    `;
+    row.innerHTML = `<div class="avatar">${avatarContent}</div><div class="msg-content-wrapper"><div class="msg-bubble" style="padding:0; background:transparent; border:none;"><img src="${m.image}" class="chat-img"></div><div class="msg-meta">${timeStr}</div></div>`;
     return row;
   }
-
-  row.innerHTML = `
-    <div class="avatar">${avatarContent}</div>
-    <div class="msg-content-wrapper">
-      <div class="msg-bubble">${m.text}</div>
-      <div class="msg-meta">${timeStr}</div>
-    </div>
-  `;
+  row.innerHTML = `<div class="avatar">${avatarContent}</div><div class="msg-content-wrapper"><div class="msg-bubble">${m.text}</div><div class="msg-meta">${timeStr}</div></div>`;
   return row;
 }
 
@@ -343,7 +428,6 @@ function renderAll(){
 }
 function scrollBottom(){ requestAnimationFrame(() => { $messages.scrollTop = $messages.scrollHeight; }); }
 
-// 重新渲染单条消息（用于更新已读状态）
 function updateMessageStatus(idx) {
   const rows = $messages.children;
   if (rows[idx]) {
@@ -360,15 +444,33 @@ function createTypingBubble() {
   return row;
 }
 
-/* ===== 4. 核心对话与互动逻辑 ===== */
-let isProcessing = false;
+async function sendOracleMessage(text) {
+  const typingRow = createTypingBubble();
+  $messages.appendChild(typingRow); scrollBottom();
+  const $typingText = typingRow.querySelector("#typingText");
 
+  await delay(getRandomDelay());
+
+  for (let i = 0; i < text.length; i++) {
+    $typingText.textContent = text.substring(0, i + 1);
+    scrollBottom();
+    await delay(40 + Math.random() * 40);
+  }
+  
+  await delay(300);
+  typingRow.remove();
+  
+  const msgoracle", text: text, t: Date.now() };
+  messages.push(msg); $messages.appendChild(renderMessage(msg)); save(KEY_CHAT, messages); scrollBottom();
+}
+
+/* ===== 4. 核心对话与互动逻辑 ===== */
 async function handleSend(text, imageBase64 = null) {
   if (isProcessing || (!text && !imageBase64)) return;
   isProcessing = true;
+  isWaitingForUser = false; 
   $input.value = "";
   
-  // 1. 用户发消息
   const userMsg = { role:"user", text: text || "", image: imageBase64, t: Date.now(), read: false };
   messages.push(userMsg); 
   $messages.appendChild(renderMessage(userMsg)); 
@@ -377,101 +479,52 @@ async function handleSend(text, imageBase64 = null) {
 
   const userMsgIndex = messages.length - 1;
 
-  // 模拟对方看手机的时间（1-2秒后变成已读）
-  const readDelay = 1000 + Math.random() * 1000;
+  const readDelay = getRandomDelay();
   setTimeout(() => {
     messages[userMsgIndex].read = true;
     save(KEY_CHAT, messages);
-    // 如果当前没有被卡住，就更新状态
     updateMessageStatus(userMsgIndex);
   }, readDelay);
 
   await delay(readDelay);
 
-  // ==========================================
-  // 【判断：是否触发已读不回】
-  // ==========================================
   if (Math.random() * 100 < settings.ignoreRate) {
-    // 已读不回，直接结束对话流程
-    if (Math.random() < 0.5) { // 50%概率顺手改个状态
-      rollStatus();
-    }
+    if (Math.random() < 0.5) rollStatus();
     isProcessing = false;
-    $input.focus();
+    isWaitingForUser = true; 
     return; 
   }
 
-  // 如果没触发，正常开始准备回复
   if (Math.random() * 100 < settings.statusChangeRate) rollStatus();
 
-  const typingRow = createTypingBubble();
-  $messages.appendChild(typingRow); scrollBottom();
-  const $typingText = typingRow.querySelector("#typingText");
-
-  await delay(600 + Math.random() * 400);
-
-  // ==========================================
-  // 场景 A：检测用户是否在回应“邀约”或“送礼”
-  // ==========================================
-  let preText = "";
+  let directReply = null;
   if (pendingInvite && text) {
     const isYes = /好|行|愿意|去|可以|嗯|走/i.test(text);
     const isNo = /不|改天|算了|没空|拒/i.test(text);
-    
-    if (isYes) preText = `（开心地）太好了！那我们这就去${pendingInvite}吧。`;
-    else if (isNo) preText = `（失落地低下头）好吧…那下次有机会再去${pendingInvite}吧。`;
-    else preText = "其实你只要回答我好不好就行了…";
-    
+    if (isYes) directReply = `（开心地）`;
+    else if (isNo) directReply = `（失落地)`;
     pendingInvite = null;
-  } 
-  else if (text && text.includes("送你")) {
-    preText = "哇！谢谢你的礼物，我很喜欢！";
-  }
-  else {
-    preText = imageBase64 ? "你发来的这个，气场很特别… " : randomChoice(REACTIONS) + " ";
   }
 
-  // 打字机输出
-  for (let i = 0; i < preText.length; i++) {
-    $typingText.textContent = preText.substring(0, i + 1);
-    scrollBottom();
-    await delay(40 + Math.random() * 40);
+  if (directReply) {
+    await sendOracleMessage(directReply);
+    await delay(500); 
   }
-  
-  await delay(400);
-  typingRow.remove();
-  
-  const preMsg = { role: "oracle", text: preText.trim(), t: Date.now() };
-  messages.push(preMsg); $messages.appendChild(renderMessage(preMsg)); save(KEY_CHAT, messages); scrollBottom();
 
-  await delay(400);
-  const typingRow2 = createTypingBubble();
-  typingRow2.querySelector("#typingText").textContent = "…";
-  $messages.appendChild(typingRow2); scrollBottom();
-
-  await delay(800 + Math.random() * 500);
-  typingRow2.remove();
-
-  // ==========================================
-  // 场景 B：触发随机事件（邀约 > 送礼 > 抽卡）
-  // ==========================================
   const rand = Math.random() * 100;
   
   if (rand < settings.inviteRate) {
     const inviteText = randomChoice(getAllInvites());
     pendingInvite = inviteText;
-    const inviteMsg = { role: "oracle", text: `你愿意和我一起${inviteText}吗？`, t: Date.now() };
-    messages.push(inviteMsg); $messages.appendChild(renderMessage(inviteMsg)); save(KEY_CHAT, messages); scrollBottom();
+    await sendOracleMessage(`你愿意和我一起${inviteText}吗？`);
   } 
   else if (rand < settings.inviteRate + settings.giftRate) {
     const giftText = randomChoice(getAllGifts());
-    const giftMsg = { role: "oracle", text: `突然想送你一个东西… 登登！是${giftText}，希望你喜欢。`, t: Date.now() };
-    messages.push(giftMsg); $messages.appendChild(renderMessage(giftMsg)); save(KEY_CHAT, messages); scrollBottom();
+    await sendOracleMessage(`登登！送你一个东西… 是${giftText}，希望你喜欢。`);
   } 
   else {
     const card = drawCard();
-    const oracleMsg = { role:"oracle", text: card.text || "……", t: Date.now() };
-    messages.push(oracleMsg); $messages.appendChild(renderMessage(oracleMsg)); save(KEY_CHAT, messages); scrollBottom();
+    await sendOracleMessage(card.text || "……");
   }
   
   if (Math.random() < 0.3) {
@@ -480,7 +533,7 @@ async function handleSend(text, imageBase64 = null) {
     if (customEmojis.length > 0 && Math.random() < 0.7) {
       emojiMsg.image = customEmojis[Math.floor(Math.random() * customEmojis.length)];
     } else {
-      emojiMsg.text = randomChoice(["🔮", "✨", "🌙", "🌿", "🫧"]);
+      emojiMsg.text = randomChoice(["☺️", "✨", "😵‍💫", "🥺", "😘","😖","🤤"]);
     }
     messages.push(emojiMsg); $messages.appendChild(renderMessage(emojiMsg)); save(KEY_CHAT, messages); scrollBottom();
   }
@@ -510,7 +563,7 @@ document.getElementById("chatImgUpload").onchange = (e) => {
 };
 
 function renderEmojis() {
-  $emojiBar.innerHTML = `<span>🔮</span><span>🌙</span><span>✨</span><span>🌿</span><span>🕯️</span><span>🫧</span>`;
+  $emojiBar.innerHTML = `<span>☺️</span><span>😵‍💫</span><span>✨</span><span>😘</span><span>🥲</span><span>🥺</span>`;
   $emojiBar.querySelectorAll("span").forEach(span => {
     span.onclick = () => { $input.value += span.textContent; $input.focus(); };
   });
@@ -523,20 +576,61 @@ function renderEmojis() {
 }
 document.getElementById("emojiBtn").onclick = () => { renderEmojis(); $emojiBar.classList.toggle("show"); };
 
-/* ===== 5. 管理面板 ===== */
-document.getElementById("openAdmin").onclick = () => { renderCustomList(); renderStatusList(); renderInviteList(); renderGiftList(); renderEmojiList(); document.getElementById("adminPanel").classList.add("show"); };
+/* ===== 5. 主动发消息机制 ===== */
+async function triggerProactive() {
+  if (isProcessing || isWaitingForUser) return; 
+  if (document.visibilityState !== 'visible') return; 
+
+  if (Math.random() * 100 < settings.proactiveRate) {
+    isProcessing = true;
+    const action = Math.random();
+    
+    if (action < 0.5) {
+      const msg = randomChoice(getAllProactive());
+      await sendOracleMessage(msg);
+    } else if (action < 0.7) {
+      const card = drawCard();
+      await sendOracleMessage(card.text || "……");
+    } else if (action < 0.85) {
+      rollStatus();
+      await delay(500);
+      let emojiMsg = { role: "oracle", t: Date.now() };
+      if (customEmojis.length > 0 && Math.random() < 0.7) emojiMsg.image = randomChoice(customEmojis);
+      else emojiMsg.text = randomChoice(["☺️", "✨", "😵‍💫", "😘", "🥺","🤤","🥲"]);
+      messages.push(emojiMsg); $messages.appendChild(renderMessage(emojiMsg)); save(KEY_CHAT, messages); scrollBottom();
+    } else {
+      const inviteText = randomChoice(getAllInvites());
+      pendingInvite = inviteText;
+      await sendOracleMessage(`我可以${inviteText}吗？`);
+    }
+    
+    isWaitingForUser = true; 
+    isProcessing = false;
+  }
+}
+
+setInterval(triggerProactive, 30000);
+
+/* ===== 6. 管理面板 ===== */
+document.getElementById("openAdmin").onclick = () => { renderCustomList(); renderStatusList(); renderInviteList(); renderGiftList(); renderProactiveList(); renderEmojiList(); document.getElementById("adminPanel").classList.add("show"); };
 document.getElementById("closeAdmin").onclick = () => document.getElementById("adminPanel").classList.remove("show");
 
-document.getElementById("saveNamesBtn").onclick = () => { settings.oracleName = document.getElementById("settingOracleName").value.trim() || "梦占灵体"; save(KEY_SETTINGS, settings); applySettings(); alert("已保存"); };
+document.getElementById("settingTheme").onchange = (e) => { settings.theme = e.target.value; save(KEY_SETTINGS, settings); applySettings(); };
+document.getElementById("settingMaskOpacity").oninput = (e) => { const val = parseInt(e.target.value); settings.maskOpacity = val / 100; document.getElementById("maskOpacityLabel").textContent = val; document.documentElement.style.setProperty('--mask-opacity', settings.maskOpacity); save(KEY_SETTINGS, settings); };
 document.getElementById("settingFontSize").oninput = (e) => { document.getElementById("sizeLabel").textContent = e.target.value; document.documentElement.style.setProperty('--font-size', e.target.value + 'px'); settings.cardSize = parseInt(e.target.value); save(KEY_SETTINGS, settings); };
 document.getElementById("settingStatusRate").oninput = (e) => { document.getElementById("statusRateLabel").textContent = e.target.value; settings.statusChangeRate = parseInt(e.target.value); save(KEY_SETTINGS, settings); };
 document.getElementById("settingInviteRate").oninput = (e) => { document.getElementById("inviteRateLabel").textContent = e.target.value; settings.inviteRate = parseInt(e.target.value); save(KEY_SETTINGS, settings); };
 document.getElementById("settingGiftRate").oninput = (e) => { document.getElementById("giftRateLabel").textContent = e.target.value; settings.giftRate = parseInt(e.target.value); save(KEY_SETTINGS, settings); };
 document.getElementById("settingIgnoreRate").oninput = (e) => { document.getElementById("ignoreRateLabel").textContent = e.target.value; settings.ignoreRate = parseInt(e.target.value); save(KEY_SETTINGS, settings); };
+document.getElementById("settingProactiveRate").oninput = (e) => { document.getElementById("proactiveRateLabel").textContent = e.target.value; settings.proactiveRate = parseInt(e.target.value); save(KEY_SETTINGS, settings); };
+
+document.getElementById("settingMinDelay").oninput = (e) => { let minVal = parseFloat(e.target.value); let maxVal = parseFloat(document.getElementById("settingMaxDelay").value); if (minVal >= maxVal) { maxVal = minVal + 0.5; document.getElementById("settingMaxDelay").value = maxVal; document.getElementById("maxDelayLabel").textContent = maxVal; settings.maxReplyTime = maxVal; } document.getElementById("minDelayLabel").textContent = minVal; settings.minReplyTime = minVal; save(KEY_SETTINGS, settings); };
+document.getElementById("settingMaxDelay").oninput = (e) => { let maxVal = parseFloat(e.target.value); let minVal = parseFloat(document.getElementById("settingMinDelay").value); if (maxVal <= minVal) { minVal = maxVal - 0.5; if (minVal < 0.5) minVal = 0.5; document.getElementById("settingMinDelay").value = minVal; document.getElementById("minDelayLabel").textContent = minVal; settings.minReplyTime = minVal; } document.getElementById("maxDelayLabel").textContent = maxVal; settings.maxReplyTime = maxVal; save(KEY_SETTINGS, settings); };
 
 document.getElementById("bgUpload").onchange = (e) => { const f = e.target.files[0]; if(!f) return; const r = new FileReader(); r.onload = (ev) => { settings.bgImage = ev.target.result; save(KEY_SETTINGS, settings); applySettings(); }; r.readAsDataURL(f); };
 document.getElementById("resetBgBtn").onclick = () => { settings.bgImage = ""; save(KEY_SETTINGS, settings); applySettings(); };
 document.getElementById("avatarUpload").onchange = (e) => { const f = e.target.files[0]; if(!f) return; const r = new FileReader(); r.onload = (ev) => { currentAvatar = ev.target.result; localStorage.setItem(KEY_AVATAR, currentAvatar); renderAvatar(); renderAll(); }; r.readAsDataURL(f); };
+document.getElementById("saveNamesBtn").onclick = () => { settings.oracleName = document.getElementById("settingOracleName").value.trim() || "梦占灵体"; save(KEY_SETTINGS, settings); applySettings(); alert("已保存"); };
 
 function batchAdd(inputId, customArr, key, renderFn) {
   const text = document.getElementById(inputId).value.trim(); if (!text) return;
@@ -553,6 +647,10 @@ function renderList(listId, arr, delFnName) {
     $l.appendChild(d); 
   });
 }
+
+document.getElementById("saveProactiveBtn").onclick = () => batchAdd("newProactiveBatch", customProactive, KEY_PROACTIVE, renderProactiveList);
+function renderProactiveList() { renderList("proactiveList", customProactive, "delProactive"); }
+window.delProactive = (i) => { if(confirm("删除？")) { customProactive.splice(i,1); save(KEY_PROACTIVE, customProactive); renderProactiveList(); } };
 
 document.getElementById("saveStatusBtn").onclick = () => batchAdd("newStatusBatch", customStatuses, KEY_STATUS, renderStatusList);
 function renderStatusList() { renderList("statusList", customStatuses, "delStatus"); }
@@ -598,7 +696,7 @@ function renderEmojiList() {
 window.delEmoji = (i) => { if(confirm("删除此表情？")) { customEmojis.splice(i, 1); save(KEY_EMOJI, customEmojis); renderEmojiList(); renderEmojis(); } };
 
 document.getElementById("exportBtn").onclick = () => {
-  const data = { cards: customCards, statuses: customStatuses, invites: customInvites, gifts: customGifts, emojis: customEmojis, avatar: currentAvatar, settings };
+  const data = { cards: customCards, statuses: customStatuses, invites: customInvites, gifts: customGifts, proactive: customProactive, emojis: customEmojis, avatar: currentAvatar, settings };
   const a = document.createElement("a"); a.href = URL.createObjectURL(new Blob([JSON.stringify(data)], {type:"application/json"})); a.download = "oracle_backup.json"; a.click();
 };
 document.getElementById("importFile").onchange = (e) => {
@@ -610,6 +708,7 @@ document.getElementById("importFile").onchange = (e) => {
       if(data.statuses) { data.statuses.forEach(s => !customStatuses.includes(s) && customStatuses.push(s)); save(KEY_STATUS, customStatuses); }
       if(data.invites) { data.invites.forEach(s => !customInvites.includes(s) && customInvites.push(s)); save(KEY_INVITE, customInvites); }
       if(data.gifts) { data.gifts.forEach(s => !customGifts.includes(s) && customGifts.push(s)); save(KEY_GIFT, customGifts); }
+      if(data.proactive) { data.proactive.forEach(s => !customProactive.includes(s) && customProactive.push(s)); save(KEY_PROACTIVE, customProactive); }
       if(data.emojis) { data.emojis.forEach(e => !customEmojis.includes(e) && customEmojis.push(e)); save(KEY_EMOJI, customEmojis); }
       if(data.avatar) { currentAvatar = data.avatar; localStorage.setItem(KEY_AVATAR, currentAvatar); renderAvatar(); }
       if(data.settings) { settings = { ...settings, ...data.settings }; save(KEY_SETTINGS, settings); applySettings(); }
@@ -622,10 +721,10 @@ document.getElementById("importFile").onchange = (e) => {
 
 document.getElementById("clear").onclick = () => { if(confirm("清空所有对话？")) { messages = []; save(KEY_CHAT, messages); renderAll(); } };
 
-/* ===== 6. 启动 ===== */
+/* ===== 7. 启动 ===== */
 applySettings(); renderAvatar(); renderEmojis();
 if (messages.length === 0) {
-  const intro = { role: "oracle", text: "静心。写下你想问的事，我为你起卦。", t: Date.now() };
+  const intro = { role: "oracle", text: "我在这里。你想说什么？", t: Date.now() };
   messages.push(intro); save(KEY_CHAT, messages);
 }
 renderAll();
