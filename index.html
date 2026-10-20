@@ -546,7 +546,7 @@ document.getElementById("chatImgUpload").onchange = (e) => {
 };
 
 function renderEmojis() {
-  $emojiBar.innerHTML = `<span>🔮</span><span>🌙</span><span>✨</span><span>🌿</span><span>🕯️</span><span>🫧</span>`;
+  $emojiBar.innerHTML = `<span>🥺</span><span>🥲</span><span>✨</span><span>😘</span><span>☺️</span><span>😖</span>`;
   $emojiBar.querySelectorAll("span").forEach(span => {
     span.onclick = () => { $input.value += span.textContent; $input.focus(); };
   });
@@ -579,7 +579,7 @@ async function triggerProactive() {
       await delay(500);
       let emojiMsg = { role: "oracle", t: Date.now() };
       if (customEmojis.length > 0 && Math.random() < 0.7) emojiMsg.image = randomChoice(customEmojis);
-      else emojiMsg.text = randomChoice(["🔮", "✨", "🌙", "🌿", "🫧"]);
+      else emojiMsg.text = randomChoice(["🥺", "😘", "😖", "☺️", "🥲"]);
       messages.push(emojiMsg); $messages.appendChild(renderMessage(emojiMsg)); save(KEY_CHAT, messages); scrollBottom();
     } else {
       const inviteText = randomChoice(getAllInvites());
