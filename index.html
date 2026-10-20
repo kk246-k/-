@@ -107,7 +107,6 @@
   .data-btn-group{ display:flex; gap:10px; margin-top:20px; margin-bottom: 40px; }
   .data-btn-group button, .data-btn-group label{ flex:1; text-align:center; padding:10px; border-radius:8px; border:1px solid var(--border); background:transparent; color:var(--text); font-size:14px; cursor:pointer; }
 
-  /* ===== 开屏动画 ===== */
   #splashScreen { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: var(--bg); z-index: 9999; display: flex; flex-direction: column; justify-content: center; align-items: center; transition: opacity 0.8s ease; }
   #splashTextContainer { text-align: center; font-size: 17px; color: var(--text); line-height: 2.2; letter-spacing: 2px; padding: 0 20px; font-family: serif; }
   .splash-line { opacity: 0; transform: translateY(10px); animation: splashFadeUp 0.8s forwards; margin-bottom: 8px; }
@@ -116,10 +115,10 @@
   #splashProgressBar { width: 0%; height: 100%; background-color: var(--accent); transition: width 0.1s linear; }
   .splash-fade-out { opacity: 0; pointer-events: none; }
 
-  /* ===== 自定义 Toast 与 Modal ===== */
+  /* 提示框上移，防止遮挡内容 */
   #toast {
-    position: fixed; top: 10%; left: 50%; transform: translateX(-50%) translateY(-20px);
-    background: rgba(0, 0, 0, 0.75); color: #fff; padding: 10px 20px; border-radius: 8px;
+    position: fixed; top: 8%; left: 50%; transform: translateX(-50%) translateY(-20px);
+    background: rgba(0, 0, 0, 0.8); color: #fff; padding: 10px 20px; border-radius: 8px;
     font-size: 14px; z-index: 10000; opacity: 0; pointer-events: none; transition: all 0.3s ease;
     backdrop-filter: blur(5px); max-width: 80%; text-align: center; line-height: 1.4;
   }
@@ -138,16 +137,13 @@
   #customModal.show .modal-box { transform: scale(1); }
   .modal-text { font-size: 16px; color: var(--text); margin-bottom: 20px; line-height: 1.5; }
   .modal-btns { display: flex; gap: 10px; }
-  .modal-btns button {
-    flex: 1; padding: 10px; border-radius: 8px; font-size: 15px; cursor: pointer; border: none; font-weight: 600;
-  }
+  .modal-btns button { flex: 1; padding: 10px; border-radius: 8px; font-size: 15px; cursor: pointer; border: none; font-weight: 600; }
   .modal-btn-cancel { background: var(--border); color: var(--text); }
   .modal-btn-confirm { background: var(--accent); color: #fff; }
 </style>
 </head>
 <body>
 
-<!-- 自定义提示框与弹窗 -->
 <div id="toast"></div>
 <div id="customModal">
   <div class="modal-box">
@@ -286,20 +282,20 @@
         <button id="exportBtn" style="flex:1;">导出数据</button>
         <label style="flex:1;">导入数据 <input type="file" id="importFile" accept=".json" style="display:none;"></label>
       </div>
-      <button id="clearOldDataBtn" style="background:var(--danger); color:white; border:none; margin-top:10px;">强制清理旧版本数据</button>
+      <button id="clearChatBtn" style="background:var(--danger); color:white; border:none; margin-top:10px;">【清理空间】只清空聊天记录</button>
+      <button id="clearOldDataBtn" style="background:transparent; border: 1px solid var(--danger); color:var(--danger); margin-top:10px;">清理旧版本废弃缓存</button>
     </div>
   </div>
 </div>
 
 <script>
-/* ===== 自定义 UI 函数（替换 alert/confirm） ===== */
 let toastTimeout;
 function showToast(msg) {
   const $toast = document.getElementById("toast");
   $toast.textContent = msg;
   $toast.classList.add("show");
   clearTimeout(toastTimeout);
-  toastTimeout = setTimeout(() => $toast.classList.remove("show"), 2000);
+  toastTimeout = setTimeout(() => $toast.classList.remove("show"), 2500);
 }
 
 let currentConfirmCallback = null;
@@ -317,7 +313,6 @@ document.getElementById("modalConfirmBtn").onclick = () => {
   closeCustomModal();
 };
 
-/* ===== 数据定义 ===== */
 const DEFAULT_CARDS = []; 
 const DEFAULT_STATUSES = ["正在冥想", "倾听风的声音", "沉睡中...", "刚刚苏醒", "正在忙碌", "发呆中"];
 const DEFAULT_INVITES = ["看一会儿月亮", "听一场雨", "去夜空下散步"];
@@ -325,7 +320,7 @@ const DEFAULT_GIFTS = ["一颗星星", "一片枫叶", "一个拥抱", "一朵�
 const DEFAULT_PROACTIVE = ["在干嘛？", "今天过得怎么样？", "突然想见你。", "我刚刚好像感应到了你的想法。", "怎么不理我？"];
 const DEFAULT_SPLASH = ["正在连接梦境...", "读取潜意识碎片...", "命运正在编织...", "准备好了吗？"];
 
-const KEY_CHAT = "dream_oracle_chat_v16", KEY_CUSTOM = "dream_oracle_custom_v16", KEY_STATUS = "dream_oracle_status_v16", KEY_INVITE = "dream_oracle_invite_v16", KEY_GIFT = "dream_oracle_gift_v16", KEY_PROACTIVE = "dream_oracle_proactive_v16", KEY_EMOJI = "dream_oracle_emoji_v16", KEY_AVATAR = "dream_oracle_avatar_v16", KEY_SETTINGS = "dream_oracle_settings_v16", KEY_SPLASH = "dream_oracle_splash_v16";
+const KEY_CHAT = "dream_oracle_chat_v17", KEY_CUSTOM = "dream_oracle_custom_v17", KEY_STATUS = "dream_oracle_status_v17", KEY_INVITE = "dream_oracle_invite_v17", KEY_GIFT = "dream_oracle_gift_v17", KEY_PROACTIVE = "dream_oracle_proactive_v17", KEY_EMOJI = "dream_oracle_emoji_v17", KEY_AVATAR = "dream_oracle_avatar_v17", KEY_SETTINGS = "dream_oracle_settings_v17", KEY_SPLASH = "dream_oracle_splash_v17";
 
 let messages = JSON.parse(localStorage.getItem(KEY_CHAT) || "[]");
 let customCards = JSON.parse(localStorage.getItem(KEY_CUSTOM) || "[]");
@@ -342,18 +337,46 @@ let bag = [];
 let pendingInvite = null;
 let isProcessing = false;
 let isWaitingForUser = false; 
+let lastCardId = null; // 防止连续抽到同一张卡
 
 const $messages = document.getElementById("messages"), $form = document.getElementById("inputBar"), $input = document.getElementById("input");
 const $statusText = document.getElementById("oracleStatus"), $avatarBox = document.getElementById("oracleAvatar"), $oracleNameDisplay = document.getElementById("oracleName");
 const $emojiBar = document.getElementById("emojiBar");
 
+// 优化保存逻辑，防止记录无限膨胀
+function saveChatData() {
+  if (messages.length > 100) { 
+    messages = messages.slice(messages.length - 100); // 只留最近100条
+    renderAll();
+  }
+  try { localStorage.setItem(KEY_CHAT, JSON.stringify(messages)); } 
+  catch(e) { showToast("【存储空间已满】请去设置点击清理空间！"); }
+}
+
 function save(key, data) {
   try { localStorage.setItem(key, JSON.stringify(data)); } 
-  catch (e) { showToast("【存储空间已满】无法保存数据！\n请去设置清理旧数据。"); }
+  catch (e) { showToast("【存储空间已满】无法保存！请去设置清理空间。"); }
 }
 function saveRaw(key, data) {
   try { localStorage.setItem(key, data); } 
-  catch (e) { showToast("【存储空间已满】无法保存图片！\n请去设置清理旧数据。"); }
+  catch (e) { showToast("【存储空间已满】无法保存图片！请去设置清理空间。"); }
+}
+
+// 压缩发送的图片
+function compressImage(base64Str, maxSize, callback) {
+  const img = new Image();
+  img.onload = () => {
+    const canvas = document.createElement('canvas');
+    const ctx = canvas.getContext('2d');
+    let width = img.width;
+    let height = img.height;
+    if (width > height) { if (width > maxSize) { height *= maxSize / width; width = maxSize; } } 
+    else { if (height > maxSize) { width *= maxSize / height; height = maxSize; } }
+    canvas.width = width; canvas.height = height;
+    ctx.drawImage(img, 0, 0, width, height);
+    callback(canvas.toDataURL('image/jpeg', 0.7));
+  };
+  img.src = base64Str;
 }
 
 const getAllCards = () => [...DEFAULT_CARDS, ...customCards];
@@ -371,11 +394,22 @@ function shuffle(arr){
   return a;
 }
 
+// 优化抽卡：防止洗牌后第一张还是上一次抽的那张
 function drawCard(){
   const allCards = getAllCards();
   if (allCards.length === 0) return { text: "（命运陷入了一片空白，去设置里加点字卡吧）" };
-  if (bag.length === 0) bag = shuffle(allCards.map(c => c.id));
-  return allCards.find(c => c.id === bag.pop()) || allCards[0];
+  
+  if (bag.length === 0) {
+    bag = shuffle(allCards.map(c => c.id));
+    // 如果重新洗牌后，最后一张（即将抽的）和上次一样，且卡池大于1，就交换一下位置
+    if (bag.length > 1 && bag[bag.length - 1] === lastCardId) {
+      [bag[bag.length - 1], bag[bag.length - 2]] = [bag[bag.length - 2], bag[bag.length - 1]];
+    }
+  }
+  
+  const id = bag.pop();
+  lastCardId = id;
+  return allCards.find(c => c.id === id) || allCards[0];
 }
 
 function formatTime(ts) {
@@ -431,7 +465,6 @@ function rollStatus() {
   $statusText.textContent = randomChoice(list);
 }
 
-/* ===== 渲染 ===== */
 function renderMessage(m){
   const row = document.createElement("div");
   const avatarContent = currentAvatar.startsWith("data:image") ? `<img src="${currentAvatar}">` : currentAvatar;
@@ -495,12 +528,12 @@ async function sendOracleMessage(text) {
   typingRow.remove();
   
   const msg = { role: "oracle", text: text, t: Date.now() };
-  messages.push(msg); $messages.appendChild(renderMessage(msg)); save(KEY_CHAT, messages); scrollBottom();
+  messages.push(msg); $messages.appendChild(renderMessage(msg)); saveChatData(); scrollBottom();
 }
 
-/* ===== 对话交互 ===== */
 async function handleSend(text, imageBase64 = null) {
   if (isProcessing || (!text && !imageBase64)) return;
+  
   isProcessing = true;
   isWaitingForUser = false; 
   $input.value = "";
@@ -508,7 +541,7 @@ async function handleSend(text, imageBase64 = null) {
   const userMsg = { role:"user", text: text || "", image: imageBase64, t: Date.now(), read: false };
   messages.push(userMsg); 
   $messages.appendChild(renderMessage(userMsg)); 
-  save(KEY_CHAT, messages); 
+  saveChatData(); 
   scrollBottom();
 
   const userMsgIndex = messages.length - 1;
@@ -516,7 +549,7 @@ async function handleSend(text, imageBase64 = null) {
   const readDelay = getRandomDelay();
   setTimeout(() => {
     messages[userMsgIndex].read = true;
-    save(KEY_CHAT, messages);
+    saveChatData();
     updateMessageStatus(userMsgIndex);
   }, readDelay);
 
@@ -569,7 +602,7 @@ async function handleSend(text, imageBase64 = null) {
     } else {
       emojiMsg.text = randomChoice(["🔮", "✨", "🌙", "🌿", "🫧"]);
     }
-    messages.push(emojiMsg); $messages.appendChild(renderMessage(emojiMsg)); save(KEY_CHAT, messages); scrollBottom();
+    messages.push(emojiMsg); $messages.appendChild(renderMessage(emojiMsg)); saveChatData(); scrollBottom();
   }
 
   isProcessing = false;
@@ -592,7 +625,13 @@ document.getElementById("imgBtn").onclick = () => document.getElementById("chatI
 document.getElementById("chatImgUpload").onchange = (e) => {
   const file = e.target.files[0]; if (!file) return;
   const reader = new FileReader();
-  reader.onload = (ev) => { handleSend("", ev.target.result); e.target.value = ""; };
+  reader.onload = (ev) => { 
+    // 压缩聊天图片
+    compressImage(ev.target.result, 300, (compressedBase64) => {
+      handleSend("", compressedBase64); 
+    });
+    e.target.value = ""; 
+  };
   reader.readAsDataURL(file);
 };
 
@@ -610,7 +649,6 @@ function renderEmojis() {
 }
 document.getElementById("emojiBtn").onclick = () => { renderEmojis(); $emojiBar.classList.toggle("show"); };
 
-/* ===== 主动发消息 ===== */
 async function triggerProactive() {
   if (isProcessing || isWaitingForUser) return; 
   if (document.visibilityState !== 'visible') return; 
@@ -631,7 +669,7 @@ async function triggerProactive() {
       let emojiMsg = { role: "oracle", t: Date.now() };
       if (customEmojis.length > 0 && Math.random() < 0.7) emojiMsg.image = randomChoice(customEmojis);
       else emojiMsg.text = randomChoice(["🔮", "✨", "🌙", "🌿", "🫧"]);
-      messages.push(emojiMsg); $messages.appendChild(renderMessage(emojiMsg)); save(KEY_CHAT, messages); scrollBottom();
+      messages.push(emojiMsg); $messages.appendChild(renderMessage(emojiMsg)); saveChatData(); scrollBottom();
     } else {
       const inviteText = randomChoice(getAllInvites());
       pendingInvite = inviteText;
@@ -642,10 +680,8 @@ async function triggerProactive() {
     isProcessing = false;
   }
 }
-
 setInterval(triggerProactive, 30000);
 
-/* ===== 面板切换逻辑 ===== */
 document.getElementById("openCardPanel").onclick = () => { 
   renderCustomList(); renderStatusList(); renderInviteList(); renderGiftList(); renderProactiveList(); renderEmojiList(); 
   document.getElementById("cardPanel").classList.add("show"); 
@@ -657,7 +693,6 @@ document.getElementById("openSettingsPanel").onclick = () => {
 };
 document.getElementById("closeSettingsPanel").onclick = () => document.getElementById("settingsPanel").classList.remove("show");
 
-/* ===== 设置项绑定 ===== */
 document.getElementById("settingOracleName").oninput = (e) => { 
   settings.oracleName = e.target.value.trim() || "梦占灵体"; 
   $oracleNameDisplay.textContent = settings.oracleName;
@@ -733,19 +768,27 @@ document.getElementById("avatarUpload").onchange = (e) => {
   r.readAsDataURL(f); 
 };
 
-document.getElementById("clearOldDataBtn").onclick = () => {
-  showConfirm("这会清理掉以前旧版本遗留的废弃缓存，不会删除现在的数据。确定清理吗？", () => {
-    for (let i = 0; i < localStorage.length; i++) {
-      const key = localStorage.key(i);
-      if (key.includes("dream_oracle") && !key.includes("v16")) {
-        localStorage.removeItem(key);
-      }
-    }
-    showToast("清理完毕！保存功能应该恢复正常了。");
+document.getElementById("clearChatBtn").onclick = () => {
+  showConfirm("这会清空所有聊天记录以释放空间，但你的字卡和设置不会丢。确定吗？", () => {
+    messages = [];
+    localStorage.removeItem(KEY_CHAT);
+    renderAll();
+    showToast("聊天记录已清空，空间已释放！");
   });
 };
 
-/* ===== 批量添加与删除逻辑 ===== */
+document.getElementById("clearOldDataBtn").onclick = () => {
+  showConfirm("这会清理掉以前旧版本遗留的废弃缓存，不会删除现在的数据。确定吗？", () => {
+    for (let i = 0; i < localStorage.length; i++) {
+      const key = localStorage.key(i);
+      if (key.includes("dream_oracle") && !key.includes("v17")) {
+        localStorage.removeItem(key);
+      }
+    }
+    showToast("清理完毕！");
+  });
+};
+
 function batchAdd(inputId, customArr, key, renderFn) {
   const text = document.getElementById(inputId).value.trim(); if (!text) return;
   const lines = text.split("\n").map(s => s.trim()).filter(s => s);
@@ -799,8 +842,11 @@ document.getElementById("emojiUpload").onchange = (e) => {
   Array.from(files).forEach(file => {
     const reader = new FileReader();
     reader.onload = (ev) => {
-      customEmojis.push(ev.target.result); count++;
-      if (count === files.length) { save(KEY_EMOJI, customEmojis); renderEmojiList(); renderEmojis(); e.target.value = ""; showToast(`成功添加 ${count} 个表情包！`); }
+      // 压缩表情包
+      compressImage(ev.target.result, 150, (compressed) => {
+        customEmojis.push(compressed); count++;
+        if (count === files.length) { save(KEY_EMOJI, customEmojis); renderEmojiList(); renderEmojis(); e.target.value = ""; showToast(`成功添加 ${count} 个表情包！`); }
+      });
     };
     reader.readAsDataURL(file);
   });
@@ -817,7 +863,6 @@ function renderEmojiList() {
   });
 }
 
-/* ===== 导入导出与启动 ===== */
 document.getElementById("exportBtn").onclick = () => {
   const data = { cards: customCards, statuses: customStatuses, invites: customInvites, gifts: customGifts, proactive: customProactive, emojis: customEmojis, avatar: currentAvatar, settings, splash: customSplashTexts };
   const a = document.createElement("a"); a.href = URL.createObjectURL(new Blob([JSON.stringify(data)], {type:"application/json"})); a.download = "oracle_backup.json"; a.click();
@@ -874,7 +919,7 @@ window.addEventListener('DOMContentLoaded', () => {
 applySettings(); renderAvatar(); renderEmojis();
 if (messages.length === 0) {
   const intro = { role: "oracle", text: "我在这里。你想说什么？", t: Date.now() };
-  messages.push(intro); save(KEY_CHAT, messages);
+  messages.push(intro); saveChatData();
 }
 renderAll();
 </script>
