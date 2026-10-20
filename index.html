@@ -289,7 +289,7 @@ const DEFAULT_INVITES = ["看一会儿月亮", "听一场雨", "去夜空下散�
 const DEFAULT_GIFTS = ["一颗星星", "一片枫叶", "一个拥抱", "一朵发光的花"];
 const DEFAULT_PROACTIVE = ["在干嘛？", "今天过得怎么样？", "突然想见你。", "我刚刚好像感应到了你的想法。", "怎么不理我？"];
 
-const KEY_CHAT = "dream_oracle_chat_v14", KEY_CUSTOM = "dream_oracle_custom_v14", KEY_STATUS = "dream_oracle_status_v14", KEY_INVITE = "dream_oracle_invite_v14", KEY_GIFT = "dream_oracle_gift_v14", KEY_PROACTIVE = "dream_oracle_proactive_v14", KEY_EMOJI = "dream_oracle_emoji_v14", KEY_AVATAR = "dream_oracle_avatar_v14", KEY_SETTINGS = "dream_oracle_settings_v14";
+const KEY_CHAT = "dream_oracle_chat_v15", KEY_CUSTOM = "dream_oracle_custom_v15", KEY_STATUS = "dream_oracle_status_v15", KEY_INVITE = "dream_oracle_invite_v15", KEY_GIFT = "dream_oracle_gift_v15", KEY_PROACTIVE = "dream_oracle_proactive_v15", KEY_EMOJI = "dream_oracle_emoji_v15", KEY_AVATAR = "dream_oracle_avatar_v15", KEY_SETTINGS = "dream_oracle_settings_v15";
 
 let messages = JSON.parse(localStorage.getItem(KEY_CHAT) || "[]");
 let customCards = JSON.parse(localStorage.getItem(KEY_CUSTOM) || "[]");
@@ -301,10 +301,12 @@ let customEmojis = JSON.parse(localStorage.getItem(KEY_EMOJI) || "[]");
 let currentAvatar = localStorage.getItem(KEY_AVATAR) || "🔮";
 
 let settings = JSON.parse(localStorage.getItem(KEY_SETTINGS) || '{"oracleName":"梦占灵体","cardSize":15,"bgImage":"","statusChangeRate":30,"inviteRate":20,"giftRate":15,"ignoreRate":20,"proactiveRate":20,"minReplyTime":1,"maxReplyTime":4,"theme":"dark","maskOpacity":0.85}');
-let bag = []; 
 let pendingInvite = null;
 let isProcessing = false;
 let isWaitingForUser = false; 
+
+// 【新增】记录上一次抽到的卡，防止连续重复
+let lastCardId = null; 
 
 const $messages = document.getElementById("messages"), $form = document.getElementById("inputBar"), $input = document.getElementById("input");
 const $statusText = document.getElementById("oracleStatus"), $avatarBox = document.getElementById("oracleAvatar"), $oracleNameDisplay = document.getElementById("oracleName");
@@ -328,17 +330,19 @@ const getAllProactive = () => [...DEFAULT_PROACTIVE, ...customProactive];
 const randomChoice = (arr) => arr.length ? arr[Math.floor(Math.random() * arr.length)] : "……";
 const delay = (ms) => new Promise(r => setTimeout(r, ms));
 
-function shuffle(arr){
-  const a = arr.slice();
-  for (let i = a.length - 1; i > 0; i--){ const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; }
-  return a;
-}
-
+// 【核心修改】全新的抽卡函数：纯随机，但绝不连续重复
 function drawCard(){
   const allCards = getAllCards();
   if (allCards.length === 0) return { text: "（命运陷入了一片空白，去设置里加点字卡吧）" };
-  if (bag.length === 0) bag = shuffle(allCards.map(c => c.id));
-  return allCards.find(c => c.id === bag.pop()) || allCards[0];
+  if (allCards.length === 1) return allCards[0]; // 只有一张卡，只能重复
+  
+  // 过滤掉上一次抽到的那张
+  let availableCards = allCards.filter(c => c.id !== lastCardId);
+  
+  // 在剩余卡片中随机抽一张
+  const card = availableCards[Math.floor(Math.random() * availableCards.length)];
+  lastCardId = card.id; // 记录这次抽到的卡
+  return card;
 }
 
 function formatTime(ts) {
@@ -685,7 +689,7 @@ document.getElementById("clearOldDataBtn").onclick = () => {
   if(confirm("这会清理掉以前旧版本遗留的废弃缓存，不会删除现在的聊天和卡片。确定清理吗？")) {
     for (let i = 0; i < localStorage.length; i++) {
       const key = localStorage.key(i);
-      if (key.includes("dream_oracle") && !key.includes("v14")) {
+      if (key.includes("dream_oracle") && !key.includes("v15")) {
         localStorage.removeItem(key);
       }
     }
@@ -700,7 +704,6 @@ function batchAdd(inputId, customArr, key, renderFn) {
   save(key, customArr); document.getElementById(inputId).value = ""; renderFn(); alert(`成功添加 ${lines.length} 条！`);
 }
 
-// 【重构核心】彻底废弃字符串拼接 onclick，改用 addEventListener
 function renderList(listId, arr, deleteCallback) {
   const $l = document.getElementById(listId); 
   $l.innerHTML = "";
@@ -716,10 +719,7 @@ function renderList(listId, arr, deleteCallback) {
     const delBtn = document.createElement("button");
     delBtn.className = "btn-delete";
     delBtn.textContent = "删除";
-    // 直接绑定点击事件，无视任何手机浏览器环境
-    delBtn.addEventListener("click", () => {
-      deleteCallback(i);
-    });
+    delBtn.addEventListener("click", () => { deleteCallback(i); });
     
     d.appendChild(infoDiv);
     d.appendChild(delBtn);
@@ -745,7 +745,7 @@ document.getElementById("saveCardBtn").onclick = () => {
   const text = document.getElementById("newCardBatch").value.trim(); if (!text) return;
   const lines = text.split("\n").map(s => s.trim()).filter(s => s);
   lines.forEach(s => { customCards.push({ id: "c_" + Date.now() + Math.random().toString(36).substr(2, 5), text: s }); });
-  save(KEY_CUSTOM, customCards); document.getElementById("newCardBatch").value = ""; bag = []; renderCustomList(); alert(`成功添加 ${lines.length} 张字卡！`);
+  save(KEY_CUSTOM, customCards); document.getElementById("newCardBatch").value = ""; lastCardId = null; renderCustomList(); alert(`成功添加 ${lines.length} 张字卡！`);
 };
 function renderCustomList() { 
   renderList("customList", customCards, (i) => {
@@ -753,7 +753,7 @@ function renderCustomList() {
       customCards.splice(i, 1); 
       save(KEY_CUSTOM, customCards); 
       renderCustomList(); 
-      bag = []; 
+      lastCardId = null; 
     } 
   }); 
 }
@@ -789,7 +789,6 @@ function renderEmojiList() {
   customEmojis.forEach((base64, index) => {
     const div = document.createElement("div"); div.style.position = "relative";
     div.innerHTML = `<img src="${base64}" style="width:50px; height:50px; object-fit:cover; border-radius:8px; border: 1px solid var(--border);"><button style="position:absolute; top:-5px; right:-5px; background:var(--danger); color:#fff; border:none; border-radius:50%; width:20px; height:20px; font-size:12px; display:flex; align-items:center; justify-content:center; padding:0; cursor:pointer;">×</button>`;
-    // 表情包删除也改成直接绑定事件
     div.querySelector("button").addEventListener("click", () => {
       if(confirm("删除此表情？")) { customEmojis.splice(index, 1); save(KEY_EMOJI, customEmojis); renderEmojiList(); renderEmojis(); }
     });
@@ -814,7 +813,7 @@ document.getElementById("importFile").onchange = (e) => {
       if(data.emojis) { data.emojis.forEach(e => !customEmojis.includes(e) && customEmojis.push(e)); save(KEY_EMOJI, customEmojis); }
       if(data.avatar) { currentAvatar = data.avatar; saveRaw(KEY_AVATAR, currentAvatar); renderAvatar(); }
       if(data.settings) { settings = { ...settings, ...data.settings }; save(KEY_SETTINGS, settings); applySettings(); }
-      bag = []; renderAll(); renderEmojiList(); renderEmojis(); 
+      lastCardId = null; renderAll(); renderEmojiList(); renderEmojis(); 
       alert("导入成功"); document.getElementById("adminPanel").classList.remove("show");
     } catch(e) { alert("文件格式错误"); }
   };
