@@ -32,17 +32,25 @@
   .svg-icon { width: 24px; height: 24px; fill: currentColor; }
   .avatar-svg { width: 100%; height: 100%; padding: 8px; fill: var(--muted); }
 
-  /* 背景层 */
-  #lockBg, #homeBg { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-size: cover; background-position: center; z-index: -2; transition: 0.3s; }
-  #bgMask { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(var(--mask-color), 0.3); z-index: -1; backdrop-filter: blur(5px); }
+  /* ====== 开屏动画 ====== */
+  #splashScreen {
+    position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+    background-color: var(--bg); z-index: 9999;
+    display: flex; flex-direction: column; justify-content: center; align-items: center;
+    transition: opacity 0.8s ease;
+    background-size: cover; background-position: center;
+  }
+  #splashMask { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.4); z-index: -1; backdrop-filter: blur(5px);}
+  #splashTextContainer { text-align: center; font-size: 17px; color: #fff; line-height: 2.2; letter-spacing: 2px; padding: 0 20px; font-family: serif; text-shadow: 0 2px 5px rgba(0,0,0,0.5); z-index: 1;}
+  .splash-line { opacity: 0; transform: translateY(10px); animation: splashFadeUp 0.8s forwards; margin-bottom: 8px; }
+  @keyframes splashFadeUp { to { opacity: 1; transform: translateY(0); } }
+  #splashProgressContainer { position: absolute; bottom: 60px; width: 50%; height: 2px; background-color: rgba(255,255,255,0.2); border-radius: 2px; overflow: hidden; z-index: 1;}
+  #splashProgressBar { width: 0%; height: 100%; background-color: var(--accent); transition: width 0.1s linear; }
+  .splash-fade-out { opacity: 0; pointer-events: none; }
 
-  /* 锁屏 */
-  #lockScreen { position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 9999; display: flex; flex-direction: column; justify-content: center; align-items: center; transition: transform 0.4s ease, opacity 0.4s ease; background: rgba(0,0,0,0.3); }
-  #lockScreen.unlocked { transform: translateY(-100%); opacity: 0; pointer-events: none; }
-  .lock-time { font-size: 80px; font-weight: 200; color: #fff; text-shadow: 0 2px 10px rgba(0,0,0,0.5); margin: 0; }
-  .lock-date { font-size: 18px; color: #fff; text-shadow: 0 1px 5px rgba(0,0,0,0.5); margin-top: 5px; }
-  .unlock-hint { position: absolute; bottom: 50px; color: #fff; font-size: 16px; animation: pulse 2s infinite; cursor: pointer; display: flex; flex-direction: column; align-items: center; gap: 10px; }
-  .unlock-hint svg { transform: rotate(90deg); fill: #fff; width: 30px; height: 30px;}
+  /* 背景层 */
+  #homeBg { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-size: cover; background-position: center; z-index: -2; transition: 0.3s; }
+  #bgMask { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(var(--mask-color), 0.3); z-index: -1; backdrop-filter: blur(5px); }
 
   /* 桌面 */
   #statusBar { display: flex; justify-content: space-between; align-items: center; padding: 10px 20px; font-size: 14px; font-weight: 600; z-index: 10; color: #fff; text-shadow: 0 1px 3px rgba(0,0,0,0.5); position: relative; }
@@ -51,14 +59,13 @@
   #homeScreen { flex: 1; display: flex; flex-direction: column; padding: 20px; z-index: 5; transition: transform 0.3s ease, opacity 0.3s ease; overflow-y: auto; position: relative; }
   #homeScreen.hidden { transform: scale(0.9); opacity: 0; pointer-events: none; }
   
-  /* 桌面小组件区 (修复了 iOS 透明 Bug) */
   #widgetArea { display: flex; flex-direction: column; gap: 15px; margin-bottom: 20px; }
   .widget-card {
     border-radius: 24px; padding: 20px; color: #fff; position: relative;
     background-size: cover; background-position: center;
     box-shadow: 0 8px 32px rgba(0,0,0,0.15); border: 1px solid rgba(255,255,255,0.2);
     display: flex; flex-direction: column; justify-content: space-between; overflow: hidden;
-    -webkit-transform: translateZ(0); transform: translateZ(0); /* 修复白屏 */
+    -webkit-transform: translateZ(0); transform: translateZ(0); 
   }
   .widget-card::before {
     content: ""; position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 0;
@@ -73,7 +80,6 @@
   .clock-time { font-size: 64px; font-weight: 200; letter-spacing: -2px; color: #fff; text-shadow: 0 2px 10px rgba(0,0,0,0.5); }
   [data-theme="light"] .clock-time, [data-theme="cute"] .clock-time { color: var(--text); text-shadow: none; }
 
-  /* App 图标 (修复了 iOS 透明 Bug) */
   .app-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; justify-items: center; }
   .app-icon { display: flex; flex-direction: column; align-items: center; gap: 8px; cursor: pointer; transition: transform 0.1s; position: relative;}
   .app-icon:active { transform: scale(0.9); }
@@ -82,7 +88,7 @@
     background: rgba(255,255,255,0.2); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
     display: flex; justify-content: center; align-items: center; 
     box-shadow: 0 4px 15px rgba(0,0,0,0.1); border: 1px solid rgba(255,255,255,0.3); overflow: hidden; 
-    -webkit-transform: translateZ(0); transform: translateZ(0); /* 修复白屏 */
+    -webkit-transform: translateZ(0); transform: translateZ(0);
   }
   .app-icon svg { width: 32px; height: 32px; fill: #fff; }
   [data-theme="light"] .app-icon svg, [data-theme="cute"] .app-icon svg { fill: var(--accent); }
@@ -200,15 +206,11 @@
 </head>
 <body>
 
-<!-- 锁屏 -->
-<div id="lockBg"></div>
-<div id="lockScreen">
-  <div class="lock-time" id="lockTime">12:00</div>
-  <div class="lock-date" id="lockDate">1月1日 星期一</div>
-  <div class="unlock-hint" onclick="unlockScreen()">
-    <svg class="svg-icon" viewBox="0 0 24 24"><path d="M12 4l-8 8h6v8h4v-8h6z"/></svg>
-    上滑解锁
-  </div>
+<!-- 开屏动画 -->
+<div id="splashScreen">
+  <div id="splashMask"></div>
+  <div id="splashTextContainer"></div>
+  <div id="splashProgressContainer"><div id="splashProgressBar"></div></div>
 </div>
 
 <div id="homeBg"></div>
@@ -369,7 +371,7 @@
   </div>
   <div class="settings-content">
     <div class="section-title">外观与壁纸</div>
-    <div class="form-group"><label>锁屏壁纸</label><input type="file" id="lockBgUpload" accept="image/*"></div>
+    <div class="form-group"><label>开屏动画背景</label><input type="file" id="splashBgUpload" accept="image/*"></div>
     <div class="form-group"><label>桌面壁纸</label><input type="file" id="homeBgUpload" accept="image/*"></div>
     <div class="form-group"><label>通话背景图</label><input type="file" id="callBgUpload" accept="image/*"></div>
     <div class="form-group"><label>界面主题</label>
@@ -380,6 +382,10 @@
       </select>
     </div>
     
+    <div class="section-title">开屏文字自定义（每行一句）</div>
+    <div class="form-group"><textarea id="splashTextsInput" rows="4" placeholder="正在连接梦境...&#10;读取潜意识碎片..."></textarea></div>
+    <button class="admin-btn" onclick="saveSplashTexts()">保存开屏文字</button>
+
     <div class="section-title">桌面小组件 (毛玻璃)</div>
     <div class="form-group"><label>添加图片</label><input type="file" id="widgetImgUpload" accept="image/*"></div>
     <div class="form-group"><label>大标题文字</label><input type="text" id="widgetTextLg" placeholder="如：Hello"></div>
@@ -419,7 +425,8 @@
 /* ================= 安全加载与核心数据 ================= */
 const DEFAULT_SETTINGS = {
   theme: "cute", ignoreRate: 20, recallRate: 10, mailMaxLen: 50, noteMaxLen: 50,
-  lockBg: "", homeBg: "", callBg: "", icons: {}, widgets: []
+  splashBg: "", homeBg: "", callBg: "", icons: {}, widgets: [],
+  splashTexts: ["正在连接梦境...", "读取潜意识碎片...", "命运正在编织...", "准备好了吗？"]
 };
 const DEFAULT_POOLS = { chat: ["顺其自然"], tarot: [], mail: ["风带来了消息"], notes: ["今天阳光很好"] };
 const DEFAULT_CONTACTS = [{ id: "c1", name: "梦占灵体", avatar: "" }];
@@ -446,6 +453,7 @@ let contacts = safeParse("os_contacts", DEFAULT_CONTACTS);
 let chatRecords = safeParse("os_chat_records", DEFAULT_CHAT_RECORDS);
 let customEmojis = safeParse("os_emojis", []);
 if(!Array.isArray(settings.widgets)) settings.widgets = [];
+if(!Array.isArray(settings.splashTexts)) settings.splashTexts = DEFAULT_SETTINGS.splashTexts;
 
 const DEFAULT_TAROT = [
   { name: "0 愚者", meaning: "纯真、冒险、新开始。不要害怕未知，带着信任向前走。" },
@@ -499,6 +507,42 @@ function generatePuzzle(poolName, maxLen) {
   }
   if (result.length > maxLen) result = result.substring(0, maxLen) + "...";
   return result;
+}
+
+/* ================= 开屏动画 ================= */
+function runSplash() {
+  const splash = document.getElementById("splashScreen");
+  const container = document.getElementById("splashTextContainer");
+  const bar = document.getElementById("splashProgressBar");
+  
+  if (settings.splashBg) {
+    splash.style.backgroundImage = `url(${settings.splashBg})`;
+  } else {
+    splash.style.backgroundImage = 'linear-gradient(135deg, #2b1055, #7597de)';
+  }
+  
+  container.innerHTML = "";
+  settings.splashTexts.forEach((text, i) => {
+    const div = document.createElement("div");
+    div.className = "splash-line";
+    div.textContent = text;
+    div.style.animationDelay = (i * 0.8) + 's';
+    container.appendChild(div);
+  });
+
+  let progress = 0;
+  const timer = setInterval(() => {
+    progress += 2;
+    if(progress > 100) progress = 100;
+    bar.style.width = progress + '%';
+  }, 30);
+
+  setTimeout(() => {
+    clearInterval(timer);
+    bar.style.width = '100%';
+    splash.classList.add("splash-fade-out");
+    setTimeout(() => splash.style.display = 'none', 800);
+  }, 3500);
 }
 
 /* ================= 桌面渲染 (优先执行，防卡死) ================= */
@@ -582,11 +626,8 @@ function updateTime() {
   const timeStr = now.getHours().toString().padStart(2, '0') + ":" + now.getMinutes().toString().padStart(2, '0');
   document.getElementById("statusTime").textContent = timeStr;
   document.getElementById("homeTime").textContent = timeStr;
-  document.getElementById("lockTime").textContent = timeStr;
-  document.getElementById("lockDate").textContent = `${now.getMonth()+1}月${now.getDate()}日 星期${['日','一','二','三','四','五','六'][now.getDay()]}`;
 }
 setInterval(updateTime, 1000); updateTime();
-function unlockScreen() { document.getElementById("lockScreen").classList.add("unlocked"); }
 
 function openApp(appId) {
   document.getElementById(appId).classList.add("open");
@@ -767,10 +808,10 @@ async function loadPlaylist() { try { playlist = await dbGetAll(); renderPlaylis
 function renderPlaylist() {
   const list = document.getElementById("playlistItems"); list.innerHTML = "";
   if(playlist.length === 0) { list.innerHTML = '<div style="padding:15px;color:var(--muted);text-align:center;">暂无音乐</div>'; return; }
-  playlist.forEach((song, i) => list.innerHTML += `<div class="playlist-item ${i===currentSongIndex)?'active':''}" onclick="playSong(${ {
-i})">${song.name}</div>` );
+  playlist.forEach((song, i) => list.innerHTML += `<div class="playlist-item ${i===currentSongIndex?'active':''}" onclick="playSong(${i})">${song.name}</div>`);
 }
-function playSong(index if(index < 0 || index >= playlist.length) return;
+function playSong(index) {
+  if(index < 0 || index >= playlist.length) return;
   currentSongIndex = index; audio.src = playlist[index].data; audio.play(); isPlaying = true; updateMusicUI();
   document.getElementById("playlist").classList.remove("open");
 }
@@ -842,7 +883,6 @@ function saveChatRecords() { localStorage.setItem("os_chat_records", JSON.string
 function applyTheme() {
   document.documentElement.setAttribute('data-theme', settings.theme);
   document.getElementById("settingTheme").value = settings.theme;
-  document.getElementById("lockBg").style.backgroundImage = settings.lockBg ? `url(${settings.lockBg})` : 'linear-gradient(135deg, #2b1055, #7597de)';
   document.getElementById("homeBg").style.backgroundImage = settings.homeBg ? `url(${settings.homeBg})` : 'linear-gradient(135deg, #2b1055, #7597de)';
 }
 
@@ -852,7 +892,7 @@ document.getElementById("settingRecall").oninput = (e) => { settings.recallRate 
 document.getElementById("settingMailLen").oninput = (e) => { settings.mailMaxLen = e.target.value; document.getElementById("mailLenLabel").textContent = e.target.value; saveSettings(); };
 document.getElementById("settingNoteLen").oninput = (e) => { settings.noteMaxLen = e.target.value; document.getElementById("noteLenLabel").textContent = e.target.value; saveSettings(); };
 
-document.getElementById("lockBgUpload").onchange = (e) => { const r = new FileReader(); r.onload = ev => { settings.lockBg = ev.target.result; saveSettings(); applyTheme(); }; r.readAsDataURL(e.target.files[0]); };
+document.getElementById("splashBgUpload").onchange = (e) => { const r = new FileReader(); r.onload = ev => { settings.splashBg = ev.target.result; saveSettings(); showToast("开屏背景已保存"); }; r.readAsDataURL(e.target.files[0]); };
 document.getElementById("homeBgUpload").onchange = (e) => { const r = new FileReader(); r.onload = ev => { settings.homeBg = ev.target.result; saveSettings(); applyTheme(); }; r.readAsDataURL(e.target.files[0]); };
 document.getElementById("callBgUpload").onchange = (e) => { const r = new FileReader(); r.onload = ev => { settings.callBg = ev.target.result; saveSettings(); showToast("通话背景已保存"); }; r.readAsDataURL(e.target.files[0]); };
 document.getElementById("emojiUpload").onchange = (e) => {
@@ -864,6 +904,15 @@ document.getElementById("emojiUpload").onchange = (e) => {
   });
   showToast("自定义表情已添加！");
 };
+
+window.saveSplashTexts = () => {
+  const text = document.getElementById("splashTextsInput").value.trim();
+  if(!text) return;
+  settings.splashTexts = text.split("\n").map(s=>s.trim()).filter(s=>s);
+  saveSettings();
+  showToast("开屏文字已保存！下次刷新生效");
+};
+
 window.saveBatchCards = () => {
   const poolName = document.getElementById("poolSelector").value;
   const text = document.getElementById("newCardBatch").value.trim(); if(!text) return;
@@ -875,10 +924,12 @@ window.saveBatchCards = () => {
 try {
   applyTheme(); 
   renderHome();
+  document.getElementById("splashTextsInput").value = settings.splashTexts.join("\n");
   document.getElementById("settingIgnore").value = settings.ignoreRate; document.getElementById("ignoreLabel").textContent = settings.ignoreRate;
   document.getElementById("settingRecall").value = settings.recallRate; document.getElementById("recallLabel").textContent = settings.recallRate;
   document.getElementById("settingMailLen").value = settings.mailMaxLen; document.getElementById("mailLenLabel").textContent = settings.mailMaxLen;
   document.getElementById("settingNoteLen").value = settings.noteMaxLen; document.getElementById("noteLenLabel").textContent = settings.noteMaxLen;
+  runSplash(); // 启动开屏动画
 } catch(e) { console.error("UI初始化失败", e); }
 
 // 2. 异步加载音乐数据库 (不阻塞 UI)
