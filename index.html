@@ -32,7 +32,7 @@
   .svg-icon { width: 24px; height: 24px; fill: currentColor; }
   .avatar-svg { width: 100%; height: 100%; padding: 8px; fill: var(--muted); }
 
-  /* ====== 开屏动画 (绝对不卡死版) ====== */
+  /* ====== 开屏动画 ====== */
   #splashScreen {
     position: fixed; top: 0; left: 0; width: 100%; height: 100%;
     background-color: var(--bg); z-index: 9999;
@@ -40,7 +40,7 @@
     background-size: cover; background-position: center;
   }
   #splashTextContainer { text-align: center; font-size: 17px; color: #fff; line-height: 2.2; letter-spacing: 2px; padding: 0 20px; font-family: serif; text-shadow: 0 2px 5px rgba(0,0,0,0.5); z-index: 1;}
-  .splash-line { opacity: 1; margin-bottom: 8px; } /* 移除入场动画 */
+  .splash-line { opacity: 1; margin-bottom: 8px; }
   #splashProgressContainer { position: absolute; bottom: 60px; width: 50%; height: 2px; background-color: rgba(255,255,255,0.2); border-radius: 2px; overflow: hidden; z-index: 1;}
   #splashProgressBar { width: 0%; height: 100%; background-color: var(--accent); transition: width 0.1s linear; }
 
@@ -56,13 +56,13 @@
   
   #widgetArea { display: flex; flex-direction: column; gap: 15px; margin-bottom: 20px; }
   
-  /* 极简小组件，无滤镜，无动画 */
   .widget-card {
     border-radius: 24px; padding: 20px; color: #fff; position: relative;
     background-size: cover; background-position: center;
     background-color: rgba(255,255,255,0.2);
     box-shadow: 0 4px 10px rgba(0,0,0,0.1); border: 1px solid rgba(255,255,255,0.3);
     display: flex; flex-direction: column; justify-content: space-between; overflow: hidden;
+    min-height: 100px;
   }
   .widget-content { position: relative; z-index: 1; }
   .widget-text-lg { font-size: 24px; font-weight: 600; text-shadow: 0 2px 4px rgba(0,0,0,0.3); }
@@ -74,7 +74,7 @@
 
   .app-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; justify-items: center; }
   .app-icon { display: flex; flex-direction: column; align-items: center; gap: 8px; cursor: pointer; position: relative;}
-  .app-icon:active { opacity: 0.7; } /* 用透明度代替缩放动画 */
+  .app-icon:active { opacity: 0.7; }
   .app-icon .icon-box { 
     width: 60px; height: 60px; border-radius: 16px; 
     background: rgba(255,255,255,0.2);
@@ -88,16 +88,14 @@
   [data-theme="light"] .app-icon .app-name, [data-theme="cute"] .app-icon .app-name { color: var(--text); text-shadow: none; }
   .edit-icon-btn { position: absolute; top: -5px; right: 5px; background: var(--accent); color: #fff; border-radius: 50%; width: 18px; height: 18px; display: flex; justify-content: center; align-items: center; font-size: 14px; z-index: 2; border: 2px solid var(--bg); }
 
-  /* ====== App 容器（最稳定方案） ====== */
+  /* ====== App 容器 ====== */
   .app-container { 
     position: fixed; top: 0; left: 0; width: 100%; height: 100%;
     background: var(--bg); z-index: 50; 
     display: none; 
     flex-direction: column; 
   }
-  .app-container.open { 
-    display: flex; 
-  }
+  .app-container.open { display: flex; }
   
   .app-header { display: flex; align-items: center; padding: 15px 16px; background: var(--panel); border-bottom: 1px solid var(--border); gap: 15px; z-index: 10;}
   .back-btn { background: none; border: none; font-size: 20px; color: var(--accent); cursor: pointer; display: flex; align-items: center; padding: 0; }
@@ -209,12 +207,6 @@
 
 <div id="homeBg"></div>
 <div id="bgMask"></div>
-
-<!-- 悬浮通话窗 -->
-<div id="floatingCall" style="display:none;" onclick="openApp('app-call')">
-  <div class="float-avatar" style="display:flex;justify-content:center;align-items:center;"><svg class="svg-icon" viewBox="0 0 24 24"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg></div>
-  <button class="float-end" onclick="event.stopPropagation(); hangupCall();">✖</button>
-</div>
 
 <!-- 状态栏 -->
 <div id="statusBar">
@@ -380,7 +372,7 @@
     <div class="form-group"><textarea id="splashTextsInput" rows="4" placeholder="正在连接梦境...&#10;读取潜意识碎片..."></textarea></div>
     <button class="admin-btn" onclick="saveSplashTexts()">保存开屏文字</button>
 
-    <div class="section-title">桌面小组件 (毛玻璃)</div>
+    <div class="section-title">桌面小组件 (磨砂感)</div>
     <div class="form-group"><label>添加图片</label><input type="file" id="widgetImgUpload" accept="image/*"></div>
     <div class="form-group"><label>大标题文字</label><input type="text" id="widgetTextLg" placeholder="如：Hello"></div>
     <div class="form-group"><label>小标题文字</label><input type="text" id="widgetTextSm" placeholder="如：今天也要开心"></div>
@@ -419,7 +411,9 @@
 /* ================= 安全加载与核心数据 ================= */
 const DEFAULT_SETTINGS = {
   theme: "cute", ignoreRate: 20, recallRate: 10, mailMaxLen: 50, noteMaxLen: 50,
-  splashBg: "", homeBg: "", callBg: "", icons: {}, widgets: [],
+  splashBg: "", homeBg: "", callBg: "", icons: {}, 
+  // 【关键改动】：默认带一个欢迎小组件
+  widgets: [{ img: "", textLg: "Hello", textSm: "今天也要开心哦" }],
   splashTexts: ["正在连接梦境...", "读取潜意识碎片...", "命运正在编织...", "准备好了吗？"]
 };
 const DEFAULT_POOLS = { chat: ["顺其自然"], tarot: [], mail: ["风带来了消息"], notes: ["今天阳光很好"] };
@@ -446,7 +440,12 @@ let pools = safeParse("os_pools", DEFAULT_POOLS);
 let contacts = safeParse("os_contacts", DEFAULT_CONTACTS);
 let chatRecords = safeParse("os_chat_records", DEFAULT_CHAT_RECORDS);
 let customEmojis = safeParse("os_emojis", []);
-if(!Array.isArray(settings.widgets)) settings.widgets = [];
+
+// 强制修复：如果 widgets 是空的，塞一个默认的，防止用户看不到
+if(!Array.isArray(settings.widgets) || settings.widgets.length === 0) {
+  settings.widgets = [{ img: "", textLg: "Hello", textSm: "今天也要开心哦" }];
+  localStorage.setItem("os_settings", JSON.stringify(settings));
+}
 if(!Array.isArray(settings.splashTexts)) settings.splashTexts = DEFAULT_SETTINGS.splashTexts;
 
 const DEFAULT_TAROT = [
@@ -535,7 +534,7 @@ function runSplash() {
     bar.style.width = '100%';
     splash.style.opacity = '0';
     setTimeout(() => { splash.style.display = 'none'; splash.remove(); }, 500);
-  }, 3000); // 缩短到 3 秒强制关闭
+  }, 3000);
 }
 
 /* ================= 桌面渲染 ================= */
@@ -607,6 +606,7 @@ window.addWidget = () => {
     document.getElementById("widgetTextLg").value = "";
     document.getElementById("widgetTextSm").value = "";
     imgInp.value = "";
+    showToast("小组件已添加！");
   };
   if (imgInp.files && imgInp.files[0]) {
     const r = new FileReader(); r.onload = e => process(e.target.result); r.readAsDataURL(imgInp.files[0]);
