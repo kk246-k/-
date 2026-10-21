@@ -7,24 +7,24 @@
 <style>
   :root, [data-theme="dark"] {
     --bg: #12101a; --panel: rgba(30, 27, 41, 0.95); --user: #4a3f6b; --user-text: #ffffff; --oracle: rgba(42, 36, 56, 0.9);
-    --text: #e8e3f0; --muted: #9a92b0; --accent: #d4af7a; --border: #3d3552; --icon-bg: rgba(255,255,255,0.1);
+    --text: #e8e3f0; --muted: #9a92b0; --accent: #d4af7a; --border: #3d3552; --icon-bg: rgba(255,255,255,0.15);
     --danger: #e05353; --mask-color: 18, 16, 26;
   }
   [data-theme="light"] {
     --bg: #f5f2eb; --panel: rgba(255, 255, 255, 0.95); --user: #e8e2d5; --user-text: #333333; --oracle: rgba(255, 255, 255, 0.9);
-    --text: #333333; --muted: #888888; --accent: #8b5a2b; --border: #dcd5c8; --icon-bg: rgba(0,0,0,0.05);
+    --text: #333333; --muted: #888888; --accent: #8b5a2b; --border: #dcd5c8; --icon-bg: rgba(0,0,0,0.08);
     --mask-color: 255, 255, 255;
   }
   [data-theme="cute"] {
     --bg: #fff5f6; --panel: rgba(255, 255, 255, 0.95); --user: #ffb7c5; --user-text: #5d4037; --oracle: rgba(255, 255, 255, 0.95);
-    --text: #5d4037; --muted: #a1887f; --accent: #f06292; --border: #f8bbd0; --icon-bg: rgba(240, 98, 146, 0.1);
+    --text: #5d4037; --muted: #a1887f; --accent: #f06292; --border: #f8bbd0; --icon-bg: rgba(240, 98, 146, 0.15);
     --mask-color: 255, 255, 255;
   }
 
   *{box-sizing:border-box; -webkit-tap-highlight-color: transparent;}
   html,body{height:100%;margin:0}
   body{
-    display:flex;flex-direction:column;height:100dvh;
+    display:flex;flex-direction:column;height:100vh; height:100dvh;
     color:var(--text); font-family:system-ui,-apple-system,"PingFang SC",sans-serif;
     position: relative; background-color: var(--bg); overflow: hidden;
   }
@@ -40,7 +40,6 @@
     transition: opacity 0.8s ease;
     background-size: cover; background-position: center;
   }
-  #splashMask { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.4); z-index: -1; backdrop-filter: blur(5px);}
   #splashTextContainer { text-align: center; font-size: 17px; color: #fff; line-height: 2.2; letter-spacing: 2px; padding: 0 20px; font-family: serif; text-shadow: 0 2px 5px rgba(0,0,0,0.5); z-index: 1;}
   .splash-line { opacity: 0; transform: translateY(10px); animation: splashFadeUp 0.8s forwards; margin-bottom: 8px; }
   @keyframes splashFadeUp { to { opacity: 1; transform: translateY(0); } }
@@ -50,27 +49,24 @@
 
   /* 背景层 */
   #homeBg { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-size: cover; background-position: center; z-index: -2; transition: 0.3s; }
-  #bgMask { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(var(--mask-color), 0.3); z-index: -1; backdrop-filter: blur(5px); }
+  #bgMask { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(var(--mask-color), 0.3); z-index: -1; }
 
   /* 桌面 */
   #statusBar { display: flex; justify-content: space-between; align-items: center; padding: 10px 20px; font-size: 14px; font-weight: 600; z-index: 10; color: #fff; text-shadow: 0 1px 3px rgba(0,0,0,0.5); position: relative; }
   [data-theme="light"] #statusBar, [data-theme="cute"] #statusBar { color: var(--text); text-shadow: none; }
   
-  #homeScreen { flex: 1; display: flex; flex-direction: column; padding: 20px; z-index: 5; transition: transform 0.3s ease, opacity 0.3s ease; overflow-y: auto; position: relative; }
+  #homeScreen { flex: 1; display: flex; flex-direction: column; padding: 20px; z-index: 5; transition: transform 0.3s ease, opacity 0.3s ease; overflow-y: auto; position: relative; height: 100%; }
   #homeScreen.hidden { transform: scale(0.9); opacity: 0; pointer-events: none; }
   
   #widgetArea { display: flex; flex-direction: column; gap: 15px; margin-bottom: 20px; }
+  
+  /* 修复：移除 backdrop-filter，改用半透明底色，完美兼容 iOS */
   .widget-card {
     border-radius: 24px; padding: 20px; color: #fff; position: relative;
     background-size: cover; background-position: center;
-    box-shadow: 0 8px 32px rgba(0,0,0,0.15); border: 1px solid rgba(255,255,255,0.2);
+    background-color: rgba(255,255,255,0.2); /* 磨砂质感底色 */
+    box-shadow: 0 8px 32px rgba(0,0,0,0.15); border: 1px solid rgba(255,255,255,0.3);
     display: flex; flex-direction: column; justify-content: space-between; overflow: hidden;
-    -webkit-transform: translateZ(0); transform: translateZ(0); 
-  }
-  .widget-card::before {
-    content: ""; position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 0;
-    backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
-    -webkit-transform: translateZ(0); transform: translateZ(0);
   }
   .widget-content { position: relative; z-index: 1; }
   .widget-text-lg { font-size: 24px; font-weight: 600; text-shadow: 0 2px 4px rgba(0,0,0,0.3); }
@@ -85,10 +81,9 @@
   .app-icon:active { transform: scale(0.9); }
   .app-icon .icon-box { 
     width: 60px; height: 60px; border-radius: 16px; 
-    background: rgba(255,255,255,0.2); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
+    background: rgba(255,255,255,0.2); /* 磨砂质感底色 */
     display: flex; justify-content: center; align-items: center; 
     box-shadow: 0 4px 15px rgba(0,0,0,0.1); border: 1px solid rgba(255,255,255,0.3); overflow: hidden; 
-    -webkit-transform: translateZ(0); transform: translateZ(0);
   }
   .app-icon svg { width: 32px; height: 32px; fill: #fff; }
   [data-theme="light"] .app-icon svg, [data-theme="cute"] .app-icon svg { fill: var(--accent); }
@@ -98,7 +93,11 @@
   .edit-icon-btn { position: absolute; top: -5px; right: 5px; background: var(--accent); color: #fff; border-radius: 50%; width: 18px; height: 18px; display: flex; justify-content: center; align-items: center; font-size: 14px; z-index: 2; border: 2px solid var(--bg); }
 
   /* App 容器 */
-  .app-container { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: var(--bg); z-index: 50; display: flex; flex-direction: column; transform: translateY(100%); transition: transform 0.3s cubic-bezier(0.1, 0.7, 0.1, 1); }
+  .app-container { 
+    position: fixed; top: 0; left: 0; width: 100%; height: 100%; height: 100dvh;
+    background: var(--bg); z-index: 50; display: flex; flex-direction: column; 
+    transform: translateY(100%); transition: transform 0.3s cubic-bezier(0.1, 0.7, 0.1, 1); 
+  }
   .app-container.open { transform: translateY(0); }
   .app-header { display: flex; align-items: center; padding: 15px 16px; background: var(--panel); border-bottom: 1px solid var(--border); gap: 15px; z-index: 10;}
   .back-btn { background: none; border: none; font-size: 20px; color: var(--accent); cursor: pointer; display: flex; align-items: center; padding: 0; }
@@ -158,11 +157,11 @@
 
   /* 通话 */
   #app-call { background: #1a1a1a; color: #fff; background-size: cover; background-position: center; position: relative;}
-  #callOverlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); z-index: 0; backdrop-filter: blur(5px); -webkit-transform: translateZ(0);}
+  #callOverlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); z-index: 0;}
   .call-content { position: relative; z-index: 1; flex: 1; display: flex; flex-direction: column; justify-content: center; align-items: center; }
 
   /* 音乐 */
-  #app-music { background: linear-gradient(180deg, var(--panel), var(--bg)); align-items: center; justify-content: center; }
+  #app-music { background: var(--bg); align-items: center; justify-content: center; }
   .music-player { width: 85%; max-width: 320px; background: var(--panel); border-radius: 20px; padding: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.2); text-align: center; position: relative;}
   .music-cover { width: 160px; height: 160px; border-radius: 50%; background: var(--icon-bg); margin: 0 auto 20px; display: flex; justify-content: center; align-items: center; border: 4px solid var(--border); overflow: hidden; animation: spin 10s linear infinite paused; }
   .music-cover.playing { animation-play-state: running; }
@@ -208,7 +207,6 @@
 
 <!-- 开屏动画 -->
 <div id="splashScreen">
-  <div id="splashMask"></div>
   <div id="splashTextContainer"></div>
   <div id="splashProgressContainer"><div id="splashProgressBar"></div></div>
 </div>
@@ -386,7 +384,7 @@
     <div class="form-group"><textarea id="splashTextsInput" rows="4" placeholder="正在连接梦境...&#10;读取潜意识碎片..."></textarea></div>
     <button class="admin-btn" onclick="saveSplashTexts()">保存开屏文字</button>
 
-    <div class="section-title">桌面小组件 (毛玻璃)</div>
+    <div class="section-title">桌面小组件 (磨砂感)</div>
     <div class="form-group"><label>添加图片</label><input type="file" id="widgetImgUpload" accept="image/*"></div>
     <div class="form-group"><label>大标题文字</label><input type="text" id="widgetTextLg" placeholder="如：Hello"></div>
     <div class="form-group"><label>小标题文字</label><input type="text" id="widgetTextSm" placeholder="如：今天也要开心"></div>
@@ -541,11 +539,12 @@ function runSplash() {
     clearInterval(timer);
     bar.style.width = '100%';
     splash.classList.add("splash-fade-out");
-    setTimeout(() => splash.style.display = 'none', 800);
+    // 彻底移除 DOM，防残留
+    setTimeout(() => { splash.style.display = 'none'; splash.remove(); }, 800);
   }, 3500);
 }
 
-/* ================= 桌面渲染 (优先执行，防卡死) ================= */
+/* ================= 桌面渲染 ================= */
 const APP_CONFIG = [
   { id: "app-contacts", name: "梦占通讯", svg: '<path d="M20 2H4c-1.1 0-2 .9-2 2v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2z"/>' },
   { id: "app-music", name: "一起听歌", svg: '<path d="M12 3v10.55c-.59-.34-1.27-.55-2-.55-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4V7h4V3h-6z"/>' },
@@ -590,6 +589,7 @@ function renderWidgets() {
     const div = document.createElement("div");
     div.className = "widget-card";
     div.style.backgroundImage = w.img ? `url(${w.img})` : 'none';
+    // 如果没有图片，使用半透明白色背景
     if(!w.img) div.style.backgroundColor = 'rgba(255,255,255,0.2)';
     div.innerHTML = `
       <div class="widget-content" style="text-align: ${w.img ? 'left' : 'center'};">
@@ -920,7 +920,7 @@ window.saveBatchCards = () => {
   savePools(); document.getElementById("newCardBatch").value = ""; alert(`已保存到 ${poolName} 卡池！`);
 };
 
-// 1. 优先渲染 UI 界面 (防止卡白屏)
+// 1. 优先渲染 UI 界面
 try {
   applyTheme(); 
   renderHome();
@@ -929,10 +929,10 @@ try {
   document.getElementById("settingRecall").value = settings.recallRate; document.getElementById("recallLabel").textContent = settings.recallRate;
   document.getElementById("settingMailLen").value = settings.mailMaxLen; document.getElementById("mailLenLabel").textContent = settings.mailMaxLen;
   document.getElementById("settingNoteLen").value = settings.noteMaxLen; document.getElementById("noteLenLabel").textContent = settings.noteMaxLen;
-  runSplash(); // 启动开屏动画
+  runSplash(); 
 } catch(e) { console.error("UI初始化失败", e); }
 
-// 2. 异步加载音乐数据库 (不阻塞 UI)
+// 2. 异步加载音乐数据库
 (async function initDBAndMusic() {
   try { await initDB(); await loadPlaylist(); } catch(e) { console.warn("音乐模块加载失败", e); }
 })();
