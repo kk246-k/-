@@ -287,7 +287,7 @@
       <button type="button" class="btn-tool" id="emojiBtn" title="表情"><svg class="svg-icon" viewBox="0 0 24 24"><path d="M11.99 2C6.47 2 2 6.48 2 12s4.47 10 9.99 10C17.52 22 22 17.52 22 12S17.52 2 11.99 2zM12 20c-4.42 0-8-3.58-8-8s3.58-8 8-8 8 3.58 8 8-3.58 8-8 8zm3.5-9c.83 0 1.5-.67 1.5-1.5S16.33 8 15.5 8 14 8.67 14 9.5s.67 1.5 1.5 1.5zm-7 0c.83 0 1.5-.67 1.5-1.5S9.33 8 8.5 8 7 8.67 7 9.5 7.67 11 8.5 11zm3.5 6.5c2.33 0 4.31-1.46 5.11-3.5H6.89c.8 2.04 2.78 3.5 5.11 3.5z"/></svg></button>
       <button type="button" class="btn-tool" id="inviteMusicBtn" title="一起听歌"><svg class="svg-icon" viewBox="0 0 24 24"><path d="M12 3v10.55c-.59-.34-1.27-.55-2-.55-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4V7h4V3h-6z"/></svg></button>
       <input type="text" id="input" placeholder="发送消息…" autocomplete="off">
-      <button class="send" type="button" id="sendBtn" onclick="sendMessage()">发送</button>
+      <button class="send" type="button" id="sendBtn">发送</button>
     </form>
   </div>
 </div>
@@ -479,7 +479,7 @@
 </div>
 
 <script>
-/* ================= 基础数据与工具函数 ================= */
+/* ================= 全局变量与常量（全部前置，绝对安全） ================= */
 const DEFAULT_SETTINGS = {
   theme: "cute", ignoreRate: 20, recallRate: 10, proactiveRate: 20, minReplyTime: 1, maxReplyTime: 3, mailMaxLen: 50, noteMaxLen: 50,
   splashBg: "", homeBg: "", chatBg: "", callBg: "", icons: {}, 
@@ -490,6 +490,55 @@ const DEFAULT_POOLS = { chat: ["顺其自然"], tarot: [], mail: ["风带来了�
 const DEFAULT_CONTACTS = [{ id: "c1", name: "梦占灵体", avatar: "" }];
 const DEFAULT_CHAT_RECORDS = { "c1": [] };
 
+const APP_CONFIG = [
+  { id: "app-contacts", name: "梦占通讯", svg: '<path d="M20 2H4c-1.1 0-2 .9-2 2v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2z"/>' },
+  { id: "app-music", name: "一起听歌", svg: '<path d="M12 3v10.55c-.59-.34-1.27-.55-2-.55-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4V7h4V3h-6z"/>' },
+  { id: "app-tarot", name: "韦特塔罗", svg: '<path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-7 14l-4-4 1.41-1.41L12 14.17l4.59-4.59L18 11l-6 6z"/>' },
+  { id: "app-mail", name: "神秘信箱", svg: '<path d="M20 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4l-8 5-8-5V6l8 5 8-5v2z"/>' },
+  { id: "app-notes", name: "神谕便签", svg: '<path d="M14 2H6c-1.1 0-1.99.9-1.99 2L4 20c0 1.1.89 2 1.99 2H18c1.1 0 2-.9 2-2V8l-6-6zm2 16H8v-2h8v2zm0-4H8v-2h8v2zm-3-5V3.5L18.5 9H13z"/>' },
+  { id: "app-call", name: "占卜热线", svg: '<path d="M6.62 10.79c1.44 2.83 3.76 5.14 6.59 6.59l2.2-2.2c.27-.27.67-.36 1.02-.24 1.12.37 2.33.57 3.57.57.55 0 1 .45 1 1V20c0 .55-.45 1-1 1-9.39 0-17-7.61-17-17 0-.55.45-1 1-1h3.5c.55 0 1 .45 1 1 0 1.25.2 2.45.57 3.57.11.35.03.74-.25 1.02l-2.2 2.2z"/>' },
+  { id: "app-settings", name: "系统设置", svg: '<path d="M19.14,12.94c0.04-0.3,0.06-0.61,0.06-0.94c0-0.32-0.02-0.64-0.06-0.94l2.03-1.58c0.18-0.14,0.23-0.41,0.12-0.61 l-1.92-3.32c-0.12-0.22-0.37-0.29-0.59-0.22l-2.39,0.96c-0.5-0.38-1.03-0.7-1.62-0.94L14.4,2.81c-0.04-0.24-0.24-0.41-0.48-0.41 h-3.84c-0.24,0-0.43,0.17-0.47,0.41L9.25,5.35C8.66,5.59,8.12,5.92,7.63,6.29L5.24,5.33c-0.22-0.08-0.47,0-0.59,0.22L2.73,8.87 C2.62,9.08,2.66,9.34,2.86,9.48l2.03,1.58C4.84,11.36,4.8,11.69,4.8,12s0.02,0.64,0.06,0.94l-2.03,1.58 c-0.18,0.14-0.23,0.41-0.12,0.61l1.92,3.32c0.12,0.22,0.37,0.29,0.59,0.22l2.39-0.96c0.5,0.38,1.03,0.7,1.62,0.94l0.36,2.54 c0.05,0.24,0.24,0.41,0.48,0.41h3.84c0.24,0,0.43-0.17,0.47-0.41l0.36-2.54c0.59-0.24,1.13-0.56,1.62-0.94l2.39,0.96 c0.22,0.08,0.47,0,0.59-0.22l1.92-3.32c0.12-0.22,0.07-0.49-0.12-0.61L19.14,12.94z M12,15.6c-1.98,0-3.6-1.62-3.6-3.6 s1.62-3.6,3.6-3.6s3.6,1.62,3.6,3.6S13.98,15.6,12,15.6z"/>' }
+];
+
+const DEFAULT_TAROT = [
+  { name: "0 愚者", meaning: "纯真、冒险、新开始。不要害怕未知，带着信任向前走。" },
+  { name: "I 魔术师", meaning: "创造力、行动力。你拥有实现目标的所有资源，现在行动吧。" },
+  { name: "II 女祭司", meaning: "直觉、潜意识。答案在内心里，静下心来倾听。" },
+  { name: "III 皇后", meaning: "丰盛、孕育。事情将开花结果，享受美好与富足。" },
+  { name: "IV 皇帝", meaning: "秩序、权威。需要建立规则，理智地掌控局面。" },
+  { name: "V 教皇", meaning: "指引、传统。寻求有经验的人的帮助。" },
+  { name: "VI 恋人", meaning: "结合、选择。面临重要的抉择或关系深化。" },
+  { name: "VII 战车", meaning: "意志、胜利。只要有决心，就能克服一切困难。" },
+  { name: "VIII 力量", meaning: "勇气、包容。用温柔和耐心降服困难。" },
+  { name: "IX 隐士", meaning: "内省、独处。退回内心反思，寻找内心的光。" },
+  { name: "X 命运之轮", meaning: "转变、契机。顺应变化，好运即将到来。" },
+  { name: "XI 正义", meaning: "平衡、因果。种什么因得什么果。" },
+  { name: "XII 倒吊人", meaning: "牺牲、换位。换个角度看问题，停滞是为了收获。" },
+  { name: "XIII 死神", meaning: "结束、新生。放下过去才能迎来新生。" },
+  { name: "XIV 节制", meaning: "调和、中庸。慢慢磨合，保持平衡。" },
+  { name: "XV 恶魔", meaning: "诱惑、束缚。看清欲望的真相，解脱自己。" },
+  { name: "XVI 高塔", meaning: "突变、破坏。打破虚假的稳定，为了重建。" },
+  { name: "XVII 星星", meaning: "希望、疗愈。黑暗中有曙光，一切都会好起来。" },
+  { name: "XVIII 月亮", meaning: "不安、未知。恐惧浮现，需防范欺骗。" },
+  { name: "XIX 太阳", meaning: "成功、喜悦。充满活力与成功，享受快乐。" },
+  { name: "XX 审判", meaning: "唤醒、复活。过去的努力得到回报。" },
+  { name: "XXI 世界", meaning: "圆满、完成。达成目标，享受成功的喜悦。" }
+];
+
+const STATUS_LIST = ["正在凝视深渊", "刚刚苏醒", "心情不错", "有点困了", "正在思考", "不想理你"];
+const DEFAULT_EMOJIS = ["😀","😅","😂","😍","😎","😭","😡","👍","🙏","💖","🎉","🔮"];
+const PROACTIVE_MSGS = ["在干嘛？", "今天过得怎么样？", "突然想见你。", "怎么不理我？"];
+
+let currentChatId = "c1";
+let currentQuote = null;
+let isWaitingForUser = false;
+let selectedMsgId = null;
+let statusInterval;
+let playlist = []; 
+let currentSongIndex = -1;
+let isPlaying = false;
+
+/* ================= 安全加载与核心数据 ================= */
 function safeParse(key, defaultVal) {
   try {
     const data = localStorage.getItem(key);
@@ -525,14 +574,7 @@ if (!Array.isArray(customEmojis)) customEmojis = [];
 if(typeof pools !== 'object' || pools === null) pools = DEFAULT_POOLS;
 for(let p in DEFAULT_POOLS) { if(!Array.isArray(pools[p])) pools[p] = []; }
 
-let currentChatId = "c1";
-let currentQuote = null;
-let isWaitingForUser = false;
-let selectedMsgId = null;
-let playlist = []; 
-let currentSongIndex = -1;
-let isPlaying = false;
-
+/* ================= 工具函数 ================= */
 function getTodayDateStr() {
   const now = new Date();
   return `${now.getFullYear()}/${(now.getMonth()+1).toString().padStart(2,'0')}/${now.getDate().toString().padStart(2,'0')}`;
@@ -540,6 +582,18 @@ function getTodayDateStr() {
 function getTodayTimeStr() {
   const now = new Date();
   return now.getHours().toString().padStart(2, '0') + ":" + now.getMinutes().toString().padStart(2, '0');
+}
+function saveSettings() { try { localStorage.setItem("os_settings", JSON.stringify(settings)); } catch(e) { showToast("空间不足"); } }
+function savePools() { localStorage.setItem("os_pools", JSON.stringify(pools)); }
+function saveContacts() { localStorage.setItem("os_contacts", JSON.stringify(contacts)); }
+function saveChatRecords() { localStorage.setItem("os_chat_records", JSON.stringify(chatRecords)); }
+
+function showToast(msg) {
+  const $t = document.getElementById("toast");
+  if(!$t) return;
+  $t.textContent = msg;
+  $t.classList.add("show");
+  setTimeout(() => $t.classList.remove("show"), 2000);
 }
 
 function compressImage(file, maxSize, callback) {
@@ -581,20 +635,7 @@ function generatePuzzle(poolName, maxLen) {
   return result;
 }
 
-function saveSettings() { try { localStorage.setItem("os_settings", JSON.stringify(settings)); } catch(e) { showToast("空间不足"); } }
-function savePools() { localStorage.setItem("os_pools", JSON.stringify(pools)); }
-function saveContacts() { localStorage.setItem("os_contacts", JSON.stringify(contacts)); }
-function saveChatRecords() { localStorage.setItem("os_chat_records", JSON.stringify(chatRecords)); }
-
-function showToast(msg) {
-  const $t = document.getElementById("toast");
-  if(!$t) return;
-  $t.textContent = msg;
-  $t.classList.add("show");
-  setTimeout(() => $t.classList.remove("show"), 2000);
-}
-
-/* ================= UI 渲染核心函数 ================= */
+/* ================= UI 渲染函数 ================= */
 function applyTheme() {
   document.documentElement.setAttribute('data-theme', settings.theme || 'cute');
   const themeSel = document.getElementById("settingTheme");
@@ -688,7 +729,7 @@ function updateTime() {
 }
 setInterval(updateTime, 1000); updateTime();
 
-function openApp(appId) {
+window.openApp = function(appId) {
   document.getElementById(appId).classList.add("open");
   document.getElementById("homeScreen").style.display = "none";
   if(appId === 'app-contacts') renderContacts();
@@ -698,14 +739,12 @@ function openApp(appId) {
   if(appId === 'app-call') startCall();
   if(appId === 'app-chat') { updateStatusBar(); scrollToBottom(); }
 }
-function closeApp(appId) {
+window.closeApp = function(appId) {
   document.getElementById(appId).classList.remove("open");
   document.getElementById("homeScreen").style.display = "flex";
 }
 
 /* ================= 通讯与聊天 ================= */
-let statusInterval;
-const STATUS_LIST = ["正在凝视深渊", "刚刚苏醒", "心情不错", "有点困了", "正在思考", "不想理你"];
 function updateStatusBar() {
   const bar = document.getElementById("oracleStatusBar");
   if(!bar) return;
@@ -723,14 +762,14 @@ function renderContacts() {
     list.innerHTML += `<div class="contact-item" onclick="switchChat('${c.id}')"><div class="contact-avatar">${av}</div><div class="contact-info"><div class="contact-name">${c.name}</div><div class="contact-last">${lastMsg}</div></div></div>`;
   });
 }
-function addContact() {
+window.addContact = function() {
   const name = prompt("输入新联系人名称：", "新联系人"); if(!name) return;
   const id = "c_" + Date.now();
   contacts.push({id, name, avatar: ""}); 
   chatRecords[id] = [];
   saveContacts(); renderContacts();
 }
-function switchChat(id) {
+window.switchChat = function(id) {
   currentChatId = id;
   if(!chatRecords[currentChatId]) chatRecords[currentChatId] = [];
   
@@ -769,7 +808,7 @@ function getRandomDelay() {
   return min + Math.random() * (max - min);
 }
 
-function sendMessage() {
+window.sendMessage = function() {
   try {
     const inputEl = document.getElementById("input");
     if(!inputEl) return;
@@ -818,8 +857,6 @@ function sendMessage() {
   }
 }
 
-/* 主动发消息 */
-const PROACTIVE_MSGS = ["在干嘛？", "今天过得怎么样？", "突然想见你。", "怎么不理我？"];
 setInterval(() => {
   if(isWaitingForUser) return; 
   if(document.getElementById("homeScreen").style.display === "none" && !document.getElementById("app-chat").classList.contains("open")) return; 
@@ -836,7 +873,6 @@ setInterval(() => {
   }
 }, 30000);
 
-/* 消息操作与引用 */
 document.getElementById("messages")?.addEventListener("click", (e) => {
   const bubble = e.target.closest(".msg-bubble"); if (!bubble) return;
   selectedMsgId = bubble.getAttribute("data-id");
@@ -858,8 +894,6 @@ document.getElementById("actRecall") && (document.getElementById("actRecall").on
 document.getElementById("closeQuote") && (document.getElementById("closeQuote").onclick = () => clearQuote());
 function clearQuote() { currentQuote = null; const p = document.getElementById("quotePreview"); if(p) p.classList.remove("show"); }
 
-/* 表情包 */
-const DEFAULT_EMOJIS = ["😀","😅","😂","😍","😎","😭","😡","👍","🙏","💖","🎉","🔮"];
 function renderEmojiPanel() {
   const panel = document.getElementById("emojiPanel"); if(!panel) return;
   panel.innerHTML = "";
@@ -878,31 +912,7 @@ function sendEmojiImg(src) {
 document.getElementById("emojiBtn") && (document.getElementById("emojiBtn").onclick = () => { renderEmojiPanel(); document.getElementById("emojiPanel").classList.toggle("show"); });
 
 /* ================= 塔罗 ================= */
-const DEFAULT_TAROT = [
-  { name: "0 愚者", meaning: "纯真、冒险、新开始。不要害怕未知，带着信任向前走。" },
-  { name: "I 魔术师", meaning: "创造力、行动力。你拥有实现目标的所有资源，现在行动吧。" },
-  { name: "II 女祭司", meaning: "直觉、潜意识。答案在内心里，静下心来倾听。" },
-  { name: "III 皇后", meaning: "丰盛、孕育。事情将开花结果，享受美好与富足。" },
-  { name: "IV 皇帝", meaning: "秩序、权威。需要建立规则，理智地掌控局面。" },
-  { name: "V 教皇", meaning: "指引、传统。寻求有经验的人的帮助。" },
-  { name: "VI 恋人", meaning: "结合、选择。面临重要的抉择或关系深化。" },
-  { name: "VII 战车", meaning: "意志、胜利。只要有决心，就能克服一切困难。" },
-  { name: "VIII 力量", meaning: "勇气、包容。用温柔和耐心降服困难。" },
-  { name: "IX 隐士", meaning: "内省、独处。退回内心反思，寻找内心的光。" },
-  { name: "X 命运之轮", meaning: "转变、契机。顺应变化，好运即将到来。" },
-  { name: "XI 正义", meaning: "平衡、因果。种什么因得什么果。" },
-  { name: "XII 倒吊人", meaning: "牺牲、换位。换个角度看问题，停滞是为了收获。" },
-  { name: "XIII 死神", meaning: "结束、新生。放下过去才能迎来新生。" },
-  { name: "XIV 节制", meaning: "调和、中庸。慢慢磨合，保持平衡。" },
-  { name: "XV 恶魔", meaning: "诱惑、束缚。看清欲望的真相，解脱自己。" },
-  { name: "XVI 高塔", meaning: "突变、破坏。打破虚假的稳定，为了重建。" },
-  { name: "XVII 星星", meaning: "希望、疗愈。黑暗中有曙光，一切都会好起来。" },
-  { name: "XVIII 月亮", meaning: "不安、未知。恐惧浮现，需防范欺骗。" },
-  { name: "XIX 太阳", meaning: "成功、喜悦。充满活力与成功，享受快乐。" },
-  { name: "XX 审判", meaning: "唤醒、复活。过去的努力得到回报。" },
-  { name: "XXI 世界", meaning: "圆满、完成。达成目标，享受成功的喜悦。" }
-];
-function drawTarot() {
+window.drawTarot = function() {
   const q = document.getElementById("tarotQuestion").value.trim();
   const count = parseInt(document.getElementById("tarotCount").value);
   const area = document.getElementById("tarotResultArea");
@@ -952,19 +962,19 @@ function renderPlaylist() {
   if(playlist.length === 0) { list.innerHTML = '<div style="padding:15px;color:var(--muted);text-align:center;">暂无音乐</div>'; return; }
   playlist.forEach((song, i) => list.innerHTML += `<div class="playlist-item ${i===currentSongIndex?'active':''}" onclick="playSong(${i})">${song.name}</div>`);
 }
-function playSong(index) {
+window.playSong = function(index) {
   if(index < 0 || index >= playlist.length) return;
   currentSongIndex = index; if(audio) audio.src = playlist[index].data; if(audio) audio.play(); isPlaying = true; updateMusicUI();
   document.getElementById("playlist")?.classList.remove("open");
 }
-function togglePlay() {
+window.togglePlay = function() {
   if(playlist.length === 0) return showToast("请先上传音乐");
   if(currentSongIndex === -1) return playSong(0);
   if(isPlaying) { if(audio) audio.pause(); isPlaying = false; } else { if(audio) audio.play(); isPlaying = true; }
   updateMusicUI();
 }
-function nextSong() { if(playlist.length === 0) return; let next = currentSongIndex + 1; if(next >= playlist.length) next = 0; playSong(next); }
-function prevSong() { if(playlist.length === 0) return; let prev = currentSongIndex - 1; if(prev < 0) prev = playlist.length - 1; playSong(prev); }
+window.nextSong = function() { if(playlist.length === 0) return; let next = currentSongIndex + 1; if(next >= playlist.length) next = 0; playSong(next); }
+window.prevSong = function() { if(playlist.length === 0) return; let prev = currentSongIndex - 1; if(prev < 0) prev = playlist.length - 1; playSong(prev); }
 function updateMusicUI() {
   const cover = document.getElementById("musicCover"), title = document.getElementById("musicTitle"), btn = document.getElementById("playPauseBtn");
   if(!cover || !title || !btn) return;
@@ -983,7 +993,7 @@ audio && audio.addEventListener("timeupdate", () => {
   if(pb) pb.value = (audio.currentTime / audio.duration) * 100;
 });
 audio && audio.addEventListener("ended", nextSong);
-function seekAudio(val) { if(audio && audio.duration) audio.currentTime = (val / 100) * audio.duration; }
+window.seekAudio = function(val) { if(audio && audio.duration) audio.currentTime = (val / 100) * audio.duration; }
 function formatTime(sec) { const m = Math.floor(sec/60).toString().padStart(2,'0'); const s = Math.floor(sec%60).toString().padStart(2,'0'); return `${m}:${s}`; }
 
 document.getElementById("inviteMusicBtn") && (document.getElementById("inviteMusicBtn").onclick = () => {
@@ -1073,23 +1083,10 @@ function startCall() {
   callApp.style.backgroundImage = settings.callBg ? `url(${settings.callBg})` : 'linear-gradient(135deg, #1a1a1a, #333)';
   setTimeout(() => { document.getElementById("callStatus").textContent = "通话中 00:01"; }, 1500);
 }
-function minimizeCall() { closeApp('app-call'); document.getElementById("floatingCall").style.display = "flex"; }
-function hangupCall() { closeApp('app-call'); document.getElementById("floatingCall").style.display = "none"; document.getElementById("callStatus").textContent = "已挂断"; }
+window.minimizeCall = function() { closeApp('app-call'); document.getElementById("floatingCall").style.display = "flex"; }
+window.hangupCall = function() { closeApp('app-call'); document.getElementById("floatingCall").style.display = "none"; document.getElementById("callStatus").textContent = "已挂断"; }
 
-/* ================= 设置与启动 ================= */
-function applyTheme() {
-  document.documentElement.setAttribute('data-theme', settings.theme);
-  document.getElementById("settingTheme").value = settings.theme;
-  document.getElementById("homeBg").style.backgroundImage = settings.homeBg ? `url(${settings.homeBg})` : 'linear-gradient(135deg, #2b1055, #7597de)';
-  
-  const chatApp = document.getElementById("app-chat");
-  if (settings.chatBg) {
-    chatApp.style.backgroundImage = `url(${settings.chatBg})`;
-  } else {
-    chatApp.style.backgroundImage = 'none';
-  }
-}
-
+/* ================= 设置相关 ================= */
 window.renderPoolList = function() {
   const poolName = document.getElementById("poolSelector").value;
   const arr = pools[poolName] || [];
@@ -1165,34 +1162,30 @@ window.clearCurrentChat = function() {
   }
 };
 
-window.saveSplashTexts = () => {
+window.saveSplashTexts = function() {
   const text = document.getElementById("splashTextsInput").value.trim();
   if(!text) return;
   settings.splashTexts = text.split("\n").map(s=>s.trim()).filter(s=>s);
   saveSettings(); showToast("开屏文字已保存！下次刷新生效");
 };
 
-window.saveBatchCards = () => {
+window.saveBatchCards = function() {
   const poolName = document.getElementById("poolSelector").value;
   const text = document.getElementById("newCardBatch").value.trim(); if(!text) return;
   text.split("\n").forEach(t => { if(t.trim()) pools[poolName].push(t.trim()); });
   savePools(); document.getElementById("newCardBatch").value = ""; renderPoolList(); alert(`已保存到 ${poolName} 卡池！`);
 };
 
-/* ================= 初始化与绑定 ================= */
-window.onload = function() {
+/* ================= 启动与事件绑定 ================= */
+window.addEventListener('DOMContentLoaded', () => {
   try {
-    // 1. 绑定事件
+    // 1. 绝对安全地绑定核心按钮
     const sendBtn = document.getElementById("sendBtn");
     const inputEl = document.getElementById("input");
-    const formEl = document.getElementById("inputForm");
-
+    
     if(sendBtn) {
-      sendBtn.onclick = null;
+      sendBtn.onclick = null; 
       sendBtn.addEventListener("click", sendMessage);
-    }
-    if(formEl) {
-      formEl.onsubmit = function(e) { e.preventDefault(); sendMessage(); };
     }
     if(inputEl) {
       inputEl.addEventListener("keydown", function(e) {
@@ -1203,7 +1196,7 @@ window.onload = function() {
       });
     }
 
-    // 2. 优先渲染 UI
+    // 2. 渲染初始数据
     applyTheme(); 
     renderHome();
     renderPoolList(); 
@@ -1216,9 +1209,56 @@ window.onload = function() {
     document.getElementById("settingMinDelay").value = settings.minReplyTime; document.getElementById("minDelayLabel").textContent = settings.minReplyTime;
     document.getElementById("settingMaxDelay").value = settings.maxReplyTime; document.getElementById("maxDelayLabel").textContent = settings.maxReplyTime;
     
+    // 3. 绑定设置面板里的控件
+    document.getElementById("settingTheme").onchange = (e) => { settings.theme = e.target.value; saveSettings(); applyTheme(); };
+    document.getElementById("settingIgnore").oninput = (e) => { settings.ignoreRate = e.target.value; document.getElementById("ignoreLabel").textContent = e.target.value; saveSettings(); };
+    document.getElementById("settingRecall").oninput = (e) => { settings.recallRate = e.target.value; document.getElementById("recallLabel").textContent = e.target.value; saveSettings(); };
+    document.getElementById("settingProactive").oninput = (e) => { settings.proactiveRate = e.target.value; document.getElementById("proactiveLabel").textContent = e.target.value; saveSettings(); };
+    document.getElementById("settingMailLen").oninput = (e) => { settings.mailMaxLen = e.target.value; document.getElementById("mailLenLabel").textContent = e.target.value; saveSettings(); };
+    document.getElementById("settingNoteLen").oninput = (e) => { settings.noteMaxLen = e.target.value; document.getElementById("noteLenLabel").textContent = e.target.value; saveSettings(); };
+    document.getElementById("settingMinDelay").oninput = (e) => { 
+      let minVal = parseFloat(e.target.value); 
+      let maxVal = parseFloat(document.getElementById("settingMaxDelay").value); 
+      if (minVal >= maxVal) { 
+        maxVal = minVal + 0.5; 
+        document.getElementById("settingMaxDelay").value = maxVal; 
+        document.getElementById("maxDelayLabel").textContent = maxVal; 
+        settings.maxReplyTime = maxVal; 
+      } 
+      document.getElementById("minDelayLabel").textContent = minVal; 
+      settings.minReplyTime = minVal; 
+      saveSettings(); 
+    };
+    document.getElementById("settingMaxDelay").oninput = (e) => { 
+      let maxVal = parseFloat(e.target.value); 
+      let minVal = parseFloat(document.getElementById("settingMinDelay").value); 
+      if (maxVal <= minVal) { 
+        minVal = maxVal - 0.5; if (minVal < 0.5) minVal = 0.5; 
+        document.getElementById("settingMinDelay").value = minVal; 
+        document.getElementById("minDelayLabel").textContent = minVal; 
+        settings.minReplyTime = minVal; 
+      } 
+      document.getElementById("maxDelayLabel").textContent = maxVal; 
+      settings.maxReplyTime = maxVal; 
+      saveSettings(); 
+    };
+
+    document.getElementById("splashBgUpload").onchange = (e) => { const f = e.target.files[0]; if(!f) return; compressImage(f, 800, (base64) => { settings.splashBg = base64; saveSettings(); showToast("开屏背景已保存"); }); };
+    document.getElementById("homeBgUpload").onchange = (e) => { const f = e.target.files[0]; if(!f) return; compressImage(f, 1000, (base64) => { settings.homeBg = base64; saveSettings(); applyTheme(); showToast("壁纸已保存"); }); };
+    document.getElementById("chatBgUpload").onchange = (e) => { const f = e.target.files[0]; if(!f) return; compressImage(f, 1000, (base64) => { settings.chatBg = base64; saveSettings(); applyTheme(); showToast("聊天背景已保存"); }); };
+    document.getElementById("callBgUpload").onchange = (e) => { const f = e.target.files[0]; if(!f) return; compressImage(f, 800, (base64) => { settings.callBg = base64; saveSettings(); showToast("通话背景已保存"); }); };
+    document.getElementById("emojiUpload").onchange = (e) => {
+      const files = e.target.files; if(!files.length) return;
+      Array.from(files).forEach(file => {
+        compressImage(file, 100, (base64) => { customEmojis.push(base64); localStorage.setItem("os_emojis", JSON.stringify(customEmojis)); });
+      });
+      showToast("自定义表情已添加！");
+    };
+
+    // 4. 开屏动画
     runSplash(); 
 
-    // 3. 异步加载数据库
+    // 5. 异步加载数据库
     (async function initDBAndMusic() {
       try { await initDB(); await loadPlaylist(); } catch(e) { console.warn("音乐模块加载失败", e); }
     })();
@@ -1226,9 +1266,8 @@ window.onload = function() {
   } catch(e) {
     alert("初始化报错：\n" + e.message);
   }
-};
+});
 
-/* ================= 开屏动画 ================= */
 function runSplash() {
   const splash = document.getElementById("splashScreen");
   const container = document.getElementById("splashTextContainer");
@@ -1254,66 +1293,6 @@ function runSplash() {
     setTimeout(() => { splash.style.display = 'none'; splash.remove(); }, 500);
   }, 3000);
 }
-
-/* 主题切换等设置监听 */
-document.getElementById("settingTheme").onchange = (e) => { settings.theme = e.target.value; saveSettings(); applyTheme(); };
-document.getElementById("settingIgnore").oninput = (e) => { settings.ignoreRate = e.target.value; document.getElementById("ignoreLabel").textContent = e.target.value; saveSettings(); };
-document.getElementById("settingRecall").oninput = (e) => { settings.recallRate = e.target.value; document.getElementById("recallLabel").textContent = e.target.value; saveSettings(); };
-document.getElementById("settingProactive").oninput = (e) => { settings.proactiveRate = e.target.value; document.getElementById("proactiveLabel").textContent = e.target.value; saveSettings(); };
-document.getElementById("settingMailLen").oninput = (e) => { settings.mailMaxLen = e.target.value; document.getElementById("mailLenLabel").textContent = e.target.value; saveSettings(); };
-document.getElementById("settingNoteLen").oninput = (e) => { settings.noteMaxLen = e.target.value; document.getElementById("noteLenLabel").textContent = e.target.value; saveSettings(); };
-
-document.getElementById("settingMinDelay").oninput = (e) => { 
-  let minVal = parseFloat(e.target.value); 
-  let maxVal = parseFloat(document.getElementById("settingMaxDelay").value); 
-  if (minVal >= maxVal) { 
-    maxVal = minVal + 0.5; 
-    document.getElementById("settingMaxDelay").value = maxVal; 
-    document.getElementById("maxDelayLabel").textContent = maxVal; 
-    settings.maxReplyTime = maxVal; 
-  } 
-  document.getElementById("minDelayLabel").textContent = minVal; 
-  settings.minReplyTime = minVal; 
-  saveSettings(); 
-};
-document.getElementById("settingMaxDelay").oninput = (e) => { 
-  let maxVal = parseFloat(e.target.value); 
-  let minVal = parseFloat(document.getElementById("settingMinDelay").value); 
-  if (maxVal <= minVal) { 
-    minVal = maxVal - 0.5; if (minVal < 0.5) minVal = 0.5; 
-    document.getElementById("settingMinDelay").value = minVal; 
-    document.getElementById("minDelayLabel").textContent = minVal; 
-    settings.minReplyTime = minVal; 
-  } 
-  document.getElementById("maxDelayLabel").textContent = maxVal; 
-  settings.maxReplyTime = maxVal; 
-  saveSettings(); 
-};
-
-document.getElementById("splashBgUpload").onchange = (e) => { 
-  const f = e.target.files[0]; if(!f) return;
-  compressImage(f, 800, (base64) => { settings.splashBg = base64; saveSettings(); showToast("开屏背景已保存"); });
-};
-document.getElementById("homeBgUpload").onchange = (e) => { 
-  const f = e.target.files[0]; if(!f) return;
-  compressImage(f, 1000, (base64) => { settings.homeBg = base64; saveSettings(); applyTheme(); showToast("壁纸已保存"); });
-};
-document.getElementById("chatBgUpload").onchange = (e) => { 
-  const f = e.target.files[0]; if(!f) return;
-  compressImage(f, 1000, (base64) => { settings.chatBg = base64; saveSettings(); applyTheme(); showToast("聊天背景已保存"); });
-};
-document.getElementById("callBgUpload").onchange = (e) => { 
-  const f = e.target.files[0]; if(!f) return;
-  compressImage(f, 800, (base64) => { settings.callBg = base64; saveSettings(); showToast("通话背景已保存"); });
-};
-
-document.getElementById("emojiUpload").onchange = (e) => {
-  const files = e.target.files; if(!files.length) return;
-  Array.from(files).forEach(file => {
-    compressImage(file, 100, (base64) => { customEmojis.push(base64); localStorage.setItem("os_emojis", JSON.stringify(customEmojis)); });
-  });
-  showToast("自定义表情已添加！");
-};
 </script>
 </body>
 </html>
