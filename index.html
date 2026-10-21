@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
 <title>梦占 · OS</title>
 <style>
+  /* ====== 主题变量配置 ====== */
   :root, [data-theme="dark"] {
     --bg: #12101a; --panel: #1e1b29; --user: #4a3f6b; --user-text: #ffffff; --oracle: #2a2438;
     --text: #e8e3f0; --muted: #9a92b0; --accent: #d4af7a; --border: #3d3552; --icon-bg: rgba(255,255,255,0.15);
@@ -18,6 +19,21 @@
   [data-theme="cute"] {
     --bg: #fff5f6; --panel: #ffffff; --user: #ffb7c5; --user-text: #5d4037; --oracle: #ffffff;
     --text: #5d4037; --muted: #a1887f; --accent: #f06292; --border: #f8bbd0; --icon-bg: rgba(240, 98, 146, 0.15);
+    --mask-color: 255, 255, 255;
+  }
+  [data-theme="blue"] {
+    --bg: #f0f8ff; --panel: #ffffff; --user: #a0c4ff; --user-text: #2c3e50; --oracle: #ffffff;
+    --text: #2c3e50; --muted: #7f8c8d; --accent: #3498db; --border: #d0e3f0; --icon-bg: rgba(52, 152, 219, 0.15);
+    --mask-color: 255, 255, 255;
+  }
+  [data-theme="purple"] {
+    --bg: #f8f5ff; --panel: #ffffff; --user: #d0bdf4; --user-text: #4a3b61; --oracle: #ffffff;
+    --text: #4a3b61; --muted: #9b8bad; --accent: #8e44ad; --border: #e6dcf3; --icon-bg: rgba(142, 68, 173, 0.15);
+    --mask-color: 255, 255, 255;
+  }
+  [data-theme="green"] {
+    --bg: #f4fbf5; --panel: #ffffff; --user: #a8e6cf; --user-text: #2e4a3d; --oracle: #ffffff;
+    --text: #2e4a3d; --muted: #7fa88b; --accent: #27ae60; --border: #d3ebd9; --icon-bg: rgba(39, 174, 96, 0.15);
     --mask-color: 255, 255, 255;
   }
 
@@ -50,7 +66,7 @@
 
   /* 桌面 */
   #statusBar { display: flex; justify-content: space-between; align-items: center; padding: 10px 20px; font-size: 14px; font-weight: 600; z-index: 10; color: #fff; text-shadow: 0 1px 3px rgba(0,0,0,0.5); position: relative; }
-  [data-theme="light"] #statusBar, [data-theme="cute"] #statusBar { color: var(--text); text-shadow: none; }
+  [data-theme="light"] #statusBar, [data-theme="cute"] #statusBar, [data-theme="blue"] #statusBar, [data-theme="purple"] #statusBar, [data-theme="green"] #statusBar { color: var(--text); text-shadow: none; }
   
   #homeScreen { flex: 1; display: flex; flex-direction: column; padding: 20px; z-index: 5; overflow-y: auto; position: relative; }
   
@@ -77,7 +93,7 @@
 
   .clock-widget { text-align: center; margin-top: 10px; margin-bottom: 20px; }
   .clock-time { font-size: 64px; font-weight: 200; letter-spacing: -2px; color: #fff; text-shadow: 0 2px 10px rgba(0,0,0,0.5); }
-  [data-theme="light"] .clock-time, [data-theme="cute"] .clock-time { color: var(--text); text-shadow: none; }
+  [data-theme="light"] .clock-time, [data-theme="cute"] .clock-time, [data-theme="blue"] .clock-time, [data-theme="purple"] .clock-time, [data-theme="green"] .clock-time { color: var(--text); text-shadow: none; }
 
   .app-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; justify-items: center; }
   .app-icon { display: flex; flex-direction: column; align-items: center; gap: 8px; cursor: pointer; position: relative;}
@@ -89,10 +105,10 @@
     box-shadow: 0 2px 8px rgba(0,0,0,0.1); border: 1px solid rgba(255,255,255,0.3); overflow: hidden; 
   }
   .app-icon svg { width: 32px; height: 32px; fill: #fff; }
-  [data-theme="light"] .app-icon svg, [data-theme="cute"] .app-icon svg { fill: var(--accent); }
+  [data-theme="light"] .app-icon svg, [data-theme="cute"] .app-icon svg, [data-theme="blue"] .app-icon svg, [data-theme="purple"] .app-icon svg, [data-theme="green"] .app-icon svg { fill: var(--accent); }
   .app-icon img { width: 100%; height: 100%; object-fit: cover; }
   .app-icon .app-name { font-size: 12px; color: #fff; text-shadow: 0 1px 3px rgba(0,0,0,0.5); }
-  [data-theme="light"] .app-icon .app-name, [data-theme="cute"] .app-icon .app-name { color: var(--text); text-shadow: none; }
+  [data-theme="light"] .app-icon .app-name, [data-theme="cute"] .app-icon .app-name, [data-theme="blue"] .app-icon .app-name, [data-theme="purple"] .app-icon .app-name, [data-theme="green"] .app-icon .app-name { color: var(--text); text-shadow: none; }
   .edit-icon-btn { position: absolute; top: -5px; right: 5px; background: var(--accent); color: #fff; border-radius: 50%; width: 18px; height: 18px; display: flex; justify-content: center; align-items: center; font-size: 14px; z-index: 2; border: 2px solid var(--bg); }
 
   /* ====== App 容器 ====== */
@@ -371,6 +387,9 @@
         <option value="dark">夜间暗黑</option>
         <option value="light">白天纯白</option>
         <option value="cute">可爱粉色</option>
+        <option value="blue">静谧淡蓝</option>
+        <option value="purple">梦幻淡紫</option>
+        <option value="green">生机淡绿</option>
       </select>
     </div>
     
@@ -413,7 +432,6 @@
     <div class="form-group"><textarea id="newCardBatch" rows="3" placeholder="每行一句，添加到当前选中的卡池"></textarea></div>
     <button class="admin-btn" onclick="saveBatchCards()">保存到卡池</button>
 
-    <!-- 字卡列表与管理 -->
     <div id="poolListArea" style="margin-top: 10px; margin-bottom: 20px; max-height: 200px; overflow-y: auto;"></div>
     
     <div class="form-group" style="margin-top:20px;"><label>上传自定义表情包 (图片)</label><input type="file" id="emojiUpload" accept="image/*" multiple></div>
@@ -426,6 +444,7 @@
 </div>
 
 <script>
+/* ================= 安全加载与核心数据 ================= */
 const DEFAULT_SETTINGS = {
   theme: "cute", ignoreRate: 20, recallRate: 10, proactiveRate: 20, minReplyTime: 1, maxReplyTime: 3, mailMaxLen: 50, noteMaxLen: 50,
   splashBg: "", homeBg: "", callBg: "", icons: {}, 
@@ -459,6 +478,7 @@ if(!Array.isArray(settings.widgets) || settings.widgets.length === 0) {
 }
 if(!Array.isArray(settings.splashTexts)) settings.splashTexts = DEFAULT_SETTINGS.splashTexts;
 
+/* ================= 图片压缩 ================= */
 function compressImage(file, maxSize, callback) {
   const reader = new FileReader();
   reader.onload = function(e) {
@@ -478,6 +498,7 @@ function compressImage(file, maxSize, callback) {
   reader.readAsDataURL(file);
 }
 
+/* ================= 备份与恢复 ================= */
 window.exportData = function() {
   const backupData = {
     settings: localStorage.getItem("os_settings"),
@@ -514,6 +535,7 @@ window.importData = function(event) {
   reader.readAsText(file);
 };
 
+/* ================= 开屏动画 ================= */
 function runSplash() {
   const splash = document.getElementById("splashScreen");
   const container = document.getElementById("splashTextContainer");
@@ -540,6 +562,7 @@ function runSplash() {
   }, 3000);
 }
 
+/* ================= 桌面渲染 ================= */
 const APP_CONFIG = [
   { id: "app-contacts", name: "梦占通讯", svg: '<path d="M20 2H4c-1.1 0-2 .9-2 2v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2z"/>' },
   { id: "app-music", name: "一起听歌", svg: '<path d="M12 3v10.55c-.59-.34-1.27-.55-2-.55-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4V7h4V3h-6z"/>' },
@@ -618,6 +641,7 @@ window.addWidget = () => {
   } else { process(""); }
 };
 
+/* ================= 基础系统 ================= */
 function updateTime() {
   const now = new Date();
   const timeStr = now.getHours().toString().padStart(2, '0') + ":" + now.getMinutes().toString().padStart(2, '0');
@@ -641,6 +665,7 @@ function closeApp(appId) {
   document.getElementById("homeScreen").style.display = "flex";
 }
 
+/* ================= 通讯与聊天 ================= */
 let statusInterval;
 function updateStatusBar() {
   const bar = document.getElementById("oracleStatusBar");
@@ -652,6 +677,7 @@ function updateStatusBar() {
 function renderContacts() {
   const list = document.getElementById("contactList"); list.innerHTML = "";
   contacts.forEach(c => {
+    // 容错：如果记录不存在，临时生成
     const msgs = chatRecords[c.id] || [];
     const lastMsg = msgs.length > 0 ? (msgs[msgs.length-1].isRecalled ? '[撤回了一条消息]' : msgs[msgs.length-1].text) : '暂无消息';
     const av = c.avatar ? `<img src="${c.avatar}">` : `<svg class="avatar-svg" viewBox="0 0 24 24"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>`;
@@ -661,12 +687,16 @@ function renderContacts() {
 function addContact() {
   const name = prompt("输入新联系人名称：", "新联系人"); if(!name) return;
   const id = "c_" + Date.now();
-  contacts.push({id, name, avatar: ""}); chatRecords[id] = [];
+  contacts.push({id, name, avatar: ""}); 
+  chatRecords[id] = [];
   saveContacts(); renderContacts();
 }
 function switchChat(id) {
   currentChatId = id;
-  const c = contacts.find(x => x.id === id);
+  // 容错：如果切到一个不存在的聊天，给他补一个
+  if(!chatRecords[currentChatId]) chatRecords[currentChatId] = [];
+  
+  const c = contacts.find(x => x.id === id) || { name: "未知", avatar: "" };
   document.getElementById("chatTitle").textContent = c.name;
   closeApp('app-contacts'); openApp('app-chat'); renderMessages();
 }
@@ -674,7 +704,8 @@ function switchChat(id) {
 function renderMessages() {
   const box = document.getElementById("messages"); box.innerHTML = "";
   const msgs = chatRecords[currentChatId] || [];
-  const c = contacts.find(x => x.id === currentChatId) || { name: "未知", avatar: "" }; // 容错
+  const c = contacts.find(x => x.id === currentChatId) || { name: "未知", avatar: "" };
+  
   msgs.forEach(m => {
     const row = document.createElement("div");
     if (m.isRecalled) {
@@ -702,37 +733,45 @@ let isWaitingForUser = false;
 
 document.getElementById("inputBar").onsubmit = (e) => {
   e.preventDefault();
-  
-  const val = document.getElementById("input").value.trim(); if(!val) return;
-  isWaitingForUser = false;
-  
-  const now = new Date(); const timeStr = now.getHours().toString().padStart(2, '0') + ":" + now.getMinutes().toString().padStart(2, '0');
-  const msgId = Date.now().toString();
-  chatRecords[currentChatId].push({ id: msgId, role: "user", text: val, time: timeStr, quote: currentQuote, read: false });
-  saveChatRecords(); renderMessages(); document.getElementById("input").value = ""; clearQuote();
-  document.getElementById("emojiPanel").classList.remove("show");
-  
-  setTimeout(() => {
-    const idx = chatRecords[currentChatId].findIndex(m => m.id === msgId);
-    if(idx>-1) { chatRecords[currentChatId][idx].read = true; saveChatRecords(); renderMessages(); }
-  }, getRandomDelay());
-
-  if (Math.random() * 100 > settings.ignoreRate) {
+  try {
+    const val = document.getElementById("input").value.trim(); if(!val) return;
+    
+    // 核心容错：确保当前聊天数组存在
+    if (!chatRecords[currentChatId]) chatRecords[currentChatId] = [];
+    
+    isWaitingForUser = false;
+    const now = new Date(); const timeStr = now.getHours().toString().padStart(2, '0') + ":" + now.getMinutes().toString().padStart(2, '0');
+    const msgId = Date.now().toString();
+    
+    chatRecords[currentChatId].push({ id: msgId, role: "user", text: val, time: timeStr, quote: currentQuote, read: false });
+    saveChatRecords(); renderMessages(); document.getElementById("input").value = ""; clearQuote();
+    document.getElementById("emojiPanel").classList.remove("show");
+    
     setTimeout(() => {
-      const reply = drawFromPool("chat");
-      const aiId = Date.now().toString();
-      chatRecords[currentChatId].push({ id: aiId, role: "oracle", text: reply, time: timeStr });
-      saveChatRecords(); renderMessages();
-      
-      if (Math.random() * 100 < settings.recallRate) {
-        setTimeout(() => {
-           const idx = chatRecords[currentChatId].findIndex(m => m.id === aiId);
-           if(idx>-1) { chatRecords[currentChatId][idx].isRecalled = true; saveChatRecords(); renderMessages(); }
-        }, 2000);
-      }
-    }, getRandomDelay() + 500);
-  } else {
-    isWaitingForUser = true;
+      const idx = chatRecords[currentChatId].findIndex(m => m.id === msgId);
+      if(idx>-1) { chatRecords[currentChatId][idx].read = true; saveChatRecords(); renderMessages(); }
+    }, getRandomDelay());
+
+    if (Math.random() * 100 > settings.ignoreRate) {
+      setTimeout(() => {
+        const reply = drawFromPool("chat");
+        const aiId = Date.now().toString();
+        chatRecords[currentChatId].push({ id: aiId, role: "oracle", text: reply, time: timeStr });
+        saveChatRecords(); renderMessages();
+        
+        if (Math.random() * 100 < settings.recallRate) {
+          setTimeout(() => {
+             const idx = chatRecords[currentChatId].findIndex(m => m.id === aiId);
+             if(idx>-1) { chatRecords[currentChatId][idx].isRecalled = true; saveChatRecords(); renderMessages(); }
+          }, 2000);
+        }
+      }, getRandomDelay() + 500);
+    } else {
+      isWaitingForUser = true;
+    }
+  } catch(err) {
+    showToast("发送出错，请尝试重新导入数据或清理浏览器缓存");
+    console.error(err);
   }
 };
 
@@ -742,6 +781,8 @@ setInterval(() => {
   if(document.getElementById("homeScreen").style.display === "none" && !document.getElementById("app-chat").classList.contains("open")) return; 
   
   if (Math.random() * 100 < settings.proactiveRate) {
+    if (!chatRecords[currentChatId]) chatRecords[currentChatId] = [];
+    
     const now = new Date(); const timeStr = now.getHours().toString().padStart(2, '0') + ":" + now.getMinutes().toString().padStart(2, '0');
     const text = Math.random() < 0.5 ? PROACTIVE_MSGS[Math.floor(Math.random() * PROACTIVE_MSGS.length)] : drawFromPool("chat");
     
@@ -781,13 +822,16 @@ function renderEmojiPanel() {
 }
 function insertEmoji(e) { const inp = document.getElementById("input"); inp.value += e; inp.focus(); }
 function sendEmojiImg(src) {
-  const msgId = Date.now().toString(); const timeStr = new Date().toLocaleTimeString().slice(0,5);
-  chatRecords[currentChatId].push({ id: msgId, role: "user", text: `<img src="${src}" style="max-width:80px;border-radius:8px;">`, time: timeStr, read: false });
-  saveChatRecords(); renderMessages(); document.getElementById("emojiPanel").classList.remove("show");
+  try {
+    if (!chatRecords[currentChatId]) chatRecords[currentChatId] = [];
+    const msgId = Date.now().toString(); const timeStr = new Date().toLocaleTimeString().slice(0,5);
+    chatRecords[currentChatId].push({ id: msgId, role: "user", text: `<img src="${src}" style="max-width:80px;border-radius:8px;">`, time: timeStr, read: false });
+    saveChatRecords(); renderMessages(); document.getElementById("emojiPanel").classList.remove("show");
+  } catch(e) { showToast("发送失败"); }
 }
 document.getElementById("emojiBtn").onclick = () => { renderEmojiPanel(); document.getElementById("emojiPanel").classList.toggle("show"); };
 
-/* 塔罗 */
+/* ================= 塔罗 ================= */
 const DEFAULT_TAROT = [
   { name: "0 愚者", meaning: "纯真、冒险、新开始。不要害怕未知，带着信任向前走。" },
   { name: "I 魔术师", meaning: "创造力、行动力。你拥有实现目标的所有资源，现在行动吧。" },
@@ -835,7 +879,7 @@ function drawTarot() {
   }, 1000);
 }
 
-/* 音乐 */
+/* ================= 音乐 ================= */
 let db;
 const DB_NAME = "OracleOS_DB", STORE_NAME = "music";
 function initDB() { return new Promise((res, rej) => { const req = indexedDB.open(DB_NAME, 1); req.onupgradeneeded = e => { if (!e.target.result.objectStoreNames.contains(STORE_NAME)) e.target.result.createObjectStore(STORE_NAME); }; req.onsuccess = e => { db = e.target.result; res(); }; req.onerror = rej; }); }
@@ -898,11 +942,12 @@ document.getElementById("inviteMusicBtn").onclick = () => {
   const c = contacts.find(x => x.id === currentChatId);
   const puzzle = generatePuzzle("notes", settings.noteMaxLen);
   const sysMsg = `系统提示：你们在音乐中感受到了神谕 -> ${puzzle}`;
+  if(!chatRecords[currentChatId]) chatRecords[currentChatId] = [];
   chatRecords[currentChatId].push({ id: Date.now().toString(), role: "oracle", text: `【邀请】${c.name} 邀请你一起听歌。\n${sysMsg}`, time: "刚刚" });
   saveChatRecords(); renderMessages(); openApp("app-music");
 };
 
-/* 其他功能 */
+/* ================= 其他功能 ================= */
 function renderMails() {
   const list = document.getElementById("mailList"), detail = document.getElementById("mailDetail");
   detail.classList.remove("show"); list.style.display = "block"; list.innerHTML = "";
@@ -926,7 +971,7 @@ function startCall() {
 function minimizeCall() { closeApp('app-call'); document.getElementById("floatingCall").style.display = "flex"; }
 function hangupCall() { closeApp('app-call'); document.getElementById("floatingCall").style.display = "none"; document.getElementById("callStatus").textContent = "已挂断"; }
 
-/* 设置与启动 */
+/* ================= 设置与启动 ================= */
 function saveSettings() { 
   try { localStorage.setItem("os_settings", JSON.stringify(settings)); } 
   catch(e) { showToast("存储空间不足，图片可能过大！"); if(settings.widgets.length > 0) settings.widgets.pop(); renderWidgets(); } 
@@ -941,7 +986,6 @@ function applyTheme() {
   document.getElementById("homeBg").style.backgroundImage = settings.homeBg ? `url(${settings.homeBg})` : 'linear-gradient(135deg, #2b1055, #7597de)';
 }
 
-/* 字卡列表渲染与删除 */
 window.renderPoolList = function() {
   const poolName = document.getElementById("poolSelector").value;
   const arr = pools[poolName] || [];
@@ -1041,7 +1085,7 @@ window.saveBatchCards = () => {
 try {
   applyTheme(); 
   renderHome();
-  renderPoolList(); // 初始化字卡列表
+  renderPoolList(); 
   document.getElementById("splashTextsInput").value = settings.splashTexts.join("\n");
   document.getElementById("settingIgnore").value = settings.ignoreRate; document.getElementById("ignoreLabel").textContent = settings.ignoreRate;
   document.getElementById("settingRecall").value = settings.recallRate; document.getElementById("recallLabel").textContent = settings.recallRate;
