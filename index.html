@@ -68,7 +68,6 @@
   .widget-text-lg { font-size: 24px; font-weight: 600; text-shadow: 0 2px 4px rgba(0,0,0,0.3); }
   .widget-text-sm { font-size: 14px; opacity: 0.9; margin-top: 5px; text-shadow: 0 1px 2px rgba(0,0,0,0.3); }
   
-  /* 更明显的小组件删除按钮 */
   .widget-del-btn {
     position: absolute; top: 10px; right: 10px; width: 28px; height: 28px;
     background: rgba(224, 83, 83, 0.9); color: #fff; border-radius: 50%;
@@ -364,6 +363,17 @@
     <div style="width:24px"></div>
   </div>
   <div class="settings-content">
+    
+    <!-- 新增：备份与恢复区 -->
+    <div class="section-title" style="color: var(--danger);">重要：数据备份与恢复</div>
+    <div style="display:flex; gap:10px; margin-bottom: 20px;">
+      <button class="admin-btn" style="flex:1; background: #4caf50; margin:0;" onclick="exportData()">导出备份</button>
+      <label class="admin-btn" style="flex:1; background: #2196f3; margin:0; text-align:center;">
+        导入恢复 <input type="file" id="importFile" accept=".json" style="display:none;" onchange="importData(event)">
+      </label>
+    </div>
+    <p style="font-size:12px; color:var(--muted); margin-top:-10px; margin-bottom:20px; line-height:1.4;">提示：备份包含你的所有文字、聊天、设置和图片，但不包含音乐。换了手机或清理浏览器缓存前，请务必导出！</p>
+
     <div class="section-title">外观与壁纸</div>
     <div class="form-group"><label>开屏动画背景</label><input type="file" id="splashBgUpload" accept="image/*"></div>
     <div class="form-group"><label>桌面壁纸</label><input type="file" id="homeBgUpload" accept="image/*"></div>
@@ -471,7 +481,6 @@ function compressImage(file, maxSize, callback) {
       canvas.height = height;
       ctx.drawImage(img, 0, 0, width, height);
       
-      // 压缩质量为 0.7
       const base64 = canvas.toDataURL('image/jpeg', 0.7);
       callback(base64);
     };
@@ -479,6 +488,51 @@ function compressImage(file, maxSize, callback) {
   };
   reader.readAsDataURL(file);
 }
+
+/* ================= 备份与恢复 ================= */
+window.exportData = function() {
+  // 把所有 localStorage 数据打包
+  const backupData = {
+    settings: localStorage.getItem("os_settings"),
+    pools: localStorage.getItem("os_pools"),
+    contacts: localStorage.getItem("os_contacts"),
+    chatRecords: localStorage.getItem("os_chat_records"),
+    emojis: localStorage.getItem("os_emojis")
+  };
+  
+  const dataStr = JSON.stringify(backupData);
+  const blob = new Blob([dataStr], {type: "application/json"});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `梦占OS备份_${new Date().toLocaleDateString()}.json`;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  showToast("备份文件已下载，请妥善保存！");
+};
+
+window.importData = function(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = function(e) {
+    try {
+      const data = JSON.parse(e.target.result);
+      if (data.settings) localStorage.setItem("os_settings", data.settings);
+      if (data.pools) localStorage.setItem("os_pools", data.pools);
+      if (data.contacts) localStorage.setItem("os_contacts", data.contacts);
+      if (data.chatRecords) localStorage.setItem("os_chat_records", data.chatRecords);
+      if (data.emojis) localStorage.setItem("os_emojis", data.emojis);
+      
+      showToast("数据恢复成功！正在刷新页面...");
+      setTimeout(() => location.reload(), 1500);
+    } catch (err) {
+      alert("导入失败：文件格式不正确！");
+    }
+  };
+  reader.readAsText(file);
+};
 
 /* ================= 开屏动画 ================= */
 function runSplash() {
@@ -601,7 +655,7 @@ window.addWidget = () => {
       process(compressedBase64);
     });
   } else {
-    process(""); // 没图纯文字
+    process(""); 
   }
 };
 
@@ -864,7 +918,6 @@ function saveSettings() {
   try { localStorage.setItem("os_settings", JSON.stringify(settings)); } 
   catch(e) { 
     showToast("存储空间不足，图片可能过大！"); 
-    // 移除最新添加的图片以防崩溃
     if(settings.widgets.length > 0) settings.widgets.pop(); 
     renderWidgets();
   } 
