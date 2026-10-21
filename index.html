@@ -67,6 +67,14 @@
   .widget-content { position: relative; z-index: 1; }
   .widget-text-lg { font-size: 24px; font-weight: 600; text-shadow: 0 2px 4px rgba(0,0,0,0.3); }
   .widget-text-sm { font-size: 14px; opacity: 0.9; margin-top: 5px; text-shadow: 0 1px 2px rgba(0,0,0,0.3); }
+  
+  /* 更明显的小组件删除按钮 */
+  .widget-del-btn {
+    position: absolute; top: 10px; right: 10px; width: 28px; height: 28px;
+    background: rgba(224, 83, 83, 0.9); color: #fff; border-radius: 50%;
+    display: flex; justify-content: center; align-items: center; font-size: 16px;
+    cursor: pointer; z-index: 10; box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+  }
 
   .clock-widget { text-align: center; margin-top: 10px; margin-bottom: 20px; }
   .clock-time { font-size: 64px; font-weight: 200; letter-spacing: -2px; color: #fff; text-shadow: 0 2px 10px rgba(0,0,0,0.5); }
@@ -412,7 +420,6 @@
 const DEFAULT_SETTINGS = {
   theme: "cute", ignoreRate: 20, recallRate: 10, mailMaxLen: 50, noteMaxLen: 50,
   splashBg: "", homeBg: "", callBg: "", icons: {}, 
-  // 【关键改动】：默认带一个欢迎小组件
   widgets: [{ img: "", textLg: "Hello", textSm: "今天也要开心哦" }],
   splashTexts: ["正在连接梦境...", "读取潜意识碎片...", "命运正在编织...", "准备好了吗？"]
 };
@@ -429,10 +436,7 @@ function safeParse(key, defaultVal) {
        return { ...defaultVal, ...parsed };
     }
     return parsed;
-  } catch (e) {
-    console.warn(`解析 ${key} 失败，使用默认值`);
-    return defaultVal;
-  }
+  } catch (e) { return defaultVal; }
 }
 
 let settings = safeParse("os_settings", DEFAULT_SETTINGS);
@@ -441,65 +445,39 @@ let contacts = safeParse("os_contacts", DEFAULT_CONTACTS);
 let chatRecords = safeParse("os_chat_records", DEFAULT_CHAT_RECORDS);
 let customEmojis = safeParse("os_emojis", []);
 
-// 强制修复：如果 widgets 是空的，塞一个默认的，防止用户看不到
 if(!Array.isArray(settings.widgets) || settings.widgets.length === 0) {
   settings.widgets = [{ img: "", textLg: "Hello", textSm: "今天也要开心哦" }];
-  localStorage.setItem("os_settings", JSON.stringify(settings));
 }
 if(!Array.isArray(settings.splashTexts)) settings.splashTexts = DEFAULT_SETTINGS.splashTexts;
 
-const DEFAULT_TAROT = [
-  { name: "0 愚者", meaning: "纯真、冒险、新开始。不要害怕未知，带着信任向前走。" },
-  { name: "I 魔术师", meaning: "创造力、行动力。你拥有实现目标的所有资源，现在行动吧。" },
-  { name: "II 女祭司", meaning: "直觉、潜意识。答案在内心里，静下心来倾听。" },
-  { name: "III 皇后", meaning: "丰盛、孕育。事情将开花结果，享受美好与富足。" },
-  { name: "IV 皇帝", meaning: "秩序、权威。需要建立规则，理智地掌控局面。" },
-  { name: "V 教皇", meaning: "指引、传统。寻求有经验的人的帮助。" },
-  { name: "VI 恋人", meaning: "结合、选择。面临重要的抉择或关系深化。" },
-  { name: "VII 战车", meaning: "意志、胜利。只要有决心，就能克服一切困难。" },
-  { name: "VIII 力量", meaning: "勇气、包容。用温柔和耐心降服困难。" },
-  { name: "IX 隐士", meaning: "内省、独处。退回内心反思，寻找内心的光。" },
-  { name: "X 命运之轮", meaning: "转变、契机。顺应变化，好运即将到来。" },
-  { name: "XI 正义", meaning: "平衡、因果。种什么因得什么果。" },
-  { name: "XII 倒吊人", meaning: "牺牲、换位。换个角度看问题，停滞是为了收获。" },
-  { name: "XIII 死神", meaning: "结束、新生。放下过去才能迎来新生。" },
-  { name: "XIV 节制", meaning: "调和、中庸。慢慢磨合，保持平衡。" },
-  { name: "XV 恶魔", meaning: "诱惑、束缚。看清欲望的真相，解脱自己。" },
-  { name: "XVI 高塔", meaning: "突变、破坏。打破虚假的稳定，为了重建。" },
-  { name: "XVII 星星", meaning: "希望、疗愈。黑暗中有曙光，一切都会好起来。" },
-  { name: "XVIII 月亮", meaning: "不安、未知。恐惧浮现，需防范欺骗。" },
-  { name: "XIX 太阳", meaning: "成功、喜悦。充满活力与成功，享受快乐。" },
-  { name: "XX 审判", meaning: "唤醒、复活。过去的努力得到回报。" },
-  { name: "XXI 世界", meaning: "圆满、完成。达成目标，享受成功的喜悦。" }
-];
-
-let currentChatId = "c1";
-let currentQuote = null;
-let playlist = []; 
-let currentSongIndex = -1;
-let isPlaying = false;
-
-const STATUS_LIST = ["正在凝视深渊", "刚刚苏醒", "心情不错", "有点困了", "正在思考", "不想理你"];
-let bags = {"chat":[],"tarot":[],"mail":[],"notes":[]};
-
-function drawFromPool(poolName) {
-  let p = pools[poolName] || [];
-  if(poolName === "tarot") p = [...DEFAULT_TAROT.map(t=>t.name), ...p];
-  if (p.length === 0) return "池子空了";
-  if (bags[poolName].length === 0) bags[poolName] = [...p].sort(() => Math.random() - 0.5);
-  return bags[poolName].pop();
-}
-function generatePuzzle(poolName, maxLen) {
-  let p = pools[poolName] || [];
-  if (p.length === 0) return "池子空了";
-  let result = "", count = 0;
-  while (result.length < maxLen && count < 5) {
-    let card = p[Math.floor(Math.random() * p.length)];
-    result += (result ? "，" : "") + card;
-    count++;
-  }
-  if (result.length > maxLen) result = result.substring(0, maxLen) + "...";
-  return result;
+/* ================= 图片压缩核心逻辑 ================= */
+function compressImage(file, maxSize, callback) {
+  const reader = new FileReader();
+  reader.onload = function(e) {
+    const img = new Image();
+    img.onload = function() {
+      const canvas = document.createElement('canvas');
+      const ctx = canvas.getContext('2d');
+      let width = img.width;
+      let height = img.height;
+      
+      if (width > height) {
+        if (width > maxSize) { height *= maxSize / width; width = maxSize; }
+      } else {
+        if (height > maxSize) { width *= maxSize / height; height = maxSize; }
+      }
+      
+      canvas.width = width;
+      canvas.height = height;
+      ctx.drawImage(img, 0, 0, width, height);
+      
+      // 压缩质量为 0.7
+      const base64 = canvas.toDataURL('image/jpeg', 0.7);
+      callback(base64);
+    };
+    img.src = e.target.result;
+  };
+  reader.readAsDataURL(file);
 }
 
 /* ================= 开屏动画 ================= */
@@ -515,7 +493,7 @@ function runSplash() {
   }
   
   container.innerHTML = "";
-  settings.splashTexts.forEach((text, i) => {
+  settings.splashTexts.forEach((text) => {
     const div = document.createElement("div");
     div.className = "splash-line";
     div.textContent = text;
@@ -563,13 +541,13 @@ function renderHome() {
 function changeIcon(appId) {
   const input = document.createElement('input'); input.type = 'file'; input.accept = 'image/*';
   input.onchange = e => {
-    const reader = new FileReader();
-    reader.onload = ev => {
+    const file = e.target.files[0]; if(!file) return;
+    compressImage(file, 200, (compressedBase64) => {
       if(!settings.icons) settings.icons = {};
-      settings.icons[appId] = ev.target.result;
+      settings.icons[appId] = compressedBase64;
       saveSettings(); renderHome();
-    };
-    reader.readAsDataURL(e.target.files[0]);
+      showToast("图标已更换！");
+    });
   };
   input.click();
 }
@@ -584,21 +562,30 @@ function renderWidgets() {
     div.style.backgroundImage = w.img ? `url(${w.img})` : 'none';
     if(!w.img) div.style.backgroundColor = 'rgba(255,255,255,0.2)';
     div.innerHTML = `
-      <div class="widget-content" style="text-align: ${w.img ? 'left' : 'center'};">
+      <div class="widget-del-btn" onclick="removeWidget(${index})">✕</div>
+      <div class="widget-content" style="text-align: ${w.img ? 'left' : 'center'}; margin-top:10px;">
         ${w.textLg ? `<div class="widget-text-lg">${w.textLg}</div>` : ''}
         ${w.textSm ? `<div class="widget-text-sm">${w.textSm}</div>` : ''}
       </div>
-      <div style="position:absolute; bottom:5px; right:10px; font-size:10px; z-index:2; cursor:pointer; color:#fff; opacity:0.5;" onclick="removeWidget(${index})">移除</div>
     `;
     area.appendChild(div);
   });
 }
-window.removeWidget = (i) => { settings.widgets.splice(i, 1); saveSettings(); renderWidgets(); };
-window.clearWidgets = () => { settings.widgets = []; saveSettings(); renderWidgets(); };
+window.removeWidget = (i) => { 
+  if(confirm("确定移除这个小组件吗？")) {
+    settings.widgets.splice(i, 1); saveSettings(); renderWidgets(); 
+  }
+};
+window.clearWidgets = () => { 
+  if(confirm("确定清空所有小组件吗？")) {
+    settings.widgets = []; saveSettings(); renderWidgets(); 
+  }
+};
 window.addWidget = () => {
   const imgInp = document.getElementById("widgetImgUpload");
   const lg = document.getElementById("widgetTextLg").value;
   const sm = document.getElementById("widgetTextSm").value;
+  
   const process = (imgSrc) => {
     if(!settings.widgets) settings.widgets = [];
     settings.widgets.push({ img: imgSrc, textLg: lg, textSm: sm });
@@ -608,9 +595,14 @@ window.addWidget = () => {
     imgInp.value = "";
     showToast("小组件已添加！");
   };
+
   if (imgInp.files && imgInp.files[0]) {
-    const r = new FileReader(); r.onload = e => process(e.target.result); r.readAsDataURL(imgInp.files[0]);
-  } else { process(""); }
+    compressImage(imgInp.files[0], 600, (compressedBase64) => {
+      process(compressedBase64);
+    });
+  } else {
+    process(""); // 没图纯文字
+  }
 };
 
 /* ================= 基础系统 ================= */
@@ -868,7 +860,15 @@ function minimizeCall() { closeApp('app-call'); document.getElementById("floatin
 function hangupCall() { closeApp('app-call'); document.getElementById("floatingCall").style.display = "none"; document.getElementById("callStatus").textContent = "已挂断"; }
 
 /* ================= 设置与启动 ================= */
-function saveSettings() { localStorage.setItem("os_settings", JSON.stringify(settings)); }
+function saveSettings() { 
+  try { localStorage.setItem("os_settings", JSON.stringify(settings)); } 
+  catch(e) { 
+    showToast("存储空间不足，图片可能过大！"); 
+    // 移除最新添加的图片以防崩溃
+    if(settings.widgets.length > 0) settings.widgets.pop(); 
+    renderWidgets();
+  } 
+}
 function savePools() { localStorage.setItem("os_pools", JSON.stringify(pools)); }
 function saveContacts() { localStorage.setItem("os_contacts", JSON.stringify(contacts)); }
 function saveChatRecords() { localStorage.setItem("os_chat_records", JSON.stringify(chatRecords)); }
@@ -885,15 +885,26 @@ document.getElementById("settingRecall").oninput = (e) => { settings.recallRate 
 document.getElementById("settingMailLen").oninput = (e) => { settings.mailMaxLen = e.target.value; document.getElementById("mailLenLabel").textContent = e.target.value; saveSettings(); };
 document.getElementById("settingNoteLen").oninput = (e) => { settings.noteMaxLen = e.target.value; document.getElementById("noteLenLabel").textContent = e.target.value; saveSettings(); };
 
-document.getElementById("splashBgUpload").onchange = (e) => { const r = new FileReader(); r.onload = ev => { settings.splashBg = ev.target.result; saveSettings(); showToast("开屏背景已保存"); }; r.readAsDataURL(e.target.files[0]); };
-document.getElementById("homeBgUpload").onchange = (e) => { const r = new FileReader(); r.onload = ev => { settings.homeBg = ev.target.result; saveSettings(); applyTheme(); }; r.readAsDataURL(e.target.files[0]); };
-document.getElementById("callBgUpload").onchange = (e) => { const r = new FileReader(); r.onload = ev => { settings.callBg = ev.target.result; saveSettings(); showToast("通话背景已保存"); }; r.readAsDataURL(e.target.files[0]); };
+document.getElementById("splashBgUpload").onchange = (e) => { 
+  const f = e.target.files[0]; if(!f) return;
+  compressImage(f, 800, (base64) => { settings.splashBg = base64; saveSettings(); showToast("开屏背景已保存"); });
+};
+document.getElementById("homeBgUpload").onchange = (e) => { 
+  const f = e.target.files[0]; if(!f) return;
+  compressImage(f, 1000, (base64) => { settings.homeBg = base64; saveSettings(); applyTheme(); showToast("壁纸已保存"); });
+};
+document.getElementById("callBgUpload").onchange = (e) => { 
+  const f = e.target.files[0]; if(!f) return;
+  compressImage(f, 800, (base64) => { settings.callBg = base64; saveSettings(); showToast("通话背景已保存"); });
+};
+
 document.getElementById("emojiUpload").onchange = (e) => {
   const files = e.target.files; if(!files.length) return;
   Array.from(files).forEach(file => {
-    const r = new FileReader();
-    r.onload = ev => { customEmojis.push(ev.target.result); localStorage.setItem("os_emojis", JSON.stringify(customEmojis)); };
-    r.readAsDataURL(file);
+    compressImage(file, 100, (base64) => { 
+      customEmojis.push(base64); 
+      localStorage.setItem("os_emojis", JSON.stringify(customEmojis)); 
+    });
   });
   showToast("自定义表情已添加！");
 };
