@@ -93,7 +93,9 @@
 
   .clock-widget { text-align: center; margin-top: 10px; margin-bottom: 20px; }
   .clock-time { font-size: 64px; font-weight: 200; letter-spacing: -2px; color: #fff; text-shadow: 0 2px 10px rgba(0,0,0,0.5); }
-  [data-theme="light"] .clock-time, [data-theme="cute"] .clock-time, [data-theme="blue"] .clock-time, [data-theme="purple"] .clock-time, [data-theme="green"] .clock-time { color: var(--text); text-shadow: none; }
+  .clock-date { font-size: 18px; font-weight: 400; color: #fff; opacity: 0.8; margin-top: 5px; text-shadow: 0 1px 5px rgba(0,0,0,0.5); }
+  [data-theme="light"] .clock-time, [data-theme="cute"] .clock-time, [data-theme="blue"] .clock-time, [data-theme="purple"] .clock-time, [data-theme="green"] .clock-time,
+  [data-theme="light"] .clock-date, [data-theme="cute"] .clock-date, [data-theme="blue"] .clock-date, [data-theme="purple"] .clock-date, [data-theme="green"] .clock-date { color: var(--text); text-shadow: none; }
 
   .app-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; justify-items: center; }
   .app-icon { display: flex; flex-direction: column; align-items: center; gap: 8px; cursor: pointer; position: relative;}
@@ -176,10 +178,19 @@
   .tarot-card-title { font-size: 20px; font-weight: bold; color: var(--accent); text-align: center; margin-bottom: 15px; border-bottom: 1px dashed var(--border); padding-bottom: 10px;}
   .tarot-card-meaning { font-size: 15px; line-height: 1.6; color: var(--text); }
 
-  /* 通话 */
+  /* 通话界面 */
   #app-call { background: #1a1a1a; color: #fff; background-size: cover; background-position: center; position: relative;}
   #callOverlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); z-index: 0;}
   .call-content { position: relative; z-index: 1; flex: 1; display: flex; flex-direction: column; justify-content: center; align-items: center; }
+  
+  .call-avatar { width: 100px; height: 100px; border-radius: 50%; background: #333; margin-bottom: 20px; display: flex; justify-content: center; align-items: center; border: 2px solid rgba(255,255,255,0.2); overflow:hidden;}
+  .call-avatar img { width: 100%; height: 100%; object-fit: cover;}
+  .call-name { font-size: 24px; font-weight: 500; margin-bottom: 10px; }
+  .call-status { font-size: 16px; color: #aaa; }
+  .call-actions { display: flex; gap: 40px; margin-top: 50px; }
+  .call-btn { width: 60px; height: 60px; border-radius: 50%; border: none; font-size: 24px; cursor: pointer; display: flex; justify-content: center; align-items: center; color: #fff; }
+  .btn-minimize { background: #444; }
+  .btn-hangup { background: #e05353; }
 
   /* 音乐 */
   #app-music { background: var(--bg); align-items: center; justify-content: center; }
@@ -205,7 +216,6 @@
   .mail-item.unread { border-left: 4px solid var(--accent); }
   .mail-date { font-size: 11px; color: var(--muted); position: absolute; top: 15px; right: 15px; }
   
-  /* 删除小按钮 */
   .del-icon-btn { color: var(--danger); font-size: 16px; cursor: pointer; padding: 5px; margin-left: 10px; font-weight: bold;}
   
   .mail-detail { padding: 20px; background: var(--panel); margin: 15px; border-radius: 12px; border: 1px solid var(--border); font-size: 16px; line-height: 1.8; white-space: pre-wrap; display: none; }
@@ -263,7 +273,10 @@
 
 <div id="homeScreen">
   <div id="widgetArea"></div>
-  <div class="clock-widget"><div class="clock-time" id="homeTime">12:00</div></div>
+  <div class="clock-widget">
+    <div class="clock-time" id="homeTime">12:00</div>
+    <div class="clock-date" id="homeDate">2024/01/01 星期一</div>
+  </div>
   <div class="app-grid" id="appGrid"></div>
 </div>
 
@@ -281,7 +294,6 @@
   <div class="app-header">
     <button class="back-btn" onclick="closeApp('app-chat'); openApp('app-contacts');"><svg class="svg-icon" viewBox="0 0 24 24"><path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"/></svg></button>
     <div class="app-title" id="chatTitle">灵体</div>
-    <!-- 增加修改联系人信息的入口 -->
     <button class="back-btn" onclick="openEditContactModal()" title="修改对方信息"><svg class="svg-icon" viewBox="0 0 24 24"><path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34c-.39-.39-1.02-.39-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/></svg></button>
   </div>
   <div id="oracleStatusBar">正在凝视深渊...</div>
@@ -355,14 +367,13 @@
 <div id="app-call" class="app-container">
   <div id="callOverlay"></div>
   <div class="call-content">
-    <div style="width:100px;height:100px;border-radius:50%;background:#333;margin-bottom:20px;display:flex;justify-content:center;align-items:center;">
+    <div class="call-avatar" id="callAvatarBox">
       <svg class="svg-icon" viewBox="0 0 24 24" style="width:50px;height:50px;fill:#fff;"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>
     </div>
-    <div style="font-size:24px;font-weight:500;" id="callName">灵体</div>
-    <div style="font-size:16px;color:#aaa;margin-top:10px;" id="callStatus">正在连接...</div>
-    <div style="display:flex;gap:40px;margin-top:50px;">
-      <button onclick="minimizeCall()" style="width:60px;height:60px;border-radius:50%;background:#444;color:#fff;border:none;display:flex;justify-content:center;align-items:center;cursor:pointer;"><svg class="svg-icon" viewBox="0 0 24 24"><path d="M19 13H5v-2h14v2z"/></svg></button>
-      <button onclick="hangupCall()" style="width:60px;height:60px;border-radius:50%;background:#e05353;color:#fff;border:none;display:flex;justify-content:center;align-items:center;cursor:pointer;"><svg class="svg-icon" viewBox="0 0 24 24"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg></button>
+    <div class="call-name" id="callName">灵体</div>
+    <div class="call-status" id="callStatus">正在呼叫...</div>
+    <div class="call-actions" id="callActions">
+      <!-- 按钮会根据状态动态变化 -->
     </div>
   </div>
 </div>
@@ -560,7 +571,9 @@
   let currentSongIndex = -1;
   let isPlaying = false;
   let settings, pools, contacts, chatRecords, customEmojis, userMails, noteHistory;
-  let tempAvatarBase64 = null; // 用于暂存修改的联系人头像
+  
+  let callTimer = null;
+  let callSeconds = 0;
 
   function safeParse(key, defaultVal) {
     try {
@@ -745,9 +758,18 @@
 
   function updateTime() {
     const now = new Date();
+    const y = now.getFullYear();
+    const m = (now.getMonth() + 1).toString().padStart(2, '0');
+    const d = now.getDate().toString().padStart(2, '0');
+    const weeks = ["日", "一", "二", "三", "四", "五", "六"];
+    const week = weeks[now.getDay()];
+    
     const timeStr = now.getHours().toString().padStart(2, '0') + ":" + now.getMinutes().toString().padStart(2, '0');
+    const dateStr = `${y}/${m}/${d} 星期${week}`;
+    
     const st = document.getElementById("statusTime"); if(st) st.textContent = timeStr;
     const ht = document.getElementById("homeTime"); if(ht) ht.textContent = timeStr;
+    const hd = document.getElementById("homeDate"); if(hd) hd.textContent = dateStr;
   }
 
   window.openApp = function(appId) {
@@ -798,13 +820,11 @@
     closeApp('app-contacts'); openApp('app-chat'); renderMessages();
   }
 
-  // 修改联系人信息
   window.openEditContactModal = function() {
     const c = contacts.find(x => x.id === currentChatId);
     if(!c) return;
     document.getElementById("editContactName").value = c.name;
-    document.getElementById("editContactAvatar").value = ""; // 清空上次选的
-    tempAvatarBase64 = null;
+    document.getElementById("editContactAvatar").value = ""; 
     document.getElementById("editContactModal").style.display = 'flex';
   };
 
@@ -818,7 +838,7 @@
     const applyChanges = () => {
       document.getElementById("chatTitle").textContent = c.name;
       saveContacts();
-      renderMessages(); // 更新聊天里的小头像
+      renderMessages(); 
       document.getElementById("editContactModal").style.display = 'none';
       showToast("对方信息已更新");
     };
@@ -834,7 +854,6 @@
     }
   };
 
-  // 聊天记录渲染
   function renderMessages() {
     const box = document.getElementById("messages"); if(!box) return;
     box.innerHTML = "";
@@ -990,6 +1009,7 @@
     }, 1000);
   }
 
+  // ================= 音乐 =================
   let db;
   const DB_NAME = "OracleOS_DB", STORE_NAME = "music";
   function initDB() { return new Promise((res, rej) => { const req = indexedDB.open(DB_NAME, 1); req.onupgradeneeded = e => { if (!e.target.result.objectStoreNames.contains(STORE_NAME)) e.target.result.createObjectStore(STORE_NAME); }; req.onsuccess = e => { db = e.target.result; res(); }; req.onerror = rej; }); }
@@ -1060,16 +1080,14 @@
     saveChatRecords(); renderMessages(); openApp("app-music");
   });
 
-  // ================= 信箱（可删除） =================
+  // ================= 信箱与便签 =================
   function renderMails() {
     const list = document.getElementById("mailList"), detail = document.getElementById("mailDetail");
     if(!list || !detail) return;
     detail.classList.remove("show"); list.style.display = "block"; list.innerHTML = "";
     const today = getTodayDateStr();
 
-    // 用户写的信：支持删除
     userMails.slice().reverse().forEach((mail, idx) => {
-      // 注意：因为 reverse 了，索引要重新计算
       const realIdx = userMails.length - 1 - idx;
       list.innerHTML += `<div class="mail-item" onclick="this.classList.remove('unread'); document.getElementById('mailList').style.display='none'; document.getElementById('mailDetail').innerHTML='<div style=\\'font-size:12px;color:var(--muted);margin-bottom:10px;\\'>${mail.date}</div><div style=\\'white-space:pre-wrap;\\'>${mail.text}</div>'; document.getElementById('mailDetail').classList.add('show');">
         <div class="mail-date">${mail.date}</div>
@@ -1081,7 +1099,6 @@
       </div>`;
     });
 
-    // 随机生成的信：不支持单独删，刷新就变了
     for(let i=0; i<3; i++) {
       const t = generatePuzzle("mail", settings.mailMaxLen);
       list.innerHTML += `<div class="mail-item unread" onclick="this.classList.remove('unread'); document.getElementById('mailList').style.display='none'; document.getElementById('mailDetail').innerHTML='<div style=\\'font-size:12px;color:var(--muted);margin-bottom:10px;\\'>${today}</div><div style=\\'white-space:pre-wrap;\\'>${t}</div>'; document.getElementById('mailDetail').classList.add('show');">
@@ -1111,7 +1128,6 @@
     showToast("信件已保存");
   };
 
-  // ================= 便签（可删除） =================
   function renderNotes() {
     const area = document.getElementById("noteHistory"); if(!area) return;
     area.innerHTML = "";
@@ -1156,17 +1172,79 @@
     renderNotes();
   };
 
+  // ================= 通话（重写界面） =================
   function startCall() {
-    document.getElementById("floatingCall").style.display = "none";
-    document.getElementById("callName").textContent = contacts.find(c=>c.id===currentChatId)?.name || "灵体";
-    document.getElementById("callStatus").textContent = "正在连接...";
+    closeApp('app-call'); // 确保重置状态
+    openApp('app-call');
+    
+    const c = contacts.find(x => x.id === currentChatId);
+    document.getElementById("callName").textContent = c?.name || "灵体";
+    
+    // 设置头像
+    const avatarBox = document.getElementById("callAvatarBox");
+    if(c && c.avatar) {
+      avatarBox.innerHTML = `<img src="${c.avatar}">`;
+    } else {
+      avatarBox.innerHTML = `<svg class="svg-icon" viewBox="0 0 24 24" style="width:50px;height:50px;fill:#fff;"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>`;
+    }
+
+    // 设置背景
     const callApp = document.getElementById("app-call");
     callApp.style.backgroundImage = settings.callBg ? `url(${settings.callBg})` : 'linear-gradient(135deg, #1a1a1a, #333)';
-    setTimeout(() => { document.getElementById("callStatus").textContent = "通话中 00:01"; }, 1500);
-  }
-  window.minimizeCall = function() { closeApp('app-call'); document.getElementById("floatingCall").style.display = "flex"; }
-  window.hangupCall = function() { closeApp('app-call'); document.getElementById("floatingCall").style.display = "none"; document.getElementById("callStatus").textContent = "已挂断"; }
+    
+    // 1. 呼叫中状态
+    const statusEl = document.getElementById("callStatus");
+    statusEl.textContent = "正在呼叫...";
+    statusEl.style.color = "#aaa";
+    
+    const actions = document.getElementById("callActions");
+    actions.innerHTML = `
+      <button onclick="hangupCall()" class="call-btn btn-hangup" style="width:70px; height:70px;">
+        <svg class="svg-icon" viewBox="0 0 24 24" style="width:30px;height:30px;"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+      </button>
+    `;
 
+    clearInterval(callTimer);
+    
+    // 2. 3秒后接通
+    setTimeout(() => {
+      if(!document.getElementById("app-call").classList.contains("open")) return; // 如果中途被挂了
+
+      statusEl.textContent = "00:00";
+      statusEl.style.color = "#4caf50";
+      callSeconds = 0;
+      
+      actions.innerHTML = `
+        <button onclick="minimizeCall()" class="call-btn btn-minimize">
+          <svg class="svg-icon" viewBox="0 0 24 24"><path d="M19 13H5v-2h14v2z"/></svg>
+        </button>
+        <button onclick="hangupCall()" class="call-btn btn-hangup">
+          <svg class="svg-icon" viewBox="0 0 24 24"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      `;
+
+      callTimer = setInterval(() => {
+        callSeconds++;
+        const m = Math.floor(callSeconds/60).toString().padStart(2,'0');
+        const s = (callSeconds%60).toString().padStart(2,'0');
+        statusEl.textContent = `${m}:${s}`;
+      }, 1000);
+      
+    }, 3000);
+  }
+
+  window.minimizeCall = function() { 
+    closeApp('app-call'); 
+    document.getElementById("floatingCall").style.display = "flex"; 
+  }
+  window.hangupCall = function() { 
+    closeApp('app-call'); 
+    document.getElementById("floatingCall").style.display = "none"; 
+    clearInterval(callTimer); 
+    showToast("通话已结束");
+  }
+
+  // ================= 其他设置 =================
   window.renderPoolList = function() {
     const poolName = document.getElementById("poolSelector").value;
     const arr = pools[poolName] || [];
