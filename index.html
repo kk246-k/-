@@ -364,7 +364,6 @@
   </div>
   <div class="settings-content">
     
-    <!-- 新增：备份与恢复区 -->
     <div class="section-title" style="color: var(--danger);">重要：数据备份与恢复</div>
     <div style="display:flex; gap:10px; margin-bottom: 20px;">
       <button class="admin-btn" style="flex:1; background: #4caf50; margin:0;" onclick="exportData()">导出备份</button>
@@ -397,9 +396,20 @@
     <button class="admin-btn" onclick="addWidget()">添加到桌面</button>
     <button class="admin-btn" style="background:var(--danger); margin-top:5px;" onclick="clearWidgets()">清空所有小组件</button>
 
-    <div class="section-title">概率与字数控制</div>
+    <!-- 【新增】：概率与时长控制 -->
+    <div class="section-title">行为与时长控制</div>
     <div class="form-group"><label>已读不回 (<span id="ignoreLabel">20</span>%)</label><input type="range" id="settingIgnore" min="0" max="100" step="10"></div>
     <div class="form-group"><label>撤回消息 (<span id="recallLabel">10</span>%)</label><input type="range" id="settingRecall" min="0" max="100" step="5"></div>
+    <div class="form-group"><label>主动发消息概率 (<span id="proactiveLabel">20</span>%)</label><input type="range" id="settingProactive" min="0" max="100" step="5"></div>
+    
+    <div class="form-group" style="margin-top:15px; border-top:1px dashed var(--border); padding-top:15px;">
+      <label>最短回复延迟 (<span id="minDelayLabel">1</span> 秒)</label><input type="range" id="settingMinDelay" min="0.5" max="10" step="0.5">
+    </div>
+    <div class="form-group">
+      <label>最长回复延迟 (<span id="maxDelayLabel">3</span> 秒)</label><input type="range" id="settingMaxDelay" min="1" max="30" step="0.5">
+    </div>
+
+    <div class="section-title">字数上限控制</div>
     <div class="form-group"><label>信箱字数上限 (<span id="mailLenLabel">50</span>字)</label><input type="range" id="settingMailLen" min="10" max="200" step="10"></div>
     <div class="form-group"><label>便签字数上限 (<span id="noteLenLabel">50</span>字)</label><input type="range" id="settingNoteLen" min="10" max="200" step="10"></div>
 
@@ -428,7 +438,7 @@
 <script>
 /* ================= 安全加载与核心数据 ================= */
 const DEFAULT_SETTINGS = {
-  theme: "cute", ignoreRate: 20, recallRate: 10, mailMaxLen: 50, noteMaxLen: 50,
+  theme: "cute", ignoreRate: 20, recallRate: 10, proactiveRate: 20, minReplyTime: 1, maxReplyTime: 3, mailMaxLen: 50, noteMaxLen: 50,
   splashBg: "", homeBg: "", callBg: "", icons: {}, 
   widgets: [{ img: "", textLg: "Hello", textSm: "今天也要开心哦" }],
   splashTexts: ["正在连接梦境...", "读取潜意识碎片...", "命运正在编织...", "准备好了吗？"]
@@ -460,7 +470,7 @@ if(!Array.isArray(settings.widgets) || settings.widgets.length === 0) {
 }
 if(!Array.isArray(settings.splashTexts)) settings.splashTexts = DEFAULT_SETTINGS.splashTexts;
 
-/* ================= 图片压缩核心逻辑 ================= */
+/* ================= 图片压缩 ================= */
 function compressImage(file, maxSize, callback) {
   const reader = new FileReader();
   reader.onload = function(e) {
@@ -480,9 +490,7 @@ function compressImage(file, maxSize, callback) {
       canvas.width = width;
       canvas.height = height;
       ctx.drawImage(img, 0, 0, width, height);
-      
-      const base64 = canvas.toDataURL('image/jpeg', 0.7);
-      callback(base64);
+      callback(canvas.toDataURL('image/jpeg', 0.7));
     };
     img.src = e.target.result;
   };
@@ -491,7 +499,6 @@ function compressImage(file, maxSize, callback) {
 
 /* ================= 备份与恢复 ================= */
 window.exportData = function() {
-  // 把所有 localStorage 数据打包
   const backupData = {
     settings: localStorage.getItem("os_settings"),
     pools: localStorage.getItem("os_pools"),
@@ -499,22 +506,18 @@ window.exportData = function() {
     chatRecords: localStorage.getItem("os_chat_records"),
     emojis: localStorage.getItem("os_emojis")
   };
-  
   const dataStr = JSON.stringify(backupData);
   const blob = new Blob([dataStr], {type: "application/json"});
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
   a.href = url;
   a.download = `梦占OS备份_${new Date().toLocaleDateString()}.json`;
-  document.body.appendChild(a);
-  a.click();
-  document.body.removeChild(a);
+  document.body.appendChild(a); a.click(); document.body.removeChild(a);
   showToast("备份文件已下载，请妥善保存！");
 };
 
 window.importData = function(event) {
-  const file = event.target.files[0];
-  if (!file) return;
+  const file = event.target.files[0]; if (!file) return;
   const reader = new FileReader();
   reader.onload = function(e) {
     try {
@@ -524,12 +527,9 @@ window.importData = function(event) {
       if (data.contacts) localStorage.setItem("os_contacts", data.contacts);
       if (data.chatRecords) localStorage.setItem("os_chat_records", data.chatRecords);
       if (data.emojis) localStorage.setItem("os_emojis", data.emojis);
-      
       showToast("数据恢复成功！正在刷新页面...");
       setTimeout(() => location.reload(), 1500);
-    } catch (err) {
-      alert("导入失败：文件格式不正确！");
-    }
+    } catch (err) { alert("导入失败：文件格式不正确！"); }
   };
   reader.readAsText(file);
 };
@@ -540,11 +540,8 @@ function runSplash() {
   const container = document.getElementById("splashTextContainer");
   const bar = document.getElementById("splashProgressBar");
   
-  if (settings.splashBg) {
-    splash.style.backgroundImage = `url(${settings.splashBg})`;
-  } else {
-    splash.style.backgroundImage = 'linear-gradient(135deg, #2b1055, #7597de)';
-  }
+  if (settings.splashBg) { splash.style.backgroundImage = `url(${settings.splashBg})`; } 
+  else { splash.style.backgroundImage = 'linear-gradient(135deg, #2b1055, #7597de)'; }
   
   container.innerHTML = "";
   settings.splashTexts.forEach((text) => {
@@ -599,8 +596,7 @@ function changeIcon(appId) {
     compressImage(file, 200, (compressedBase64) => {
       if(!settings.icons) settings.icons = {};
       settings.icons[appId] = compressedBase64;
-      saveSettings(); renderHome();
-      showToast("图标已更换！");
+      saveSettings(); renderHome(); showToast("图标已更换！");
     });
   };
   input.click();
@@ -639,7 +635,6 @@ window.addWidget = () => {
   const imgInp = document.getElementById("widgetImgUpload");
   const lg = document.getElementById("widgetTextLg").value;
   const sm = document.getElementById("widgetTextSm").value;
-  
   const process = (imgSrc) => {
     if(!settings.widgets) settings.widgets = [];
     settings.widgets.push({ img: imgSrc, textLg: lg, textSm: sm });
@@ -649,14 +644,9 @@ window.addWidget = () => {
     imgInp.value = "";
     showToast("小组件已添加！");
   };
-
   if (imgInp.files && imgInp.files[0]) {
-    compressImage(imgInp.files[0], 600, (compressedBase64) => {
-      process(compressedBase64);
-    });
-  } else {
-    process(""); 
-  }
+    compressImage(imgInp.files[0], 600, (compressedBase64) => { process(compressedBase64); });
+  } else { process(""); }
 };
 
 /* ================= 基础系统 ================= */
@@ -676,7 +666,7 @@ function openApp(appId) {
   if(appId === 'app-notes') renderNotes();
   if(appId === 'app-music') renderPlaylist();
   if(appId === 'app-call') startCall();
-  if(appId === 'app-chat') updateStatusBar();
+  if(appId === 'app-chat') { updateStatusBar(); scrollToBottom(); }
 }
 function closeApp(appId) {
   document.getElementById(appId).classList.remove("open");
@@ -731,38 +721,78 @@ function renderMessages() {
     }
     box.appendChild(row);
   });
-  box.scrollTop = box.scrollHeight;
+  scrollToBottom();
 }
+function scrollToBottom() { setTimeout(() => { const box = document.getElementById("messages"); if(box) box.scrollTop = box.scrollHeight; }, 50); }
+
+// 【新增】：根据设置获取随机延迟时间
+function getRandomDelay() {
+  const min = (settings.minReplyTime || 1) * 1000;
+  const max = (settings.maxReplyTime || 3) * 1000;
+  return min + Math.random() * (max - min);
+}
+
+let isProcessing = false; 
+let isWaitingForUser = false; // 防打扰锁：如果发了主动消息，用户没回就不发
 
 document.getElementById("inputBar").onsubmit = (e) => {
   e.preventDefault();
+  if(isProcessing) return;
+  
   const val = document.getElementById("input").value.trim(); if(!val) return;
+  isProcessing = true;
+  isWaitingForUser = false;
+  
   const now = new Date(); const timeStr = now.getHours().toString().padStart(2, '0') + ":" + now.getMinutes().toString().padStart(2, '0');
   const msgId = Date.now().toString();
   chatRecords[currentChatId].push({ id: msgId, role: "user", text: val, time: timeStr, quote: currentQuote, read: false });
   saveChatRecords(); renderMessages(); document.getElementById("input").value = ""; clearQuote();
   document.getElementById("emojiPanel").classList.remove("show");
   
+  // 已读延迟
   setTimeout(() => {
     const idx = chatRecords[currentChatId].findIndex(m => m.id === msgId);
     if(idx>-1) { chatRecords[currentChatId][idx].read = true; saveChatRecords(); renderMessages(); }
-  }, 1000);
+  }, getRandomDelay());
 
+  // 回复延迟与概率
   if (Math.random() * 100 > settings.ignoreRate) {
     setTimeout(() => {
       const reply = drawFromPool("chat");
       const aiId = Date.now().toString();
       chatRecords[currentChatId].push({ id: aiId, role: "oracle", text: reply, time: timeStr });
       saveChatRecords(); renderMessages();
+      
       if (Math.random() * 100 < settings.recallRate) {
         setTimeout(() => {
            const idx = chatRecords[currentChatId].findIndex(m => m.id === aiId);
            if(idx>-1) { chatRecords[currentChatId][idx].isRecalled = true; saveChatRecords(); renderMessages(); }
         }, 2000);
       }
-    }, 1500);
+      isProcessing = false;
+    }, getRandomDelay() + 500);
+  } else {
+    isProcessing = false;
+    isWaitingForUser = true;
   }
 };
+
+// 【新增】：主动发消息定时器
+const PROACTIVE_MSGS = ["在干嘛？", "今天过得怎么样？", "突然想见你。", "怎么不理我？"];
+setInterval(() => {
+  if(isProcessing || isWaitingForUser) return; // 正在聊天或等待回复时，不发
+  if(document.getElementById("homeScreen").style.display === "none" && !document.getElementById("app-chat").classList.contains("open")) return; // 必须当前在聊天界面才触发（防打扰其他App）
+  
+  if (Math.random() * 100 < settings.proactiveRate) {
+    const now = new Date(); const timeStr = now.getHours().toString().padStart(2, '0') + ":" + now.getMinutes().toString().padStart(2, '0');
+    const text = Math.random() < 0.5 ? PROACTIVE_MSGS[Math.floor(Math.random() * PROACTIVE_MSGS.length)] : drawFromPool("chat");
+    
+    chatRecords[currentChatId].push({ id: Date.now().toString(), role: "oracle", text: text, time: timeStr });
+    saveChatRecords(); 
+    if (document.getElementById("app-chat").classList.contains("open")) renderMessages();
+    isWaitingForUser = true;
+  }
+}, 30000);
 
 let selectedMsgId = null;
 document.getElementById("messages").addEventListener("click", (e) => {
@@ -916,11 +946,7 @@ function hangupCall() { closeApp('app-call'); document.getElementById("floatingC
 /* ================= 设置与启动 ================= */
 function saveSettings() { 
   try { localStorage.setItem("os_settings", JSON.stringify(settings)); } 
-  catch(e) { 
-    showToast("存储空间不足，图片可能过大！"); 
-    if(settings.widgets.length > 0) settings.widgets.pop(); 
-    renderWidgets();
-  } 
+  catch(e) { showToast("存储空间不足，图片可能过大！"); if(settings.widgets.length > 0) settings.widgets.pop(); renderWidgets(); } 
 }
 function savePools() { localStorage.setItem("os_pools", JSON.stringify(pools)); }
 function saveContacts() { localStorage.setItem("os_contacts", JSON.stringify(contacts)); }
@@ -935,8 +961,37 @@ function applyTheme() {
 document.getElementById("settingTheme").onchange = (e) => { settings.theme = e.target.value; saveSettings(); applyTheme(); };
 document.getElementById("settingIgnore").oninput = (e) => { settings.ignoreRate = e.target.value; document.getElementById("ignoreLabel").textContent = e.target.value; saveSettings(); };
 document.getElementById("settingRecall").oninput = (e) => { settings.recallRate = e.target.value; document.getElementById("recallLabel").textContent = e.target.value; saveSettings(); };
+document.getElementById("settingProactive").oninput = (e) => { settings.proactiveRate = e.target.value; document.getElementById("proactiveLabel").textContent = e.target.value; saveSettings(); };
 document.getElementById("settingMailLen").oninput = (e) => { settings.mailMaxLen = e.target.value; document.getElementById("mailLenLabel").textContent = e.target.value; saveSettings(); };
 document.getElementById("settingNoteLen").oninput = (e) => { settings.noteMaxLen = e.target.value; document.getElementById("noteLenLabel").textContent = e.target.value; saveSettings(); };
+
+// 【新增】：回复时长滑块监听
+document.getElementById("settingMinDelay").oninput = (e) => { 
+  let minVal = parseFloat(e.target.value); 
+  let maxVal = parseFloat(document.getElementById("settingMaxDelay").value); 
+  if (minVal >= maxVal) { 
+    maxVal = minVal + 0.5; 
+    document.getElementById("settingMaxDelay").value = maxVal; 
+    document.getElementById("maxDelayLabel").textContent = maxVal; 
+    settings.maxReplyTime = maxVal; 
+  } 
+  document.getElementById("minDelayLabel").textContent = minVal; 
+  settings.minReplyTime = minVal; 
+  saveSettings(); 
+};
+document.getElementById("settingMaxDelay").oninput = (e) => { 
+  let maxVal = parseFloat(e.target.value); 
+  let minVal = parseFloat(document.getElementById("settingMinDelay").value); 
+  if (maxVal <= minVal) { 
+    minVal = maxVal - 0.5; if (minVal < 0.5) minVal = 0.5; 
+    document.getElementById("settingMinDelay").value = minVal; 
+    document.getElementById("minDelayLabel").textContent = minVal; 
+    settings.minReplyTime = minVal; 
+  } 
+  document.getElementById("maxDelayLabel").textContent = maxVal; 
+  settings.maxReplyTime = maxVal; 
+  saveSettings(); 
+};
 
 document.getElementById("splashBgUpload").onchange = (e) => { 
   const f = e.target.files[0]; if(!f) return;
@@ -954,10 +1009,7 @@ document.getElementById("callBgUpload").onchange = (e) => {
 document.getElementById("emojiUpload").onchange = (e) => {
   const files = e.target.files; if(!files.length) return;
   Array.from(files).forEach(file => {
-    compressImage(file, 100, (base64) => { 
-      customEmojis.push(base64); 
-      localStorage.setItem("os_emojis", JSON.stringify(customEmojis)); 
-    });
+    compressImage(file, 100, (base64) => { customEmojis.push(base64); localStorage.setItem("os_emojis", JSON.stringify(customEmojis)); });
   });
   showToast("自定义表情已添加！");
 };
@@ -966,8 +1018,7 @@ window.saveSplashTexts = () => {
   const text = document.getElementById("splashTextsInput").value.trim();
   if(!text) return;
   settings.splashTexts = text.split("\n").map(s=>s.trim()).filter(s=>s);
-  saveSettings();
-  showToast("开屏文字已保存！下次刷新生效");
+  saveSettings(); showToast("开屏文字已保存！下次刷新生效");
 };
 
 window.saveBatchCards = () => {
@@ -984,8 +1035,11 @@ try {
   document.getElementById("splashTextsInput").value = settings.splashTexts.join("\n");
   document.getElementById("settingIgnore").value = settings.ignoreRate; document.getElementById("ignoreLabel").textContent = settings.ignoreRate;
   document.getElementById("settingRecall").value = settings.recallRate; document.getElementById("recallLabel").textContent = settings.recallRate;
+  document.getElementById("settingProactive").value = settings.proactiveRate; document.getElementById("proactiveLabel").textContent = settings.proactiveRate;
   document.getElementById("settingMailLen").value = settings.mailMaxLen; document.getElementById("mailLenLabel").textContent = settings.mailMaxLen;
   document.getElementById("settingNoteLen").value = settings.noteMaxLen; document.getElementById("noteLenLabel").textContent = settings.noteMaxLen;
+  document.getElementById("settingMinDelay").value = settings.minReplyTime; document.getElementById("minDelayLabel").textContent = settings.minReplyTime;
+  document.getElementById("settingMaxDelay").value = settings.maxReplyTime; document.getElementById("maxDelayLabel").textContent = settings.maxReplyTime;
   runSplash(); 
 } catch(e) { console.error("UI初始化失败", e); }
 
