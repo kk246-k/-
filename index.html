@@ -3,12 +3,12 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
-<title>梦占 · 操作系统</title>
+<title>梦占 · OS</title>
 <style>
   :root, [data-theme="dark"] {
     --bg: #12101a; --panel: rgba(30, 27, 41, 0.95); --user: #4a3f6b; --user-text: #ffffff; --oracle: rgba(42, 36, 56, 0.9);
     --text: #e8e3f0; --muted: #9a92b0; --accent: #d4af7a; --border: #3d3552; --icon-bg: rgba(255,255,255,0.1);
-    --danger: #e05353; --bg-image: none; --mask-color: 18, 16, 26;
+    --danger: #e05353; --mask-color: 18, 16, 26;
   }
   [data-theme="light"] {
     --bg: #f5f2eb; --panel: rgba(255, 255, 255, 0.95); --user: #e8e2d5; --user-text: #333333; --oracle: rgba(255, 255, 255, 0.9);
@@ -29,113 +29,141 @@
     position: relative; background-color: var(--bg); overflow: hidden;
   }
 
-  #bgLayer { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-image: var(--bg-image); background-size: cover; background-position: center; z-index: -2; transition: 0.3s; }
-  #bgMask { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(var(--mask-color), 0.3); z-index: -1; backdrop-filter: blur(10px); }
+  /* ================= 背景层 ================= */
+  #lockBg, #homeBg { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-size: cover; background-position: center; z-index: -2; transition: 0.3s; }
+  #bgMask { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(var(--mask-color), 0.3); z-index: -1; backdrop-filter: blur(5px); }
 
-  /* 顶部状态栏 */
-  #statusBar { display: flex; justify-content: space-between; align-items: center; padding: 10px 20px; font-size: 14px; font-weight: 600; z-index: 10; color: var(--text); }
-  .status-right { display: flex; gap: 5px; align-items: center; }
+  /* ================= 1. 锁屏界面 ================= */
+  #lockScreen { position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 9999; display: flex; flex-direction: column; justify-content: center; align-items: center; transition: transform 0.4s ease, opacity 0.4s ease; background: rgba(0,0,0,0.3); }
+  #lockScreen.unlocked { transform: translateY(-100%); opacity: 0; pointer-events: none; }
+  .lock-time { font-size: 80px; font-weight: 200; color: #fff; text-shadow: 0 2px 10px rgba(0,0,0,0.5); margin: 0; }
+  .lock-date { font-size: 18px; color: #fff; text-shadow: 0 1px 5px rgba(0,0,0,0.5); margin-top: 5px; }
+  .unlock-hint { position: absolute; bottom: 50px; color: #fff; font-size: 16px; animation: pulse 2s infinite; cursor: pointer; display: flex; flex-direction: column; align-items: center; gap: 10px; }
+  .unlock-hint svg { width: 30px; height: 30px; fill: #fff; transform: rotate(90deg); }
 
-  /* ================= 桌面 (Home) ================= */
+  /* ================= 2. 桌面 ================= */
+  #statusBar { display: flex; justify-content: space-between; align-items: center; padding: 10px 20px; font-size: 14px; font-weight: 600; z-index: 10; color: #fff; text-shadow: 0 1px 3px rgba(0,0,0,0.5); }
+  [data-theme="light"] #statusBar, [data-theme="cute"] #statusBar { color: var(--text); text-shadow: none; }
+  
   #homeScreen { flex: 1; display: flex; flex-direction: column; padding: 20px; z-index: 5; transition: transform 0.3s ease, opacity 0.3s ease; }
   #homeScreen.hidden { transform: scale(0.9); opacity: 0; pointer-events: none; }
   
   .clock-widget { text-align: center; margin-top: 30px; margin-bottom: 40px; }
-  .clock-time { font-size: 64px; font-weight: 200; letter-spacing: -2px; }
-  .clock-date { font-size: 16px; color: var(--muted); margin-top: 5px; }
+  .clock-time { font-size: 64px; font-weight: 200; letter-spacing: -2px; color: #fff; text-shadow: 0 2px 10px rgba(0,0,0,0.5); }
+  .clock-date { font-size: 16px; color: #eee; text-shadow: 0 1px 5px rgba(0,0,0,0.5); }
+  [data-theme="light"] .clock-time, [data-theme="cute"] .clock-time { color: var(--text); text-shadow: none; }
+  [data-theme="light"] .clock-date, [data-theme="cute"] .clock-date { color: var(--muted); text-shadow: none; }
 
   .app-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; justify-items: center; }
-  .app-icon { display: flex; flex-direction: column; align-items: center; gap: 8px; cursor: pointer; transition: transform 0.1s; }
+  .app-icon { display: flex; flex-direction: column; align-items: center; gap: 8px; cursor: pointer; transition: transform 0.1s; position: relative;}
   .app-icon:active { transform: scale(0.9); }
-  .app-icon .icon-box { width: 60px; height: 60px; border-radius: 16px; background: var(--panel); display: flex; justify-content: center; align-items: center; box-shadow: 0 4px 15px rgba(0,0,0,0.1); border: 1px solid var(--border); }
+  .app-icon .icon-box { width: 60px; height: 60px; border-radius: 16px; background: var(--panel); display: flex; justify-content: center; align-items: center; box-shadow: 0 4px 15px rgba(0,0,0,0.1); border: 1px solid var(--border); overflow: hidden; }
   .app-icon svg { width: 32px; height: 32px; fill: var(--accent); }
-  .app-icon .app-name { font-size: 12px; color: var(--text); text-shadow: 0 1px 2px rgba(0,0,0,0.5); }
-  [data-theme="light"] .app-icon .app-name, [data-theme="cute"] .app-icon .app-name { text-shadow: none; }
+  .app-icon img { width: 100%; height: 100%; object-fit: cover; }
+  .app-icon .app-name { font-size: 12px; color: #fff; text-shadow: 0 1px 3px rgba(0,0,0,0.5); }
+  [data-theme="light"] .app-icon .app-name, [data-theme="cute"] .app-icon .app-name { color: var(--text); text-shadow: none; }
+  /* 图标右上角的更换按钮 */
+  .edit-icon-btn { position: absolute; top: -5px; right: 5px; background: var(--accent); color: #fff; border-radius: 50%; width: 18px; height: 18px; display: flex; justify-content: center; align-items: center; font-size: 12px; z-index: 2; border: 2px solid var(--bg); }
 
-  /* ================= App 通用容器 ================= */
+  /* ================= App 容器 ================= */
   .app-container { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: var(--bg); z-index: 50; display: flex; flex-direction: column; transform: translateY(100%); transition: transform 0.3s cubic-bezier(0.1, 0.7, 0.1, 1); }
   .app-container.open { transform: translateY(0); }
-  
   .app-header { display: flex; align-items: center; padding: 15px 16px; background: var(--panel); border-bottom: 1px solid var(--border); gap: 15px; }
   .back-btn { background: none; border: none; font-size: 20px; color: var(--accent); cursor: pointer; display: flex; align-items: center; padding: 0; }
   .back-btn svg { width: 24px; height: 24px; fill: currentColor; }
   .app-title { font-size: 18px; font-weight: 600; color: var(--text); flex: 1; text-align: center; padding-right: 24px;}
 
-  /* ================= 1. 聊天 App ================= */
+  /* ================= 3. 通讯录与聊天 ================= */
+  .contact-list { flex: 1; overflow-y: auto; padding: 10px; }
+  .contact-item { background: var(--panel); border: 1px solid var(--border); border-radius: 12px; padding: 15px; margin-bottom: 10px; display: flex; align-items: center; gap: 15px; cursor: pointer; }
+  .contact-avatar { width: 48px; height: 48px; border-radius: 50%; background: var(--icon-bg); display: flex; justify-content: center; align-items: center; font-size: 24px; }
+  .contact-info { flex: 1; }
+  .contact-name { font-weight: bold; font-size: 16px; }
+  .contact-last { font-size: 13px; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 180px; }
+  .add-contact-btn { position: absolute; bottom: 20px; right: 20px; width: 50px; height: 50px; border-radius: 50%; background: var(--accent); color: #fff; font-size: 24px; border: none; box-shadow: 0 4px 10px rgba(0,0,0,0.2); cursor: pointer; z-index: 10; display: flex; justify-content: center; align-items: center; }
+
+  /* 聊天界面 */
   #messages { flex: 1; overflow-y: auto; padding: 16px; display: flex; flex-direction: column; gap: 20px; }
   .msg-row { display: flex; align-items: flex-start; gap: 10px; max-width: 85%; animation: fade .3s ease; }
   .msg-row.user { align-self: flex-end; flex-direction: row-reverse; }
   .msg-row.oracle { align-self: flex-start; }
   @keyframes fade{from{opacity:0;transform:translateY(10px)}to{opacity:1}}
   .msg-recalled { align-self: center; font-size: 12px; color: var(--muted); background: var(--icon-bg); padding: 4px 10px; border-radius: 10px; }
-  
   .avatar { width: 40px; height: 40px; border-radius: 50%; background: var(--border); display: flex; justify-content: center; align-items: center; font-size: 20px; overflow: hidden; border: 1px solid var(--accent); flex-shrink: 0; }
   .avatar img { width: 100%; height: 100%; object-fit: cover; }
-  
   .msg-content-wrapper { display: flex; flex-direction: column; position: relative; max-width: 100%; }
   .msg-row.user .msg-content-wrapper { align-items: flex-end; }
-  .msg-row.oracle .msg-content-wrapper { align-items: flex-start; }
-
   .quote-block { background: rgba(0,0,0,0.05); font-size: 12px; padding: 6px 10px; border-radius: 8px; margin-bottom: 4px; color: var(--muted); border-left: 3px solid var(--accent); word-break: break-all; }
   .msg-bubble { padding: 12px 16px; border-radius: 18px; line-height: 1.6; font-size: 15px; word-break: break-word; position: relative; box-shadow: 0 2px 5px rgba(0,0,0,0.05); cursor: pointer; }
   .msg-row.user .msg-bubble { background: var(--user); color: var(--user-text); border-top-right-radius: 4px; }
   .msg-row.oracle .msg-bubble { background: var(--oracle); border: 1px solid var(--border); border-top-left-radius: 4px; }
-  
   .msg-meta { font-size: 11px; color: var(--muted); margin-top: 4px; padding: 0 4px; }
   .input-area { background: var(--panel); border-top: 1px solid var(--border); display: flex; flex-direction: column; }
   #quotePreview { display: none; padding: 8px 16px; background: rgba(0,0,0,0.03); font-size: 13px; color: var(--muted); border-bottom: 1px solid var(--border); position: relative; }
   #quotePreview.show { display: block; }
   #closeQuote { position: absolute; right: 16px; top: 8px; cursor: pointer; font-weight: bold; }
-  
   form { display: flex; gap: 10px; padding: 10px 12px calc(10px + env(safe-area-inset-bottom)); align-items: center; }
   .btn-tool { background: transparent; border: none; padding: 0 4px; cursor: pointer; color: var(--muted); display: flex; align-items: center; }
   .btn-tool svg { width: 24px; height: 24px; fill: currentColor; }
   input[type="text"] { flex: 1; padding: 12px 16px; border-radius: 24px; border: 1px solid var(--border); background: var(--bg); color: var(--text); font-size: 16px; outline: none; }
   button.send { padding: 0 20px; border-radius: 24px; border: none; background: var(--accent); color: #fff; font-size: 16px; font-weight: 600; height: 44px; cursor: pointer; }
 
-  /* ================= 2. 塔罗 App ================= */
+  /* ================= 4. 塔罗 App ================= */
   #app-tarot { background: var(--bg); align-items: center; justify-content: center; }
   .tarot-area { flex: 1; display: flex; flex-direction: column; justify-content: center; align-items: center; width: 100%; padding: 20px; }
   .tarot-card { width: 240px; height: 380px; perspective: 1000px; cursor: pointer; }
   .tarot-inner { position: relative; width: 100%; height: 100%; text-align: center; transition: transform 0.8s; transform-style: preserve-3d; }
   .tarot-card.flipped .tarot-inner { transform: rotateY(180deg); }
-  .tarot-front, .tarot-back { position: absolute; width: 100%; height: 100%; -webkit-backface-visibility: hidden; backface-visibility: hidden; border-radius: 16px; display: flex; justify-content: center; align-items: center; padding: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.2); border: 2px solid var(--accent); }
+  .tarot-front, .tarot-back { position: absolute; width: 100%; height: 100%; -webkit-backface-visibility: hidden; backface-visibility: hidden; border-radius: 16px; display: flex; flex-direction: column; justify-content: center; align-items: center; padding: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.2); border: 2px solid var(--accent); }
   .tarot-front { background: repeating-linear-gradient(45deg, var(--panel), var(--panel) 10px, var(--border) 10px, var(--border) 20px); }
   .tarot-front::after { content: "?"; font-size: 80px; color: var(--accent); opacity: 0.5; }
-  .tarot-back { background: var(--panel); transform: rotateY(180deg); font-size: 24px; text-align: center; line-height: 1.6; color: var(--text); font-weight: bold; }
+  .tarot-back { background: var(--panel); transform: rotateY(180deg); color: var(--text); }
+  .tarot-title { font-size: 22px; font-weight: bold; color: var(--accent); margin-bottom: 15px; }
+  .tarot-meaning { font-size: 15px; line-height: 1.6; text-align: left; }
   .tarot-hint { margin-top: 30px; color: var(--muted); font-size: 14px; animation: pulse 2s infinite; }
-  @keyframes pulse { 0% { opacity: 0.5; } 50% { opacity: 1; } 100% { opacity: 0.5; } }
 
-  /* ================= 3. 信箱 App ================= */
+  /* ================= 5. 通话与悬浮窗 ================= */
+  #app-call { background: #1a1a1a; align-items: center; justify-content: center; color: #fff; }
+  .call-info { text-align: center; margin-bottom: 50px; }
+  .call-avatar { width: 100px; height: 100px; border-radius: 50%; background: #333; margin: 0 auto 20px; display: flex; justify-content: center; align-items: center; font-size: 40px; border: 2px solid #555; }
+  .call-name { font-size: 24px; font-weight: 500; }
+  .call-status { font-size: 16px; color: #aaa; margin-top: 10px; }
+  .call-actions { display: flex; gap: 40px; margin-top: 50px; }
+  .call-btn { width: 60px; height: 60px; border-radius: 50%; border: none; font-size: 24px; cursor: pointer; display: flex; justify-content: center; align-items: center; color: #fff; }
+  .btn-minimize { background: #444; }
+  .btn-hangup { background: #e05353; }
+
+  /* 悬浮窗 */
+  #floatingCall { position: fixed; top: 100px; right: 20px; width: 70px; height: 100px; background: rgba(30,30,30,0.9); border-radius: 16px; z-index: 9998; display: none; flex-direction: column; justify-content: space-between; align-items: center; padding: 10px; box-shadow: 0 4px 15px rgba(0,0,0,0.3); cursor: pointer; border: 1px solid #555; backdrop-filter: blur(10px); }
+  #floatingCall.show { display: flex; }
+  .float-avatar { width: 40px; height: 40px; border-radius: 50%; background: #444; display: flex; justify-content: center; align-items: center; color: #fff; font-size: 18px; }
+  .float-end { width: 30px; height: 30px; border-radius: 50%; background: #e05353; color: white; display: flex; justify-content: center; align-items: center; border: none; font-size: 12px; }
+
+  /* ================= 6. 信箱 / 便签 / 设置 ================= */
   #app-mail { background: var(--bg); }
   .mail-list { flex: 1; overflow-y: auto; padding: 10px; }
   .mail-item { background: var(--panel); border: 1px solid var(--border); border-radius: 12px; padding: 15px; margin-bottom: 10px; display: flex; flex-direction: column; gap: 5px; cursor: pointer; }
   .mail-item.unread { border-left: 4px solid var(--accent); }
   .mail-sender { font-weight: bold; color: var(--accent); font-size: 15px; }
   .mail-subject { font-size: 14px; color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-  .mail-time { font-size: 12px; color: var(--muted); align-self: flex-end; }
   .mail-detail { padding: 20px; background: var(--panel); margin: 15px; border-radius: 12px; border: 1px solid var(--border); font-size: 16px; line-height: 1.8; white-space: pre-wrap; display: none; }
   .mail-detail.show { display: block; }
 
-  /* ================= 4. 备忘录 App ================= */
   #app-notes { background: #fdfaf6; color: #333; }
   [data-theme="dark"] #app-notes { background: #1a1823; color: #e8e3f0; }
   .note-paper { flex: 1; margin: 20px; padding: 30px 20px; border-radius: 8px; background-image: repeating-linear-gradient(transparent, transparent 30px, rgba(0,0,0,0.05) 30px, rgba(0,0,0,0.05) 31px); background-attachment: local; font-family: "KaiTi", "楷体", serif; font-size: 20px; line-height: 1.8; box-shadow: 0 4px 15px rgba(0,0,0,0.05); }
-  .note-date { text-align: right; color: #888; font-size: 14px; margin-bottom: 20px; font-family: sans-serif; }
-
-  /* ================= 5. 设置 App ================= */
+  
   #app-settings { background: var(--bg); }
   .settings-content { flex: 1; overflow-y: auto; padding: 16px; }
   .section-title { font-size: 15px; color: var(--text); margin: 24px 0 10px 0; border-bottom: 1px solid var(--border); padding-bottom: 6px; }
-  .section-title:first-child { margin-top: 0; }
   .form-group { margin-bottom: 12px; }
   .form-group label { display: flex; justify-content: space-between; font-size: 13px; color: var(--muted); margin-bottom: 4px; }
   .form-group input[type="text"], .form-group textarea, .form-group select { width: 100%; padding: 10px; border-radius: 8px; border: 1px solid var(--border); background: var(--panel); color: var(--text); font-size: 15px; font-family: inherit; }
   .form-group input[type="range"] { width: 100%; margin-top: 8px; }
   .admin-btn { width: 100%; padding: 12px; border-radius: 8px; border: none; background: var(--accent); color: #fff; font-size: 16px; font-weight: 600; margin-top: 5px; cursor: pointer; }
 
-  /* 通用弹窗与菜单 */
-  #actionMenu { position: fixed; background: var(--panel); border: 1px solid var(--border); border-radius: 12px; box-shadow: 0 5px 20px rgba(0,0,0,0.2); display: none; z-index: 1000; flex-direction: row; }
+  /* 选项菜单、Toast */
+  #actionMenu { position: fixed; background: var(--panel); border: 1px solid var(--border); border-radius: 12px; box-shadow: 0 5px 20px rgba(0,0,0,0.2); display: none; z-index: 10000; flex-direction: row; }
   #actionMenu.show { display: flex; }
   .action-btn { padding: 10px 16px; font-size: 14px; color: var(--text); border: none; background: transparent; cursor: pointer; }
   #toast { position: fixed; top: 10%; left: 50%; transform: translateX(-50%) translateY(-20px); background: rgba(0, 0, 0, 0.8); color: #fff; padding: 10px 20px; border-radius: 8px; font-size: 14px; z-index: 10000; opacity: 0; pointer-events: none; transition: all 0.3s ease; }
@@ -144,91 +172,105 @@
 </head>
 <body>
 
-<div id="bgLayer"></div><div id="bgMask"></div>
+<!-- 锁屏 -->
+<div id="lockBg"></div>
+<div id="lockScreen">
+  <div class="lock-time" id="lockTime">12:00</div>
+  <div class="lock-date" id="lockDate">1月1日 星期一</div>
+  <div class="unlock-hint" onclick="unlockScreen()">
+    <svg viewBox="0 0 24 24"><path d="M12 4l-8 8h6v8h4v-8h6z"/></svg>
+    上滑解锁
+  </div>
+</div>
 
-<div id="toast"></div>
+<div id="homeBg"></div>
+<div id="bgMask"></div>
 
-<!-- 手机状态栏 -->
+<!-- 悬浮通话窗 -->
+<div id="floatingCall" onclick="openApp('app-call')">
+  <div class="float-avatar" id="floatAvatar">🔮</div>
+  <button class="float-end" onclick="event.stopPropagation(); hangupCall();">挂断</button>
+</div>
+
+<!-- 状态栏 -->
 <div id="statusBar">
   <div id="statusTime">12:00</div>
   <div class="status-right"><span>5G</span><span>🔋</span></div>
 </div>
 
-<!-- ================= 桌面 ================= -->
+<!-- 桌面 -->
 <div id="homeScreen">
   <div class="clock-widget">
     <div class="clock-time" id="homeTime">12:00</div>
-    <div class="clock-date" id="homeDate">1月1日 星期一</div>
   </div>
-
-  <div class="app-grid">
-    <!-- 聊天 -->
-    <div class="app-icon" onclick="openApp('app-chat')">
-      <div class="icon-box"><svg viewBox="0 0 24 24"><path d="M20 2H4c-1.1 0-2 .9-2 2v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2z"/></svg></div>
-      <div class="app-name">梦占通讯</div>
-    </div>
-    <!-- 塔罗 -->
-    <div class="app-icon" onclick="openApp('app-tarot'); resetTarot();">
-      <div class="icon-box"><svg viewBox="0 0 24 24"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-7 14l-4-4 1.41-1.41L12 14.17l4.59-4.59L18 11l-6 6z"/></svg></div>
-      <div class="app-name">命运塔罗</div>
-    </div>
-    <!-- 信箱 -->
-    <div class="app-icon" onclick="openApp('app-mail'); renderMails();">
-      <div class="icon-box"><svg viewBox="0 0 24 24"><path d="M20 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4l-8 5-8-5V6l8 5 8-5v2z"/></svg></div>
-      <div class="app-name">神秘信箱</div>
-    </div>
-    <!-- 备忘录 -->
-    <div class="app-icon" onclick="openApp('app-notes'); renderNotes();">
-      <div class="icon-box"><svg viewBox="0 0 24 24"><path d="M14 2H6c-1.1 0-1.99.9-1.99 2L4 20c0 1.1.89 2 1.99 2H18c1.1 0 2-.9 2-2V8l-6-6zm2 16H8v-2h8v2zm0-4H8v-2h8v2zm-3-5V3.5L18.5 9H13z"/></svg></div>
-      <div class="app-name">神谕便签</div>
-    </div>
-    <!-- 设置 -->
-    <div class="app-icon" onclick="openApp('app-settings')">
-      <div class="icon-box"><svg viewBox="0 0 24 24"><path d="M19.14,12.94c0.04-0.3,0.06-0.61,0.06-0.94c0-0.32-0.02-0.64-0.06-0.94l2.03-1.58c0.18-0.14,0.23-0.41,0.12-0.61 l-1.92-3.32c-0.12-0.22-0.37-0.29-0.59-0.22l-2.39,0.96c-0.5-0.38-1.03-0.7-1.62-0.94L14.4,2.81c-0.04-0.24-0.24-0.41-0.48-0.41 h-3.84c-0.24,0-0.43,0.17-0.47,0.41L9.25,5.35C8.66,5.59,8.12,5.92,7.63,6.29L5.24,5.33c-0.22-0.08-0.47,0-0.59,0.22L2.73,8.87 C2.62,9.08,2.66,9.34,2.86,9.48l2.03,1.58C4.84,11.36,4.8,11.69,4.8,12s0.02,0.64,0.06,0.94l-2.03,1.58 c-0.18,0.14-0.23,0.41-0.12,0.61l1.92,3.32c0.12,0.22,0.37,0.29,0.59,0.22l2.39-0.96c0.5,0.38,1.03,0.7,1.62,0.94l0.36,2.54 c0.05,0.24,0.24,0.41,0.48,0.41h3.84c0.24,0,0.43-0.17,0.47-0.41l0.36-2.54c0.59-0.24,1.13-0.56,1.62-0.94l2.39,0.96 c0.22,0.08,0.47,0,0.59-0.22l1.92-3.32c0.12-0.22,0.07-0.49-0.12-0.61L19.14,12.94z M12,15.6c-1.98,0-3.6-1.62-3.6-3.6 s1.62-3.6,3.6-3.6s3.6,1.62,3.6,3.6S13.98,15.6,12,15.6z"/></svg></div>
-      <div class="app-name">系统设置</div>
-    </div>
+  <div class="app-grid" id="appGrid">
+    <!-- 动态渲染图标 -->
   </div>
 </div>
 
-<!-- ================= App 1：聊天 ================= -->
+<!-- ================= App：通讯录 ================= -->
+<div id="app-contacts" class="app-container">
+  <div class="app-header">
+    <button class="back-btn" onclick="closeApp('app-contacts')"><svg viewBox="0 0 24 24"><path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"/></svg></button>
+    <div class="app-title">通讯录</div>
+    <div style="width:24px"></div>
+  </div>
+  <div class="contact-list" id="contactList"></div>
+  <button class="add-contact-btn" onclick="addContact()">+</button>
+</div>
+
+<!-- ================= App：聊天 ================= -->
 <div id="app-chat" class="app-container">
   <div class="app-header">
-    <button class="back-btn" onclick="closeApp('app-chat')"><svg viewBox="0 0 24 24"><path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"/></svg></button>
+    <button class="back-btn" onclick="closeApp('app-chat'); openApp('app-contacts');"><svg viewBox="0 0 24 24"><path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"/></svg></button>
     <div class="app-title" id="chatTitle">梦占灵体</div>
     <div style="width:24px"></div>
   </div>
-  
   <div id="messages"></div>
-  
   <div class="input-area">
     <div id="quotePreview"><span id="quoteText"></span><span id="closeQuote">✕</span></div>
     <form id="inputBar">
-      <button type="button" class="btn-tool" id="optBtn" title="提问"><svg viewBox="0 0 24 24"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-9 14l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/></svg></button>
       <input type="text" id="input" placeholder="发送消息…" autocomplete="off">
       <button class="send" type="submit">发送</button>
     </form>
   </div>
 </div>
 
-<!-- ================= App 2：塔罗 ================= -->
+<!-- ================= App：塔罗 ================= -->
 <div id="app-tarot" class="app-container">
   <div class="app-header">
     <button class="back-btn" onclick="closeApp('app-tarot')"><svg viewBox="0 0 24 24"><path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"/></svg></button>
-    <div class="app-title">命运塔罗</div>
+    <div class="app-title">韦特塔罗</div>
     <div style="width:24px"></div>
   </div>
   <div class="tarot-area">
     <div class="tarot-card" id="tarotCard" onclick="flipTarot()">
       <div class="tarot-inner">
         <div class="tarot-front"></div>
-        <div class="tarot-back" id="tarotText">……</div>
+        <div class="tarot-back">
+          <div class="tarot-title" id="tarotName">……</div>
+          <div class="tarot-meaning" id="tarotMeaning"></div>
+        </div>
       </div>
     </div>
-    <div class="tarot-hint">点击卡牌，揭示今日神谕</div>
+    <div class="tarot-hint">点击卡牌，揭示命运</div>
   </div>
 </div>
 
-<!-- ================= App 3：信箱 ================= -->
+<!-- ================= App：通话 ================= -->
+<div id="app-call" class="app-container">
+  <div class="call-info">
+    <div class="call-avatar">🔮</div>
+    <div class="call-name" id="callName">梦占灵体</div>
+    <div class="call-status" id="callStatus">正在连接...</div>
+  </div>
+  <div class="call-actions">
+    <button class="call-btn btn-minimize" onclick="minimizeCall()">➖</button>
+    <button class="call-btn btn-hangup" onclick="hangupCall()">✖</button>
+  </div>
+</div>
+
+<!-- ================= App：信箱 ================= -->
 <div id="app-mail" class="app-container">
   <div class="app-header">
     <button class="back-btn" onclick="closeApp('app-mail')"><svg viewBox="0 0 24 24"><path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"/></svg></button>
@@ -239,7 +281,7 @@
   <div class="mail-detail" id="mailDetail"></div>
 </div>
 
-<!-- ================= App 4：备忘录 ================= -->
+<!-- ================= App：便签 ================= -->
 <div id="app-notes" class="app-container">
   <div class="app-header" style="background:#fdfaf6; border-color:#eee;">
     <button class="back-btn" onclick="closeApp('app-notes')" style="color:#d4a373;"><svg viewBox="0 0 24 24"><path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"/></svg></button>
@@ -247,12 +289,11 @@
     <div style="width:24px"></div>
   </div>
   <div class="note-paper">
-    <div class="note-date" id="noteDate"></div>
     <div id="noteContent">……</div>
   </div>
 </div>
 
-<!-- ================= App 5：设置 ================= -->
+<!-- ================= App：设置 ================= -->
 <div id="app-settings" class="app-container">
   <div class="app-header">
     <button class="back-btn" onclick="closeApp('app-settings')"><svg viewBox="0 0 24 24"><path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"/></svg></button>
@@ -260,8 +301,9 @@
     <div style="width:24px"></div>
   </div>
   <div class="settings-content">
-    <div class="section-title">基础与外观</div>
-    <div class="form-group"><label>桌面壁纸</label><input type="file" id="bgUpload" accept="image/*"></div>
+    <div class="section-title">外观自定义</div>
+    <div class="form-group"><label>锁屏壁纸</label><input type="file" id="lockBgUpload" accept="image/*"></div>
+    <div class="form-group"><label>桌面壁纸</label><input type="file" id="homeBgUpload" accept="image/*"></div>
     <div class="form-group"><label>界面主题</label>
       <select id="settingTheme">
         <option value="dark">夜间暗黑</option>
@@ -269,72 +311,146 @@
         <option value="cute">可爱粉色</option>
       </select>
     </div>
-    <div class="form-group"><label>对方称呼</label><input type="text" id="settingOracleName"></div>
+    <div class="form-group"><label>全局称呼 (联系人1)</label><input type="text" id="settingOracleName"></div>
     
-    <div class="section-title">概率控制</div>
+    <div class="section-title">聊天概率</div>
     <div class="form-group"><label>已读不回 (<span id="ignoreLabel">20</span>%)</label><input type="range" id="settingIgnore" min="0" max="100" step="10"></div>
     <div class="form-group"><label>撤回消息 (<span id="recallLabel">10</span>%)</label><input type="range" id="settingRecall" min="0" max="100" step="5"></div>
 
-    <div class="section-title">字卡池（所有App共用，每行一句）</div>
-    <div class="form-group"><textarea id="newCardBatch" rows="5" placeholder="写下你的字卡..."></textarea></div>
-    <button class="admin-btn" id="saveCardBtn">保存到字卡池</button>
-    <div id="customList" style="margin-top:15px;"></div>
-  </div>
-</div>
-
-<!-- 选项弹窗 -->
-<div id="optionModal" style="position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.5);z-index:10001;display:none;justify-content:center;align-items:center;">
-  <div style="background:var(--panel); padding:20px; border-radius:16px; width:85%; max-width:340px;">
-    <h3 style="margin-top:0;color:var(--text)">向对方提问</h3>
-    <input type="text" id="optQuestion" placeholder="问题..." style="width:100%;padding:10px;margin-bottom:10px;border-radius:8px;border:1px solid var(--border);background:var(--bg);color:var(--text);">
-    <input type="text" id="optA" placeholder="选项 A" style="width:100%;padding:10px;margin-bottom:10px;border-radius:8px;border:1px solid var(--border);background:var(--bg);color:var(--text);">
-    <input type="text" id="optB" placeholder="选项 B" style="width:100%;padding:10px;margin-bottom:10px;border-radius:8px;border:1px solid var(--border);background:var(--bg);color:var(--text);">
-    <div style="display:flex;gap:10px;margin-top:15px;">
-      <button onclick="document.getElementById('optionModal').style.display='none'" style="flex:1;padding:10px;border-radius:8px;border:none;background:var(--border);color:var(--text);">取消</button>
-      <button id="sendOptionBtn" style="flex:1;padding:10px;border-radius:8px;border:none;background:var(--accent);color:#fff;">发送</button>
+    <div class="section-title">独立卡池管理</div>
+    <div class="form-group">
+      <label>选择要编辑的卡池</label>
+      <select id="poolSelector">
+        <option value="chat">通讯卡池 (字卡)</option>
+        <option value="tarot">塔罗附加卡池 (备用)</option>
+        <option value="mail">信箱卡池</option>
+        <option value="notes">便签卡池</option>
+      </select>
     </div>
+    <div class="form-group"><textarea id="newCardBatch" rows="4" placeholder="每行一句，添加到当前选中的卡池"></textarea></div>
+    <button class="admin-btn" id="saveCardBtn">保存到卡池</button>
   </div>
 </div>
 
+<!-- 选项菜单 -->
 <div id="actionMenu">
   <button class="action-btn" id="actQuote">引用</button>
   <button class="action-btn" id="actRecall">撤回</button>
 </div>
 
 <script>
-/* ================= 0. 基础环境配置 ================= */
-const DEFAULT_CARDS = ["顺其自然", "水逆退散", "静待花开", "心诚则灵"];
-const KEY_CHAT = "os_chat_v1", KEY_CUSTOM = "os_custom_v1", KEY_SETTINGS = "os_settings_v1";
+/* ================= 核心数据 ================= */
+const DEFAULT_TAROT = [
+  { name: "0 愚者", meaning: "关键词：纯真、冒险、新开始。\n解释：不要害怕未知的旅程，带着信任向前走。" },
+  { name: "I 魔术师", meaning: "关键词：创造力、行动力。\n解释：你拥有实现目标的所有资源，现在是行动的最佳时机。" },
+  { name: "II 女祭司", meaning: "关键词：直觉、潜意识。\n解释：答案在你的内心深处，静下心来倾听直觉的声音。" },
+  { name: "III 皇后", meaning: "关键词：丰盛、孕育。\n解释：事情将开花结果，享受生命的美好与富足。" },
+  { name: "IV 皇帝", meaning: "关键词：秩序、权威。\n解释：需要建立规则和结构，理智地掌控局面。" },
+  { name: "V 教皇", meaning: "关键词：指引、传统。\n解释：寻求有经验的人的帮助，或者遵循传统的智慧。" },
+  { name: "VI 恋人", meaning: "关键词：结合、选择。\n解释：面临重要的选择，或者关系将进入更深的阶段。" },
+  { name: "VII 战车", meaning: "关键词：意志、胜利。\n解释：只要有坚定的意志，就能克服一切困难向前冲刺。" },
+  { name: "VIII 力量", meaning: "关键词：勇气、包容。\n解释：真正的力量不是强硬，而是用温柔和耐心降服困难。" },
+  { name: "IX 隐士", meaning: "关键词：内省、独处。\n解释：现在是退回内心、反思自我的时候，寻找内心的光。" },
+  { name: "X 命运之轮", meaning: "关键词：转变、契机。\n解释：命运的齿轮正在转动，顺应变化，好运即将到来。" },
+  { name: "XI 正义", meaning: "关键词：平衡、因果。\n解释：种什么因得什么果，需要客观理智地做出公正的决定。" },
+  { name: "XII 倒吊人", meaning: "关键词：牺牲、换位。\n解释：换一个角度看问题，短暂的停滞或牺牲会带来更大的收获。" },
+  { name: "XIII 死神", meaning: "关键词：结束、新生。\n解释：一段旧的关系或阶段即将结束，放下过去才能迎来新生。" },
+  { name: "XIV 节制", meaning: "关键词：调和、中庸。\n解释：事情需要慢慢磨合，不要走极端，保持平衡。" },
+  { name: "XV 恶魔", meaning: "关键词：诱惑、束缚。\n解释：你被某种欲望或物质所困，需要看清真相，解脱自己。" },
+  { name: "XVI 高塔", meaning: "关键词：突变、破坏。\n解释：突然的变故将打破虚假的稳定，虽然痛苦，但为了重建。" },
+  { name: "XVII 星星", meaning: "关键词：希望、疗愈。\n解释：黑暗中看到了曙光，充满希望，一切都会慢慢好起来。" },
+  { name: "XVIII 月亮", meaning: "关键词：不安、未知。\n解释：潜意识的恐惧和迷惘浮现，需防范欺骗，不要盲目行动。" },
+  { name: "XIX 太阳", meaning: "关键词：成功、喜悦。\n解释：一切都将明朗化，充满活力与成功，尽情享受快乐。" },
+  { name: "XX 审判", meaning: "关键词：唤醒、复活。\n解释：过去的努力得到回报，或者从过去的阴影中彻底走出来。" },
+  { name: "XXI 世界", meaning: "关键词：圆满、完成。\n解释：你达成了阶段性的目标，身心合一，享受成功的喜悦。" }
+];
 
-let customCards = JSON.parse(localStorage.getItem(KEY_CUSTOM) || "[]");
-let messages = JSON.parse(localStorage.getItem(KEY_CHAT) || "[]");
-let settings = JSON.parse(localStorage.getItem(KEY_SETTINGS) || '{"oracleName":"梦占灵体","theme":"cute","ignoreRate":20,"recallRate":10}');
+let settings = JSON.parse(localStorage.getItem("os_settings") || '{"theme":"cute","ignoreRate":20,"recallRate":10,"lockBg":"","homeBg":"","icons":{}}');
+let pools = JSON.parse(localStorage.getItem("os_pools") || '{"chat":["顺其自然"],"tarot":[],"mail":["这是随机掉落的信件。"],"notes":["今天是美好的一天。"]}');
+let contacts = JSON.parse(localStorage.getItem("os_contacts") || '[{"id":"c1","name":"梦占灵体","avatar":"🔮"}]');
+let chatRecords = JSON.parse(localStorage.getItem("os_chat_records") || '{"c1":[]}');
+let currentChatId = "c1";
+let currentQuote = null;
 
-const $chatMessages = document.getElementById("messages");
-let bag = [];
-
-function getAllCards() { return [...DEFAULT_CARDS, ...customCards]; }
-
-function drawCard() {
-  const cards = getAllCards();
-  if (cards.length === 0) return "池子空了，去设置里加卡吧。";
-  if (bag.length === 0) bag = [...cards].sort(() => Math.random() - 0.5);
-  return bag.pop();
+// 抽卡池 (带洗牌袋)
+let bags = {"chat":[],"tarot":[],"mail":[],"notes":[]};
+function drawFromPool(poolName) {
+  let p = pools[poolName] || [];
+  // 如果是塔罗，合并内置韦特牌
+  if(poolName === "tarot") p = [...DEFAULT_TAROT.map(t=>t.name), ...p];
+  
+  if (p.length === 0) return "池子空了";
+  if (bags[poolName].length === 0) bags[poolName] = [...p].sort(() => Math.random() - 0.5);
+  return bags[poolName].pop();
 }
 
-/* ================= 1. 手机桌面系统 ================= */
+/* ================= 桌面与图标系统 ================= */
+const APP_CONFIG = [
+  { id: "app-contacts", name: "梦占通讯", svg: '<path d="M20 2H4c-1.1 0-2 .9-2 2v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2z"/>' },
+  { id: "app-tarot", name: "韦特塔罗", svg: '<path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-7 14l-4-4 1.41-1.41L12 14.17l4.59-4.59L18 11l-6 6z"/>' },
+  { id: "app-mail", name: "神秘信箱", svg: '<path d="M20 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4l-8 5-8-5V6l8 5 8-5v2z"/>' },
+  { id: "app-notes", name: "神谕便签", svg: '<path d="M14 2H6c-1.1 0-1.99.9-1.99 2L4 20c0 1.1.89 2 1.99 2H18c1.1 0 2-.9 2-2V8l-6-6zm2 16H8v-2h8v2zm0-4H8v-2h8v2zm-3-5V3.5L18.5 9H13z"/>' },
+  { id: "app-call", name: "占卜热线", svg: '<path d="M6.62 10.79c1.44 2.83 3.76 5.14 6.59 6.59l2.2-2.2c.27-.27.67-.36 1.02-.24 1.12.37 2.33.57 3.57.57.55 0 1 .45 1 1V20c0 .55-.45 1-1 1-9.39 0-17-7.61-17-17 0-.55.45-1 1-1h3.5c.55 0 1 .45 1 1 0 1.25.2 2.45.57 3.57.11.35.03.74-.25 1.02l-2.2 2.2z"/>' },
+  { id: "app-settings", name: "系统设置", svg: '<path d="M19.14,12.94c0.04-0.3,0.06-0.61,0.06-0.94c0-0.32-0.02-0.64-0.06-0.94l2.03-1.58c0.18-0.14,0.23-0.41,0.12-0.61 l-1.92-3.32c-0.12-0.22-0.37-0.29-0.59-0.22l-2.39,0.96c-0.5-0.38-1.03-0.7-1.62-0.94L14.4,2.81c-0.04-0.24-0.24-0.41-0.48-0.41 h-3.84c-0.24,0-0.43,0.17-0.47,0.41L9.25,5.35C8.66,5.59,8.12,5.92,7.63,6.29L5.24,5.33c-0.22-0.08-0.47,0-0.59,0.22L2.73,8.87 C2.62,9.08,2.66,9.34,2.86,9.48l2.03,1.58C4.84,11.36,4.8,11.69,4.8,12s0.02,0.64,0.06,0.94l-2.03,1.58 c-0.18,0.14-0.23,0.41-0.12,0.61l1.92,3.32c0.12,0.22,0.37,0.29,0.59,0.22l2.39-0.96c0.5,0.38,1.03,0.7,1.62,0.94l0.36,2.54 c0.05,0.24,0.24,0.41,0.48,0.41h3.84c0.24,0,0.43-0.17,0.47-0.41l0.36-2.54c0.59-0.24,1.13-0.56,1.62-0.94l2.39,0.96 c0.22,0.08,0.47,0,0.59-0.22l1.92-3.32c0.12-0.22,0.07-0.49-0.12-0.61L19.14,12.94z M12,15.6c-1.98,0-3.6-1.62-3.6-3.6 s1.62-3.6,3.6-3.6s3.6,1.62,3.6,3.6S13.98,15.6,12,15.6z"/>' }
+];
+
+function renderHome() {
+  const grid = document.getElementById("appGrid");
+  grid.innerHTML = "";
+  APP_CONFIG.forEach(app => {
+    const iconSrc = settings.icons && settings.icons[app.id];
+    const iconHtml = iconSrc ? `<img src="${iconSrc}">` : `<svg viewBox="0 0 24 24">${app.svg}</svg>`;
+    
+    // 给图标加个可点击更换的标记
+    const editBtn = `<div class="edit-icon-btn" onclick="event.stopPropagation(); changeIcon('${app.id}')">+</div>`;
+    
+    grid.innerHTML += `
+      <div class="app-icon" onclick="openApp('${app.id}')">
+        ${editBtn}
+        <div class="icon-box">${iconHtml}</div>
+        <div class="app-name">${app.name}</div>
+      </div>
+    `;
+  });
+}
+
+function changeIcon(appId) {
+  const input = document.createElement('input');
+  input.type = 'file'; input.accept = 'image/*';
+  input.onchange = e => {
+    const reader = new FileReader();
+    reader.onload = ev => {
+      if(!settings.icons) settings.icons = {};
+      settings.icons[appId] = ev.target.result;
+      saveSettings();
+      renderHome();
+    };
+    reader.readAsDataURL(e.target.files[0]);
+  };
+  input.click();
+}
+
+/* ================= 时间与解锁 ================= */
 function updateTime() {
   const now = new Date();
   const timeStr = now.getHours().toString().padStart(2, '0') + ":" + now.getMinutes().toString().padStart(2, '0');
   document.getElementById("statusTime").textContent = timeStr;
   document.getElementById("homeTime").textContent = timeStr;
-  document.getElementById("homeDate").textContent = `${now.getMonth()+1}月${now.getDate()}日 星期${['日','一','二','三','四','五','六'][now.getDay()]}`;
+  document.getElementById("lockTime").textContent = timeStr;
+  const dStr = `${now.getMonth()+1}月${now.getDate()}日 星期${['日','一','二','三','四','五','六'][now.getDay()]}`;
+  document.getElementById("lockDate").textContent = dStr;
 }
 setInterval(updateTime, 1000); updateTime();
+
+function unlockScreen() { document.getElementById("lockScreen").classList.add("unlocked"); }
 
 function openApp(appId) {
   document.getElementById(appId).classList.add("open");
   document.getElementById("homeScreen").classList.add("hidden");
+  if(appId === 'app-contacts') renderContacts();
+  if(appId === 'app-mail') renderMails();
+  if(appId === 'app-notes') renderNotes();
+  if(appId === 'app-tarot') resetTarot();
 }
 
 function closeApp(appId) {
@@ -342,16 +458,53 @@ function closeApp(appId) {
   document.getElementById("homeScreen").classList.remove("hidden");
 }
 
-/* ================= 2. 聊天 App ================= */
-const $input = document.getElementById("input");
-const $form = document.getElementById("inputBar");
-let currentQuote = null;
+/* ================= 通讯录与聊天 ================= */
+function renderContacts() {
+  const list = document.getElementById("contactList");
+  list.innerHTML = "";
+  contacts.forEach(c => {
+    const msgs = chatRecords[c.id] || [];
+    const lastMsg = msgs.length > 0 ? (msgs[msgs.length-1].isRecalled ? '[撤回了一条消息]' : msgs[msgs.length-1].text) : '暂无消息';
+    const av = c.avatar ? `<img src="${c.avatar}">` : '🔮';
+    
+    list.innerHTML += `
+      <div class="contact-item" onclick="switchChat('${c.id}')">
+        <div class="contact-avatar">${av}</div>
+        <div class="contact-info">
+          <div class="contact-name">${c.name}</div>
+          <div class="contact-last">${lastMsg}</div>
+        </div>
+      </div>
+    `;
+  });
+}
 
-function saveChat() { localStorage.setItem(KEY_CHAT, JSON.stringify(messages)); }
+function addContact() {
+  const name = prompt("输入新联系人名称：", "新联系人");
+  if(!name) return;
+  const id = "c_" + Date.now();
+  contacts.push({id, name, avatar: ""});
+  chatRecords[id] = [];
+  saveContacts();
+  renderContacts();
+}
+
+function switchChat(id) {
+  currentChatId = id;
+  const c = contacts.find(x => x.id === id);
+  document.getElementById("chatTitle").textContent = c.name;
+  closeApp('app-contacts');
+  openApp('app-chat');
+  renderMessages();
+}
 
 function renderMessages() {
-  $chatMessages.innerHTML = "";
-  messages.forEach(m => {
+  const box = document.getElementById("messages");
+  box.innerHTML = "";
+  const msgs = chatRecords[currentChatId] || [];
+  const c = contacts.find(x => x.id === currentChatId);
+  
+  msgs.forEach(m => {
     const row = document.createElement("div");
     if (m.isRecalled) {
       row.className = "msg-recalled";
@@ -359,7 +512,9 @@ function renderMessages() {
     } else {
       row.className = `msg-row ${m.role}`;
       let quoteHtml = m.quote ? `<div class="quote-block">${m.quote}</div>` : "";
-      let avatarHtml = m.role === "oracle" ? `<div class="avatar">🔮</div>` : "";
+      let av = m.role === "oracle" ? (c.avatar ? `<img src="${c.avatar}">` : '🔮') : "";
+      let avatarHtml = m.role === "oracle" ? `<div class="avatar">${av}</div>` : "";
+      
       row.innerHTML = `
         ${avatarHtml}
         <div class="msg-content-wrapper">
@@ -368,54 +523,51 @@ function renderMessages() {
         </div>
       `;
     }
-    $chatMessages.appendChild(row);
+    box.appendChild(row);
   });
-  $chatMessages.scrollTop = $chatMessages.scrollHeight;
+  box.scrollTop = box.scrollHeight;
 }
 
-async function sendMessage(text) {
+document.getElementById("inputBar").onsubmit = (e) => {
+  e.preventDefault();
+  const val = document.getElementById("input").value.trim();
+  if(!val) return;
+  
   const now = new Date();
   const timeStr = now.getHours().toString().padStart(2, '0') + ":" + now.getMinutes().toString().padStart(2, '0');
   const msgId = Date.now().toString();
   
-  messages.push({ id: msgId, role: "user", text, time: timeStr, quote: currentQuote, read: false });
-  saveChat(); renderMessages(); clearQuote();
+  chatRecords[currentChatId].push({ id: msgId, role: "user", text: val, time: timeStr, quote: currentQuote, read: false });
+  saveChatRecords(); renderMessages();
+  document.getElementById("input").value = ""; clearQuote();
   
   // 已读
   setTimeout(() => {
-    const idx = messages.findIndex(m => m.id === msgId);
-    if (idx > -1) { messages[idx].read = true; saveChat(); renderMessages(); }
+    const idx = chatRecords[currentChatId].findIndex(m => m.id === msgId);
+    if(idx>-1) { chatRecords[currentChatId][idx].read = true; saveChatRecords(); renderMessages(); }
   }, 1000);
 
-  // AI 判断
-  if (Math.random() * 100 < settings.ignoreRate) return; // 已读不回
-
-  setTimeout(async () => {
-    const replyText = drawCard();
-    const aiId = Date.now().toString();
-    messages.push({ id: aiId, role: "oracle", text: replyText, time: timeStr });
-    saveChat(); renderMessages();
-
-    // AI 撤回
-    if (Math.random() * 100 < settings.recallRate) {
-      setTimeout(() => {
-        const aiIdx = messages.findIndex(m => m.id === aiId);
-        if (aiIdx > -1) { messages[aiIdx].isRecalled = true; saveChat(); renderMessages(); }
-      }, 2000);
-    }
-  }, 1500);
-}
-
-$form.onsubmit = (e) => {
-  e.preventDefault();
-  if (!input.value.trim()) return;
-  sendMessage(input.value.trim());
-  input.value = "";
+  // AI
+  if (Math.random() * 100 > settings.ignoreRate) {
+    setTimeout(() => {
+      const reply = drawFromPool("chat");
+      const aiId = Date.now().toString();
+      chatRecords[currentChatId].push({ id: aiId, role: "oracle", text: reply, time: timeStr });
+      saveChatRecords(); renderMessages();
+      
+      if (Math.random() * 100 < settings.recallRate) {
+        setTimeout(() => {
+           const idx = chatRecords[currentChatId].findIndex(m => m.id === aiId);
+           if(idx>-1) { chatRecords[currentChatId][idx].isRecalled = true; saveChatRecords(); renderMessages(); }
+        }, 2000);
+      }
+    }, 1500);
+  }
 };
 
-// 引用/撤回
+// 引用撤回
 let selectedMsgId = null;
-$chatMessages.addEventListener("click", (e) => {
+document.getElementById("messages").addEventListener("click", (e) => {
   const bubble = e.target.closest(".msg-bubble");
   if (!bubble) return;
   selectedMsgId = bubble.getAttribute("data-id");
@@ -424,158 +576,125 @@ $chatMessages.addEventListener("click", (e) => {
   menu.style.left = Math.min(e.clientX, window.innerWidth - 120) + "px";
   menu.classList.add("show");
 });
-
 document.getElementById("actQuote").onclick = () => {
-  const msg = messages.find(m => m.id === selectedMsgId);
-  if (msg) {
-    currentQuote = `${msg.role === 'user' ? '我' : '灵体'}：${msg.text}`;
-    document.getElementById("quoteText").textContent = currentQuote;
-    document.getElementById("quotePreview").classList.add("show");
-  }
+  const msg = chatRecords[currentChatId].find(m => m.id === selectedMsgId);
+  if(msg) { currentQuote = `${msg.role==='user'?'我':'TA'}：${msg.text}`; document.getElementById("quoteText").textContent = currentQuote; document.getElementById("quotePreview").classList.add("show"); }
   document.getElementById("actionMenu").classList.remove("show");
 };
-
 document.getElementById("actRecall").onclick = () => {
-  const msg = messages.find(m => m.id === selectedMsgId);
-  if (msg) { msg.isRecalled = true; saveChat(); renderMessages(); }
+  const msg = chatRecords[currentChatId].find(m => m.id === selectedMsgId);
+  if(msg) { msg.isRecalled = true; saveChatRecords(); renderMessages(); }
   document.getElementById("actionMenu").classList.remove("show");
 };
-
 document.getElementById("closeQuote").onclick = () => clearQuote();
 function clearQuote() { currentQuote = null; document.getElementById("quotePreview").classList.remove("show"); }
 
-// 选项提问
-document.getElementById("optBtn").onclick = () => document.getElementById("optionModal").style.display = "flex";
-document.getElementById("sendOptionBtn").onclick = () => {
-  const q = document.getElementById("optQuestion").value;
-  const a = document.getElementById("optA").value;
-  const b = document.getElementById("optB").value;
-  if (!q || !a || !b) return alert("请填写完整");
-  
-  const opts = [a, b];
-  sendMessage(`【提问】${q}\nA. ${a}\nB. ${b}`);
-  document.getElementById("optionModal").style.display = "none";
-  
-  setTimeout(() => {
-    sendMessage(`我选：${opts[Math.floor(Math.random() * opts.length)]}`);
-  }, 2500);
-};
-
-/* ================= 3. 塔罗 App ================= */
+/* ================= 塔罗 App ================= */
 let tarotFlipped = false;
-function resetTarot() {
-  tarotFlipped = false;
-  document.getElementById("tarotCard").classList.remove("flipped");
-  setTimeout(() => { document.getElementById("tarotText").textContent = "……"; }, 400);
-}
+function resetTarot() { tarotFlipped = false; document.getElementById("tarotCard").classList.remove("flipped"); }
 function flipTarot() {
-  if (tarotFlipped) return;
+  if(tarotFlipped) return;
   tarotFlipped = true;
-  document.getElementById("tarotText").textContent = drawCard();
+  
+  const drawnName = drawFromPool("tarot");
+  const tarotData = DEFAULT_TAROT.find(t => t.name === drawnName);
+  
+  document.getElementById("tarotName").textContent = drawnName;
+  if (tarotData) {
+    document.getElementById("tarotMeaning").innerHTML = tarotData.meaning.replace(/\n/g, "<br>");
+  } else {
+    document.getElementById("tarotMeaning").textContent = "自定义神谕：\n" + drawnName;
+  }
   document.getElementById("tarotCard").classList.add("flipped");
 }
 
-/* ================= 4. 信箱 App ================= */
+/* ================= 伪通话 App ================= */
+let callTimer;
+function minimizeCall() {
+  closeApp('app-call');
+  document.getElementById("floatingCall").classList.add("show");
+  document.getElementById("floatAvatar").textContent = contacts.find(c=>c.id===currentChatId)?.avatar ? '🖼️' : '🔮';
+}
+function hangupCall() {
+  closeApp('app-call');
+  document.getElementById("floatingCall").classList.remove("show");
+  clearTimeout(callTimer);
+  document.getElementById("callStatus").textContent = "已挂断";
+}
+// 点击桌面通话App时触发
+const originalOpenApp = openApp;
+openApp = function(id) {
+  if(id === 'app-call') {
+    document.getElementById("floatingCall").classList.remove("show");
+    document.getElementById("callStatus").textContent = "正在连接...";
+    setTimeout(() => {
+      document.getElementById("callStatus").textContent = "通话中 00:01";
+    }, 1500);
+  }
+  originalOpenApp(id);
+};
+
+/* ================= 其他 App ================= */
 function renderMails() {
   const list = document.getElementById("mailList");
   const detail = document.getElementById("mailDetail");
   detail.classList.remove("show");
+  list.style.display = "block";
   list.innerHTML = "";
-  
-  // 随机生成3封未读信件
-  for (let i = 0; i < 3; i++) {
-    const text = drawCard();
-    const div = document.createElement("div");
-    div.className = "mail-item unread";
-    div.innerHTML = `
-      <div class="mail-sender">未知发件人</div>
-      <div class="mail-subject">${text.substring(0, 15)}...</div>
-      <div class="mail-time">今天</div>
-    `;
-    div.onclick = () => {
-      div.classList.remove("unread");
-      list.style.display = "none";
-      detail.textContent = `信件内容：\n\n${text}`;
-      detail.classList.add("show");
-    };
-    list.appendChild(div);
+  for(let i=0; i<3; i++) {
+    const t = drawFromPool("mail");
+    list.innerHTML += `<div class="mail-item unread" onclick="this.classList.remove('unread'); document.getElementById('mailList').style.display='none'; document.getElementById('mailDetail').textContent='内容：\\n\\n${t}'; document.getElementById('mailDetail').classList.add('show');">
+      <div class="mail-sender">未知发件人</div><div class="mail-subject">${t.substring(0,10)}...</div></div>`;
   }
-  
-  // 点击详情返回列表
-  detail.onclick = () => {
-    detail.classList.remove("show");
-    list.style.display = "block";
-  };
+  detail.onclick = () => { detail.classList.remove("show"); list.style.display = "block"; };
 }
 
-/* ================= 5. 备忘录 App ================= */
 function renderNotes() {
-  const now = new Date();
-  document.getElementById("noteDate").textContent = `${now.getFullYear()}年${now.getMonth()+1}月${now.getDate()}日`;
-  document.getElementById("noteContent").textContent = drawCard();
+  document.getElementById("noteContent").innerText = drawFromPool("notes");
 }
 
-/* ================= 6. 设置 App ================= */
-function applySettings() {
+/* ================= 设置与存储 ================= */
+function saveSettings() { localStorage.setItem("os_settings", JSON.stringify(settings)); }
+function savePools() { localStorage.setItem("os_pools", JSON.stringify(pools)); }
+function saveContacts() { localStorage.setItem("os_contacts", JSON.stringify(contacts)); }
+function saveChatRecords() { localStorage.setItem("os_chat_records", JSON.stringify(chatRecords)); }
+
+function applyTheme() {
   document.documentElement.setAttribute('data-theme', settings.theme);
   document.getElementById("settingTheme").value = settings.theme;
-  document.getElementById("settingOracleName").value = settings.oracleName;
-  document.getElementById("settingIgnore").value = settings.ignoreRate;
-  document.getElementById("ignoreLabel").textContent = settings.ignoreRate;
-  document.getElementById("settingRecall").value = settings.recallRate;
-  document.getElementById("recallLabel").textContent = settings.recallRate;
-  document.getElementById("chatTitle").textContent = settings.oracleName;
-  localStorage.setItem(KEY_SETTINGS, JSON.stringify(settings));
-  renderCustomList();
+  document.getElementById("lockBg").style.backgroundImage = settings.lockBg ? `url(${settings.lockBg})` : 'linear-gradient(135deg, #2b1055, #7597de)';
+  document.getElementById("homeBg").style.backgroundImage = settings.homeBg ? `url(${settings.homeBg})` : 'linear-gradient(135deg, #2b1055, #7597de)';
 }
 
-document.getElementById("settingTheme").onchange = (e) => { settings.theme = e.target.value; applySettings(); };
-document.getElementById("settingOracleName").oninput = (e) => { settings.oracleName = e.target.value; applySettings(); };
-document.getElementById("settingIgnore").oninput = (e) => { settings.ignoreRate = e.target.value; applySettings(); };
-document.getElementById("settingRecall").oninput = (e) => { settings.recallRate = e.target.value; applySettings(); };
-
-document.getElementById("bgUpload").onchange = (e) => {
-  const file = e.target.files[0]; if (!file) return;
-  const reader = new FileReader();
-  reader.onload = (ev) => {
-    document.getElementById("bgLayer").style.backgroundImage = `url(${ev.target.result})`;
-    // 这里为了演示就不存数据库了，实际可存 localStorage
-  };
-  reader.readAsDataURL(file);
+document.getElementById("settingTheme").onchange = (e) => { settings.theme = e.target.value; saveSettings(); applyTheme(); };
+document.getElementById("settingOracleName").oninput = (e) => { 
+  settings.oracleName = e.target.value; saveSettings();
+  contacts[0].name = e.target.value; saveContacts(); renderContacts();
 };
+document.getElementById("settingIgnore").oninput = (e) => { settings.ignoreRate = e.target.value; document.getElementById("ignoreLabel").textContent = e.target.value; saveSettings(); };
+document.getElementById("settingRecall").oninput = (e) => { settings.recallRate = e.target.value; document.getElementById("recallLabel").textContent = e.target.value; saveSettings(); };
+
+document.getElementById("lockBgUpload").onchange = (e) => { const r = new FileReader(); r.onload = ev => { settings.lockBg = ev.target.result; saveSettings(); applyTheme(); }; r.readAsDataURL(e.target.files[0]); };
+document.getElementById("homeBgUpload").onchange = (e) => { const r = new FileReader(); r.onload = ev => { settings.homeBg = ev.target.result; saveSettings(); applyTheme(); }; r.readAsDataURL(e.target.files[0]); };
 
 document.getElementById("saveCardBtn").onclick = () => {
+  const poolName = document.getElementById("poolSelector").value;
   const text = document.getElementById("newCardBatch").value.trim();
-  if (!text) return;
-  text.split("\n").forEach(t => {
-    if (t.trim() && !customCards.includes(t.trim())) customCards.push(t.trim());
-  });
-  localStorage.setItem(KEY_CUSTOM, JSON.stringify(customCards));
+  if(!text) return;
+  text.split("\n").forEach(t => { if(t.trim()) pools[poolName].push(t.trim()); });
+  savePools();
   document.getElementById("newCardBatch").value = "";
-  renderCustomList();
-  alert("已保存到所有App的字卡池！");
+  alert(`已保存到 ${poolName} 卡池！`);
 };
 
-function renderCustomList() {
-  const list = document.getElementById("customList");
-  list.innerHTML = "";
-  customCards.forEach((c, i) => {
-    const div = document.createElement("div");
-    div.style.cssText = "display:flex;justify-content:space-between;padding:8px;border-bottom:1px solid var(--border);font-size:14px;";
-    div.innerHTML = `<span>${c}</span><span style="color:red;cursor:pointer;" onclick="delCard(${i})">删除</span>`;
-    list.appendChild(div);
-  });
-}
-
-window.delCard = (i) => {
-  customCards.splice(i, 1);
-  localStorage.setItem(KEY_CUSTOM, JSON.stringify(customCards));
-  renderCustomList();
-};
-
-/* ================= 7. 启动 ================= */
-applySettings();
-renderMessages();
+/* ================= 启动 ================= */
+applyTheme();
+renderHome();
+document.getElementById("settingOracleName").value = contacts[0].name;
+document.getElementById("settingIgnore").value = settings.ignoreRate;
+document.getElementById("ignoreLabel").textContent = settings.ignoreRate;
+document.getElementById("settingRecall").value = settings.recallRate;
+document.getElementById("recallLabel").textContent = settings.recallRate;
 </script>
 </body>
 </html>
