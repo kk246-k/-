@@ -148,7 +148,7 @@
   .msg-content-wrapper { display: flex; flex-direction: column; position: relative; max-width: 100%; }
   .msg-row.user .msg-content-wrapper { align-items: flex-end; }
   .quote-block { background: rgba(0,0,0,0.05); font-size: 12px; padding: 6px 10px; border-radius: 8px; margin-bottom: 4px; color: var(--muted); border-left: 3px solid var(--accent); }
-  .msg-bubble { padding: 12px 16px; border-radius: 18px; line-height: 1.6; font-size: 15px; word-break: break-word; position: relative; box-shadow: 0 1px 3px rgba(0,0,0,0.05); cursor: pointer; }
+  .msg-bubble { padding: 12px 16px; border-radius: 18px; line-height: 1.6; font-size: 15px; word-break: break-word; position: relative; box-shadow: 0 1px 3px rgba(0,0,0,0.05); cursor: pointer; white-space: pre-wrap; }
   .msg-row.user .msg-bubble { background: var(--user); color: var(--user-text); border-top-right-radius: 4px; }
   .msg-row.oracle .msg-bubble { background: var(--oracle); border: 1px solid var(--border); border-top-left-radius: 4px; }
   .msg-meta { font-size: 11px; color: var(--muted); margin-top: 4px; padding: 0 4px; }
@@ -193,10 +193,10 @@
   .btn-minimize { background: #444; }
   .btn-hangup { background: #e05353; }
 
-  /* 【修复】通话悬浮窗样式 */
+  /* 悬浮通话窗 */
   #floatingCall { 
     position: fixed; top: 80px; right: 20px; width: 70px; height: 100px; 
-    background: rgba(30,30,30,0.9); border-radius: 16px; z-index: 99999; /* 层级拉满 */
+    background: rgba(30,30,30,0.9); border-radius: 16px; z-index: 99999;
     display: none; flex-direction: column; justify-content: space-between; align-items: center; 
     padding: 10px; box-shadow: 0 4px 15px rgba(0,0,0,0.3); cursor: pointer; border: 1px solid #555; backdrop-filter: blur(10px); 
   }
@@ -258,7 +258,7 @@
   #toast { position: fixed; top: 10%; left: 50%; transform: translateX(-50%) translateY(-20px); background: rgba(0, 0, 0, 0.8); color: #fff; padding: 10px 20px; border-radius: 8px; font-size: 14px; z-index: 10000; opacity: 0; pointer-events: none; transition: all 0.3s ease; }
   #toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
 
-  #writeModal, #editContactModal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 10001; display: none; justify-content: center; align-items: center; }
+  .modal-container { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 10001; display: none; justify-content: center; align-items: center; }
   .write-box { background: var(--panel); padding: 20px; border-radius: 12px; width: 85%; max-width: 320px; }
   .write-box textarea { width: 100%; height: 120px; padding: 10px; border-radius: 8px; border: 1px solid var(--border); background: var(--bg); color: var(--text); font-size: 15px; resize: none; margin-bottom: 10px; }
   .write-box input[type="text"] { width: 100%; padding: 10px; border-radius: 8px; border: 1px solid var(--border); background: var(--bg); color: var(--text); font-size: 15px; margin-bottom: 10px; outline: none;}
@@ -320,6 +320,9 @@
     <div id="quotePreview"><span id="quoteText"></span><span id="closeQuote">✕</span></div>
     <div id="emojiPanel"></div>
     <form id="inputForm" onsubmit="event.preventDefault(); sendMessage(); return false;">
+      <!-- 新增：选项按钮 -->
+      <button type="button" class="btn-tool" id="choiceBtn" title="出选择题"><svg class="svg-icon" viewBox="0 0 24 24"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-9 14l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/></svg></button>
+      
       <button type="button" class="btn-tool" id="emojiBtn" title="表情"><svg class="svg-icon" viewBox="0 0 24 24"><path d="M11.99 2C6.47 2 2 6.48 2 12s4.47 10 9.99 10C17.52 22 22 17.52 22 12S17.52 2 11.99 2zM12 20c-4.42 0-8-3.58-8-8s3.58-8 8-8 8 3.58 8 8-3.58 8-8 8zm3.5-9c.83 0 1.5-.67 1.5-1.5S16.33 8 15.5 8 14 8.67 14 9.5s.67 1.5 1.5 1.5zm-7 0c.83 0 1.5-.67 1.5-1.5S9.33 8 8.5 8 7 8.67 7 9.5 7.67 11 8.5 11zm3.5 6.5c2.33 0 4.31-1.46 5.11-3.5H6.89c.8 2.04 2.78 3.5 5.11 3.5z"/></svg></button>
       <button type="button" class="btn-tool" id="inviteMusicBtn" title="一起听歌"><svg class="svg-icon" viewBox="0 0 24 24"><path d="M12 3v10.55c-.59-.34-1.27-.55-2-.55-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4V7h4V3h-6z"/></svg></button>
       <input type="text" id="input" placeholder="发送消息…" autocomplete="off">
@@ -477,14 +480,14 @@
 
     <div class="section-title">行为与时长控制</div>
     <div class="form-group"><label>已读不回 (<span id="ignoreLabel">20</span>%)</label><input type="range" id="settingIgnore" min="0" max="100" step="10"></div>
-    <div class="form-group"><label>撤回消息 (<span id="recallLabel">10</span>%)</label><input type="range" id="settingRecall" min="0" max="100" step="5"></div>
+    <div class="form-group"><label>撤回消息 (<span id="labelRecall">10</span>%)</label><input type="range" id="settingRecall" min="0" max="100" step="5"></div>
     <div class="form-group"><label>主动发消息概率 (<span id="proactiveLabel">20</span>%)</label><input type="range" id="settingProactive" min="0" max="100" step="5"></div>
     
     <div class="form-group" style="margin-top:15px; border-top:1px dashed var(--border); padding-top:15px;">
       <label>最短回复延迟 (<span id="minDelayLabel">1</span> 秒)</label><input type="range" id="settingMinDelay" min="0.5" max="10" step="0.5">
     </div>
     <div class="form-group">
-      <label>最长回复延迟 (<span id="maxDelayLabel">3</span> 秒)</label><input type="range" id="settingMaxDelay" min="1" max="30" step="0.5">
+      <:label>最长回复延迟 (<span id="maxDelayLabel">3var</span>(-- 秒)</label><input type="rangetext" id="settingMaxDelay" min="1)" max="30" step="0.">5">
     </div>
 
     <div class="section-title">字数上限控制</div>
@@ -509,7 +512,8 @@
   </div>
 </div>
 
-<div id="writeModal">
+<!-- 写信弹窗 -->
+<div id="writeModal" class="modal-container">
   <div class="write-box">
     <textarea id="writeContent" placeholder="写下你的信件内容..."></textarea>
     <div class="btns">
@@ -519,15 +523,43 @@
   </div>
 </div>
 
-<div id="editContactModal">
+<!-- 修改对方信息弹窗 -->
+<div id="editContactModal" class="modal-container">
   <div class="write-box">
-    <h3 style="margin-top:0; color:var(--text)">修改对方信息</h3>
+    <h3 style="margin-top:0; color修改对方信息</h3>
     <input type="text" id="editContactName" placeholder="输入对方称呼">
     <label style="font-size:12px; color:var(--muted); margin-bottom:5px; display:block;">更换头像</label>
     <input type="file" id="editContactAvatar" accept="image/*" style="margin-bottom:15px; font-size:14px; color:var(--text);">
     <div class="btns">
       <button class="cancel" onclick="document.getElementById('editContactModal').style.display='none'">取消</button>
       <button class="confirm" onclick="saveContactInfo()">保存</button>
+    </div>
+  </div>
+</div>
+
+<!-- 【新增】出选择题弹窗 -->
+<div id="choiceModal" class="modal-container">
+  <div class="write-box">
+    <h3 style="margin-top:0; color:var(--text)">让对方做决定</h3>
+    
+    <label style="font-size:12px; color:var(--muted); margin-bottom:5px; display:block;">提问（如：今晚吃什么？）</label>
+    <input type="text" id="choiceQ" placeholder="输入问题...">
+    
+    <label style="font-size:12px; color:var(--muted); margin-bottom:5px; display:block;">选择类型</label>
+    <select id="choiceType" style="width:100%; padding:10px; margin-bottom:10px; border-radius:8px; border:1px solid var(--border); background:var(--bg); color:var(--text);">
+      <option value="single">单选（随机挑一个）</option>
+      <option value="multi">多选（随机挑几个）</option>
+    </select>
+
+    <label style="font-size:12px; color:var(--muted); margin-bottom:5px; display:block;">选项</label>
+    <input type="text" id="choiceOptA" placeholder="选项 A">
+    <input type="text" id="choiceOptB" placeholder="选项 B">
+    <input type="text" id="choiceOptC" placeholder="选项 C (可选)">
+    <input type="text" id="choiceOptD" placeholder="选项 D (可选)">
+
+    <div class="btns" style="margin-top:15px;">
+      <button class="cancel" onclick="document.getElementById('choiceModal').style.display='none'">取消</button>
+      <button class="confirm" onclick="submitChoice()">发送</button>
     </div>
   </div>
 </div>
@@ -830,7 +862,6 @@
     contacts.forEach(c => {
       const msgs = chatRecords[c.id] || [];
       const lastMsg = msgs.length > 0 ? (msgs[msgs.length-1].isRecalled ? '[撤回了一条消息]' : msgs[msgs.length-1].text) : '暂无消息';
-      // 强制统一头像逻辑
       const av = c.avatar ? `<img src="${c.avatar}">` : `<svg class="avatar-svg" viewBox="0 0 24 24"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>`;
       list.innerHTML += `<div class="contact-item" onclick="switchChat('${c.id}')"><div class="contact-avatar">${av}</div><div class="contact-info"><div class="contact-name">${c.name}</div><div class="contact-last">${lastMsg}</div></div></div>`;
     });
@@ -889,7 +920,6 @@
     const box = document.getElementById("messages"); if(!box) return;
     box.innerHTML = "";
     const msgs = chatRecords[currentChatId] || [];
-    // 强制统一头像逻辑
     const c = contacts.find(x => x.id === currentChatId) || { name: "未知", avatar: "" };
     
     msgs.forEach(m => {
@@ -916,12 +946,18 @@
     return min + Math.random() * (max - min);
   }
 
-  window.sendMessage = function() {
+  // 用户发送消息的主逻辑
+  function sendMessage(text = null, imageBase64 = null) {
     try {
-      const inputEl = document.getElementById("input");
-      if(!inputEl) return;
-      const val = inputEl.value.trim(); 
-      if(!val) return;
+      let val = text;
+      if (!val) {
+        const inputEl = document.getElementById("input");
+        if(!inputEl) return;
+        val = inputEl.value.trim(); 
+        if(!val) return;
+        inputEl.value = "";
+        document.getElementById("emojiPanel").classList.remove("show");
+      }
 
       if (!currentChatId) currentChatId = "c1"; 
       if (!chatRecords[currentChatId]) chatRecords[currentChatId] = [];
@@ -930,9 +966,8 @@
       const timeStr = getTodayTimeStr();
       const msgId = Date.now().toString();
       
-      chatRecords[currentChatId].push({ id: msgId, role: "user", text: val, time: timeStr, quote: currentQuote, read: false });
-      saveChatRecords(); renderMessages(); inputEl.value = ""; clearQuote();
-      document.getElementById("emojiPanel").classList.remove("show");
+      chatRecords[currentChatId].push({ id: msgId, role: "user", text: val, image: imageBase64, time: timeStr, quote: currentQuote, read: false });
+      saveChatRecords(); renderMessages(); clearQuote();
       
       setTimeout(() => {
         if(chatRecords[currentChatId]) {
@@ -964,7 +999,63 @@
       alert("发送崩溃报错：\n" + err.message);
     }
   }
+  window.sendMessage = () => sendMessage();
 
+  // ================= 选择题功能 =================
+  window.submitChoice = function() {
+    const q = document.getElementById("choiceQ").value.trim();
+    const type = document.getElementById("choiceType").value;
+    const optsStr = [
+      document.getElementById("choiceOptA").value.trim(),
+      document.getElementById("choiceOptB").value.trim(),
+      document.getElementById("choiceOptC").value.trim(),
+      document.getElementById("choiceOptD").value.trim()
+    ].filter(v => v !== "");
+
+    if(!q || optsStr.length < 2) return showToast("题目和至少两个选项不能为空");
+
+    let text = `【提问】${q}\n`;
+    optsStr.forEach((opt, i) => {
+      text += `${String.fromCharCode(65+i)}. ${opt}\n`;
+    });
+    text = text.trim();
+
+    // 渲染用户消息
+    if (!chatRecords[currentChatId]) chatRecords[currentChatId] = [];
+    const timeStr = getTodayTimeStr();
+    const msgId = Date.now().toString();
+    chatRecords[currentChatId].push({ id: msgId, role: "user", text: text, time: timeStr, read: false });
+    saveChatRecords(); renderMessages(); 
+    
+    // 清空并关闭弹窗
+    document.getElementById("choiceQ").value = "";
+    document.getElementById("choiceOptA").value = "";
+    document.getElementById("choiceOptB").value = "";
+    document.getElementById("choiceOptC").value = "";
+    document.getElementById("choiceOptD").value = "";
+    document.getElementById("choiceModal").style.display = "none";
+
+    // AI 回复
+    setTimeout(() => {
+      let chosen = [];
+      if (type === "single") {
+        chosen.push(optsStr[Math.floor(Math.random() * optsStr.length)]);
+      } else {
+        const count = Math.floor(Math.random() * optsStr.length) + 1; // 至少选1个
+        const shuffled = [...optsStr].sort(() => Math.random() - 0.5);
+        chosen = shuffled.slice(0, count);
+      }
+      
+      let replyText = `我选：${chosen.join("、")}`;
+      
+      setTimeout(() => {
+        chatRecords[currentChatId].push({ id: Date.now().toString(), role: "oracle", text: replyText, time: getTodayTimeStr() });
+        saveChatRecords(); renderMessages();
+      }, getRandomDelay());
+    }, getRandomDelay());
+  };
+
+  // 主动发消息
   setInterval(() => {
     if(isWaitingForUser) return; 
     if(document.getElementById("homeScreen").style.display === "none" && !document.getElementById("app-chat").classList.contains("open")) return; 
@@ -1204,7 +1295,7 @@
     renderNotes();
   };
 
-  // ================= 通话（修复悬浮窗） =================
+  // ================= 通话 =================
   function startCall() {
     clearInterval(callTimer); 
     clearTimeout(callTimeout);
@@ -1212,7 +1303,6 @@
     const c = contacts.find(x => x.id === currentChatId);
     document.getElementById("callName").textContent = c?.name || "灵体";
     
-    // 设置头像
     const avatarBox = document.getElementById("callAvatarBox");
     if(c && c.avatar) {
       avatarBox.innerHTML = `<img src="${c.avatar}">`;
@@ -1220,11 +1310,9 @@
       avatarBox.innerHTML = `<svg class="svg-icon" viewBox="0 0 24 24" style="width:50px;height:50px;fill:#fff;"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>`;
     }
 
-    // 设置背景
     const callApp = document.getElementById("app-call");
     callApp.style.backgroundImage = settings.callBg ? `url(${settings.callBg})` : 'linear-gradient(135deg, #1a1a1a, #333)';
     
-    // 初始化 UI 状态
     const statusEl = document.getElementById("callStatus");
     statusEl.textContent = "正在呼叫...";
     statusEl.style.color = "#aaa";
@@ -1233,7 +1321,6 @@
     document.getElementById("callHangupBtn").style.width = "70px";
     document.getElementById("callHangupBtn").style.height = "70px";
 
-    // 3秒后接通
     callTimeout = setTimeout(() => {
       if(!document.getElementById("app-call").classList.contains("open")) return;
 
@@ -1387,7 +1474,6 @@
     try {
       initData();
       
-      // 【修复】启动时立即同步时间，防止显示“获取中”
       updateTime();
       setInterval(updateTime, 1000);
 
@@ -1396,7 +1482,7 @@
       
       if(sendBtn) {
         sendBtn.onclick = null; 
-        sendBtn.addEventListener("click", sendMessage);
+        sendBtn.addEventListener("click", () => sendMessage());
       }
       if(inputEl) {
         inputEl.addEventListener("keydown", function(e) {
@@ -1406,6 +1492,11 @@
           }
         });
       }
+
+      // 绑定选择题按钮
+      document.getElementById("choiceBtn") && (document.getElementById("choiceBtn").onclick = () => {
+        document.getElementById("choiceModal").style.display = "flex";
+      });
 
       applyTheme(); 
       renderHome();
