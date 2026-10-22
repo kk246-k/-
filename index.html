@@ -231,8 +231,9 @@
   .playlist.open { transform: translateY(0); }
   .playlist-header { padding: 15px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; }
   .playlist-items { overflow-y: auto; flex: 1; }
-  .playlist-item { padding: 15px; border-bottom: 1px solid var(--border); cursor: pointer; font-size: 14px; display: flex; justify-content: space-between;}
+  .playlist-item { padding: 15px; border-bottom: 1px solid var(--border); cursor: pointer; font-size: 14px; display: flex; justify-content: space-between; align-items: center;}
   .playlist-item.active { color: var(--accent); font-weight: bold; }
+  .playlist-item .del-btn { color: var(--danger); font-size: 16px; padding: 5px; }
 
   /* 其他App */
   #app-mail, #app-notes, #app-settings { background: var(--bg); }
@@ -430,7 +431,7 @@
     </div>
     <label class="music-upload-btn">
       <svg class="svg-icon" viewBox="0 0 24 24" style="width:20px;height:20px;"><path d="M9 16h6v-6h4l-7-7-7 7h4zm-4 2h14v2H5z"/></svg>
-      上传本地音乐 (建议小于20MB)
+      上传本地音乐 (建议<20MB)
       <input type="file" id="musicUpload" accept="audio/*" style="display:none;">
     </label>
     <div class="playlist" id="playlist">
@@ -762,6 +763,7 @@
   let playlist = []; 
   let currentSongIndex = -1;
   let isPlaying = false;
+  let currentAudioUrl = null; // 用于释放 Blob URL
   let settings, pools, contacts, chatRecords, customEmojis, userMails, noteHistory, moments;
   
   let callTimer = null;
@@ -799,7 +801,6 @@
 
   function initData() {
     settings = safeParse("os_settings", DEFAULT_SETTINGS);
-    // 确保 userProfile 字段存在
     if (!settings.userProfile) settings.userProfile = { name: "梦主", avatar: "", cover: "", sign: "这个人很懒，什么都没有留下。" };
 
     pools = safeParse("os_pools", DEFAULT_POOLS);
@@ -1270,7 +1271,6 @@
   window.likeMoment = function(id) {
     const m = moments.find(x => x.id === id);
     if(!m) return;
-    // 由于现在没记录是我点的还是灵体点的，做个简单判断
     m.likes = (m.likes || 0) + 1;
     saveMoments();
     renderMomentsFeed();
@@ -1591,4 +1591,722 @@
 
   function renderEmojiPanel() {
     const panel = document.getElementById("emojiPanel"); if(!panel) return;
-    panel.innerHTML =
+    panel.innerHTML = "";
+    DEFAULT_EMOJIS.forEach(e => {
+      const span = document.createElement('span');
+      span.className = "emoji-item";
+      span.textContent = e;
+      span.onclick = () => insertEmoji(e);
+      panel.appendChild(span);
+    });
+    customEmojis.forEach(imgSrc => {
+      const img = document.createElement('img');
+      img.src = imgSrc;
+      img.className = "emoji-img";
+      img.onclick = () => sendEmojiImg(imgSrc);
+      panel.appendChild(img);
+    });
+  }
+  window.insertEmoji = function(e) { const inp = document.getElementById("input"); if(inp) { inp.value += e; inp.focus(); } }
+  window.sendEmojiImg = function(src) {
+    try {
+      const chatId = currentChatId;
+      if (!chatRecords[chatId]) chatRecords[chatId] = [];
+      const msgId = genId(); const timeStr = getTodayTimeStr();
+      chatRecords[chatId].push({ id: msgId, role: "user", text: `<img src="${src}" style="max-width:80px;border-radius:8px;">`, time: timeStr, read: false });
+      saveChatRecords(); 
+      if (chatId === currentChatId) renderMessages(); 
+      document.getElementById("emojiPanel").classList.remove("show");
+      
+      setTimeout(() => {
+        const idx = chatRecords[chatId].findIndex(m => m.id === msgId);
+        if(idx>-1) { 
+          chatRecords[chatId][idx].read = true; 
+          saveChatRecords(); 
+          if (chatId === currentChatId && document.getElementById("app-chat").classList.contains("open")) renderMessages(); 
+        }
+      }, getRandomDelay());
+      triggerAIReply(chatId);
+    } catch(e) { showToast("发送失败"); }
+  }
+  document.getElementById("emojiBtn") && (document.getElementById("emojiBtn").onclick = () => { renderEmojiPanel(); document.getElementById("emojiPanel").classList.toggle("show"); });
+
+  window.drawTarot = function() {
+    const q = document.getElementById("tarotQuestion").value.trim();
+    const count = parseInt(document.getElementById("tarotCount").value);
+    const area = document.getElementById("tarotResultArea");
+    if(!q) { alert("请先写下你的问题哦~"); return; }
+    area.innerHTML = "<div style='color:var(--muted);margin-top:20px;'>正在洗牌，连接命运...</div>";
+    
+    setTimeout(() => {
+      area.innerHTML = "";
+      let p = [...DEFAULT_TAROT, ...pools.tarot.map(t=>({name:t, meaning:"这是你的自定义神谕。"}))];
+      p = p.sort(() => Math.random() - 0.5);
+      for(let i=0; i<count; i++) {
+        const card = p[i % p.length];
+        const div = document.createElement("div");
+        div.className = "tarot-card-item"; 
+        let posName = count === 3 ? (i===0 ? "【过去】" : i===1 ? "【现在】" : "【未来】") : "";
+        div.innerHTML = `<div class="tarot-card-title">${escapeHtml(posName)} ${escapeHtml(card.name)}</div><div class="tarot-card-meaning">${escapeHtml(card.meaning)}</div>`;
+        area.appendChild(div);
+      }
+    }, 1000);
+  }
+
+  // ====== 音乐模块 (Blob修复版) ======
+  let db;
+  const DB_NAME = "OracleOS_DB", STORE_NAME = "music";
+  
+  function initDB() { 
+    return new Promise((res, rej) => { 
+      if(db) return res();
+      const req = indexedDB.open(DB_NAME, 1); 
+      req.onupgradeneeded = e => { 
+        if (!e.target.result.objectStoreNames.contains(STORE_NAME)) e.target.result.createObjectStore(STORE_NAME); 
+      }; 
+      req.onsuccess = e => { db = e.target.result; res(); }; 
+      req.onerror = rej; 
+    }); 
+  }
+  
+  async function dbSet(key, value) { 
+    if(!db) await initDB();
+    return new Promise((res, rej) => { 
+      const req = db.transaction(STORE_NAME, "readwrite").objectStore(STORE_NAME).put(value, key); 
+      req.onsuccess = res; 
+      req.onerror = rej; 
+    }); 
+  }
+  
+  async function dbGetAll() { 
+    if(!db) await initDB();
+    return new Promise((res, rej) => { 
+      const req = db.transaction(STORE_NAME, "readonly").objectStore(STORE_NAME).getAll(); 
+      req.onsuccess = e => res(e.target.result); 
+      req.onerror = rej; 
+    }); 
+  }
+
+  async function dbDelete(key) {
+    if(!db) await initDB();
+    return new Promise((res, rej) => {
+      const req = db.transaction(STORE_NAME, "readwrite").objectStore(STORE_NAME).delete(key);
+      req.onsuccess = res;
+      req.onerror = rej;
+    });
+  }
+
+  const audio = document.getElementById("audioPlayer");
+  
+  // 使用 Blob 直接存储，彻底解决手机端上传失败问题
+  document.getElementById("musicUpload") && (document.getElementById("musicUpload").onchange = async (e) => {
+    const file = e.target.files[0]; if(!file) return;
+    
+    // 限制最大 30MB，防止爆内存
+    if (file.size > 30 * 1024 * 1024) {
+      showToast("文件太大啦，建议上传小于30MB的音乐~");
+      e.target.value = "";
+      return;
+    }
+
+    try {
+      showToast("正在存入本地，请稍候...");
+      const song = { id: "song_" + Date.now(), name: file.name, blob: file };
+      await dbSet(song.id, song); 
+      await loadPlaylist();
+      if(currentSongIndex === -1) playSong(playlist.length - 1);
+      showToast("音乐上传成功！");
+    } catch(err) { 
+      console.error(err);
+      showToast("存储空间不足，上传失败"); 
+    }
+    e.target.value = ""; // 清空 input 允许重新选同一首
+  });
+  
+  async function loadPlaylist() { 
+    try { 
+      playlist = await dbGetAll(); 
+      renderPlaylist(); 
+    } catch(e){ console.warn(e); } 
+  }
+  
+  function renderPlaylist() {
+    const list = document.getElementById("playlistItems"); if(!list) return;
+    list.innerHTML = "";
+    if(playlist.length === 0) { list.innerHTML = '<div style="padding:15px;color:var(--muted);text-align:center;">暂无音乐</div>'; return; }
+    playlist.forEach((song, i) => {
+      const item = document.createElement('div');
+      item.className = "playlist-item" + (i===currentSongIndex?' active':'');
+      
+      const nameSpan = document.createElement('span');
+      nameSpan.textContent = song.name;
+      nameSpan.style.flex = "1";
+      nameSpan.style.overflow = "hidden";
+      nameSpan.style.textOverflow = "ellipsis";
+      nameSpan.style.whiteSpace = "nowrap";
+      nameSpan.onclick = () => playSong(i);
+
+      const delSpan = document.createElement('span');
+      delSpan.className = "del-btn";
+      delSpan.textContent = "✕";
+      delSpan.onclick = (e) => { e.stopPropagation(); deleteSong(song.id, i); };
+
+      item.appendChild(nameSpan);
+      item.appendChild(delSpan);
+      list.appendChild(item);
+    });
+  }
+
+  async function deleteSong(id, index) {
+    if(confirm("确定删除这首音乐吗？")) {
+      try {
+        await dbDelete(id);
+        if (index === currentSongIndex) {
+          audio.pause();
+          isPlaying = false;
+          currentSongIndex = -1;
+          updateMusicUI();
+        } else if (index < currentSongIndex) {
+          currentSongIndex--;
+        }
+        await loadPlaylist();
+        showToast("已删除");
+      } catch(e) { showToast("删除失败"); }
+    }
+  }
+  
+  window.playSong = function(index) {
+    if(index < 0 || index >= playlist.length) return;
+    currentSongIndex = index; 
+    const song = playlist[index];
+
+    // 释放旧的 URL 防止内存泄漏
+    if (currentAudioUrl) {
+      URL.revokeObjectURL(currentAudioUrl);
+      currentAudioUrl = null;
+    }
+
+    if (audio) {
+      // 如果是旧版存的 Base64 (字符串)，直接用；如果是新版 Blob，生成 URL
+      if (typeof song.blob === 'string') {
+        audio.src = song.blob;
+      } else if (song.blob instanceof Blob) {
+        currentAudioUrl = URL.createObjectURL(song.blob);
+        audio.src = currentAudioUrl;
+      }
+      audio.play().catch(()=>{ showToast("播放失败：格式不支持"); }); 
+    }
+    
+    isPlaying = true; 
+    updateMusicUI();
+    document.getElementById("playlist")?.classList.remove("open");
+  }
+
+  window.togglePlay = function() {
+    if(playlist.length === 0) return showToast("请先上传音乐");
+    if(currentSongIndex === -1) return playSong(0);
+    if(isPlaying) { if(audio) audio.pause(); isPlaying = false; } else { if(audio) audio.play().catch(()=>{}); isPlaying = true; }
+    updateMusicUI();
+  }
+  window.nextSong = function() { if(playlist.length === 0) return; let next = currentSongIndex + 1; if(next >= playlist.length) next = 0; playSong(next); }
+  window.prevSong = function() { if(playlist.length === 0) return; let prev = currentSongIndex - 1; if(prev < 0) prev = playlist.length - 1; playSong(prev); }
+  
+  function updateMusicUI() {
+    const cover = document.getElementById("musicCover"), title = document.getElementById("musicTitle"), btn = document.getElementById("playPauseBtn");
+    if(!cover || !title || !btn) return;
+    if(currentSongIndex > -1 && playlist[currentSongIndex]) title.textContent = playlist[currentSongIndex].name; else title.textContent = "暂无歌曲";
+    if(isPlaying) {
+      cover.classList.add("playing"); 
+      btn.innerHTML = '<svg class="svg-icon" viewBox="0 0 24 24"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/></svg>';
+    } else {
+      cover.classList.remove("playing"); 
+      btn.innerHTML = '<svg class="svg-icon" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>';
+    }
+  }
+  audio && audio.addEventListener("timeupdate", () => {
+    if(!audio.duration) return;
+    const ct = document.getElementById("currentTime"), tt = document.getElementById("totalTime"), pb = document.getElementById("progressBar");
+    if(ct) ct.textContent = formatTime(audio.currentTime);
+    if(tt) tt.textContent = formatTime(audio.duration);
+    if(pb) pb.value = (audio.currentTime / audio.duration) * 100;
+  });
+  audio && audio.addEventListener("ended", nextSong);
+  window.seekAudio = function(val) { if(audio && audio.duration) audio.currentTime = (val / 100) * audio.duration; }
+  function formatTime(sec) { const m = Math.floor(sec/60).toString().padStart(2,'0'); const s = Math.floor(sec%60).toString().padStart(2,'0'); return `${m}:${s}`; }
+
+  document.getElementById("inviteMusicBtn") && (document.getElementById("inviteMusicBtn").onclick = () => {
+    const c = contacts.find(x => x.id === currentChatId);
+    const puzzle = generatePuzzle("notes", settings.noteMaxLen);
+    const sysMsg = `系统提示：你们在音乐中感受到了神谕 -> ${puzzle}`;
+    const chatId = currentChatId;
+    if(!chatRecords[chatId]) chatRecords[chatId] = [];
+    chatRecords[chatId].push({ id: genId(), role: "oracle", text: `【邀请】${c ? c.name : 'TA'} 邀请你一起听歌。\n${sysMsg}`, time: getTodayTimeStr() });
+    saveChatRecords(); renderMessages(); openApp("app-music");
+  });
+
+  // ===== 信箱 =====
+  function showMailDetail(text, date) {
+    const list = document.getElementById("mailList");
+    const detail = document.getElementById("mailDetail");
+    list.style.display = "none";
+    detail.innerHTML = "";
+    const d1 = document.createElement('div');
+    d1.style.cssText = "font-size:12px;color:var(--muted);margin-bottom:10px;";
+    d1.textContent = date;
+    const d2 = document.createElement('div');
+    d2.style.cssText = "white-space:pre-wrap;";
+    d2.textContent = text;
+    detail.appendChild(d1); detail.appendChild(d2);
+    detail.classList.add("show");
+  }
+
+  function renderMails() {
+    const list = document.getElementById("mailList"), detail = document.getElementById("mailDetail");
+    if(!list || !detail) return;
+    detail.classList.remove("show"); list.style.display = "block"; list.innerHTML = "";
+    const today = getTodayDateStr();
+
+    userMails.slice().reverse().forEach((mail, idx) => {
+      const realIdx = userMails.length - 1 - idx;
+      const item = document.createElement('div');
+      item.className = "mail-item";
+      const dateDiv = document.createElement('div');
+      dateDiv.className = "mail-date"; dateDiv.textContent = mail.date;
+      const senderDiv = document.createElement('div');
+      senderDiv.className = "mail-sender";
+      senderDiv.style.cssText = "display:flex; justify-content:space-between;";
+      const senderSpan = document.createElement('span'); senderSpan.textContent = "我的信件";
+      const delSpan = document.createElement('span'); delSpan.className = "del-icon-btn"; delSpan.textContent = "删除";
+      senderDiv.appendChild(senderSpan); senderDiv.appendChild(delSpan);
+      const subjDiv = document.createElement('div');
+      subjDiv.className = "mail-subject";
+      subjDiv.textContent = (mail.text || '').substring(0, 10) + '...';
+      item.appendChild(dateDiv); item.appendChild(senderDiv); item.appendChild(subjDiv);
+      
+      item.addEventListener('click', (ev) => {
+        if (ev.target.classList.contains('del-icon-btn')) {
+          ev.stopPropagation();
+          deleteUserMail(realIdx);
+          return;
+        }
+        item.classList.remove('unread');
+        showMailDetail(mail.text, mail.date);
+      });
+      list.appendChild(item);
+    });
+
+    for(let i=0; i<3; i++) {
+      const t = generatePuzzle("mail", settings.mailMaxLen);
+      const item = document.createElement('div');
+      item.className = "mail-item unread";
+      const dateDiv = document.createElement('div');
+      dateDiv.className = "mail-date"; dateDiv.textContent = today;
+      const senderDiv = document.createElement('div');
+      senderDiv.className = "mail-sender"; senderDiv.textContent = "未知发件人";
+      const subjDiv = document.createElement('div');
+      subjDiv.className = "mail-subject"; subjDiv.textContent = t.substring(0, 10) + '...';
+      item.appendChild(dateDiv); item.appendChild(senderDiv); item.appendChild(subjDiv);
+      item.addEventListener('click', () => {
+        item.classList.remove('unread');
+        showMailDetail(t, today);
+      });
+      list.appendChild(item);
+    }
+    
+    detail.onclick = () => { detail.classList.remove("show"); list.style.display = "block"; };
+  }
+
+  window.deleteUserMail = function(idx) {
+    if(confirm("确定删除这封信件吗？")) {
+      userMails.splice(idx, 1);
+      localStorage.setItem("os_user_mails", JSON.stringify(userMails));
+      renderMails();
+    }
+  };
+
+  window.saveUserMail = function() {
+    const content = document.getElementById("writeContent").value.trim();
+    if(!content) return;
+    userMails.push({ text: content, date: getTodayDateStr() });
+    localStorage.setItem("os_user_mails", JSON.stringify(userMails));
+    document.getElementById("writeContent").value = "";
+    document.getElementById("writeModal").style.display = 'none';
+    renderMails();
+    showToast("信件已保存");
+  };
+
+  // ===== 便签 =====
+  function renderNotes() {
+    const area = document.getElementById("noteHistory"); if(!area) return;
+    area.innerHTML = "";
+    
+    noteHistory.forEach((item, index) => {
+      const div = document.createElement('div');
+      if (item.role === "user") {
+        div.className = "note-msg user-msg";
+      } else {
+        div.className = "note-msg sys-msg";
+      }
+      const dateSpan = document.createElement('span');
+      dateSpan.className = "note-date";
+      dateSpan.textContent = item.date;
+      const delSpan = document.createElement('span');
+      delSpan.className = "del-icon-btn"; delSpan.textContent = "✕";
+      delSpan.onclick = () => deleteNote(index);
+      dateSpan.appendChild(document.createTextNode(" "));
+      dateSpan.appendChild(delSpan);
+      div.appendChild(dateSpan);
+      div.appendChild(document.createTextNode(item.role === "sys" ? "回复：" + item.text : item.text));
+      area.appendChild(div);
+    });
+    
+    if (noteHistory.length === 0) {
+      const t = generatePuzzle("notes", settings.noteMaxLen);
+      const div = document.createElement('div');
+      div.className = "note-msg sys-msg";
+      const dateSpan = document.createElement('span');
+      dateSpan.className = "note-date"; dateSpan.textContent = getTodayDateStr();
+      div.appendChild(dateSpan);
+      div.appendChild(document.createTextNode("今日神谕：" + t));
+      area.appendChild(div);
+    }
+    
+    setTimeout(() => { area.scrollTop = area.scrollHeight; }, 50);
+  }
+
+  window.deleteNote = function(idx) {
+    if(confirm("确定删除这条便签记录吗？")) {
+      noteHistory.splice(idx, 1);
+      localStorage.setItem("os_note_history", JSON.stringify(noteHistory));
+      renderNotes();
+    }
+  };
+
+  window.sendNote = function() {
+    const input = document.getElementById("noteInput");
+    const val = input.value.trim(); if(!val) return;
+    
+    const today = getTodayDateStr();
+    noteHistory.push({ role: "user", text: val, date: today });
+    input.value = "";
+    
+    const reply = generatePuzzle("notes", settings.noteMaxLen);
+    noteHistory.push({ role: "sys", text: reply, date: today });
+    
+    localStorage.setItem("os_note_history", JSON.stringify(noteHistory));
+    renderNotes();
+  };
+
+  // ===== 通话 =====
+  function startCall() {
+    if (inCall) return;
+    inCall = true;
+    clearInterval(callTimer); 
+    clearTimeout(callTimeout);
+    
+    const c = contacts.find(x => x.id === currentChatId);
+    document.getElementById("callName").textContent = c?.name || "灵体";
+    
+    const avatarBox = document.getElementById("callAvatarBox");
+    if(c && c.avatar) {
+      avatarBox.innerHTML = `<img src="${c.avatar}">`;
+    } else {
+      avatarBox.innerHTML = `<svg class="svg-icon" viewBox="0 0 24 24" style="width:50px;height:50px;fill:#fff;"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>`;
+    }
+
+    const floatBox = document.getElementById("floatAvatarBox");
+    if (floatBox) {
+      floatBox.innerHTML = c && c.avatar 
+        ? `<img src="${c.avatar}">` 
+        : `<svg class="svg-icon" viewBox="0 0 24 24"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>`;
+    }
+
+    const callApp = document.getElementById("app-call");
+    callApp.style.backgroundImage = settings.callBg ? `url(${settings.callBg})` : 'linear-gradient(135deg, #1a1a1a, #333)';
+    
+    const statusEl = document.getElementById("callStatus");
+    statusEl.textContent = "正在呼叫...";
+    statusEl.style.color = "#aaa";
+    
+    document.getElementById("callMinimizeBtn").style.display = "none";
+    document.getElementById("callHangupBtn").style.width = "70px";
+    document.getElementById("callHangupBtn").style.height = "70px";
+
+    callTimeout = setTimeout(() => {
+      if(!inCall) return;
+      statusEl.textContent = "00:00";
+      statusEl.style.color = "#4caf50";
+      callSeconds = 0;
+      
+      document.getElementById("callMinimizeBtn").style.display = "flex";
+      document.getElementById("callHangupBtn").style.width = "60px";
+      document.getElementById("callHangupBtn").style.height = "60px";
+
+      clearInterval(callTimer);
+      callTimer = setInterval(() => {
+        callSeconds++;
+        const m = Math.floor(callSeconds/60).toString().padStart(2,'0');
+        const s = (callSeconds%60).toString().padStart(2,'0');
+        statusEl.textContent = `${m}:${s}`;
+      }, 1000);
+      
+    }, 3000);
+  }
+
+  window.minimizeCall = function() { 
+    closeApp('app-call'); 
+    document.getElementById("floatingCall").classList.add("show"); 
+  }
+  window.hangupCall = function() { 
+    inCall = false;
+    closeApp('app-call'); 
+    document.getElementById("floatingCall").classList.remove("show"); 
+    clearInterval(callTimer); 
+    clearTimeout(callTimeout);
+    callTimer = null; callTimeout = null;
+    showToast("通话已结束");
+  }
+
+  // ===== 卡池与备份 =====
+  window.renderPoolList = function() {
+    const poolName = document.getElementById("poolSelector").value;
+    const arr = pools[poolName] || [];
+    const area = document.getElementById("poolListArea");
+    area.innerHTML = "";
+    if (arr.length === 0) {
+      area.innerHTML = '<div style="font-size:12px; color:var(--muted); text-align:center;">暂无字卡</div>';
+      return;
+    }
+    arr.forEach((text, index) => {
+      const div = document.createElement("div");
+      div.style.cssText = "display:flex; justify-content:space-between; align-items:center; background:var(--panel); border:1px solid var(--border); padding:8px 12px; margin-bottom:5px; border-radius:6px; font-size:14px;";
+      const span = document.createElement('span');
+      span.style.cssText = "flex:1; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;";
+      span.textContent = text;
+      const del = document.createElement('span');
+      del.style.cssText = "color:var(--danger); cursor:pointer; padding:0 5px; font-weight:bold;";
+      del.textContent = "✕";
+      del.onclick = () => deletePoolCard(poolName, index);
+      div.appendChild(span); div.appendChild(del);
+      area.appendChild(div);
+    });
+  };
+
+  window.deletePoolCard = function(poolName, index) {
+    if (confirm("确定要删除这张字卡吗？")) {
+      pools[poolName].splice(index, 1);
+      savePools();
+      renderPoolList();
+    }
+  };
+
+  window.exportData = function() {
+    const backupData = {
+      settings: localStorage.getItem("os_settings"),
+      pools: localStorage.getItem("os_pools"),
+      contacts: localStorage.getItem("os_contacts"),
+      chatRecords: localStorage.getItem("os_chat_records"),
+      emojis: localStorage.getItem("os_emojis"),
+      userMails: localStorage.getItem("os_user_mails"),
+      noteHistory: localStorage.getItem("os_note_history"),
+      moments: localStorage.getItem("os_moments")
+    };
+    const dataStr = JSON.stringify(backupData);
+    const blob = new Blob([dataStr], {type: "application/json"});
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `梦占OS备份_${getTodayDateStr().replace(/\//g,'-')}.json`;
+    document.body.appendChild(a); a.click(); document.body.removeChild(a);
+    showToast("备份文件已下载，请妥善保存！");
+  };
+
+  window.importData = function(event) {
+    const file = event.target.files[0]; if (!file) return;
+    const reader = new FileReader();
+    reader.onload = function(e) {
+      try {
+        const data = JSON.parse(e.target.result);
+        if (data.settings) localStorage.setItem("os_settings", data.settings);
+        if (data.pools) localStorage.setItem("os_pools", data.pools);
+        if (data.contacts) localStorage.setItem("os_contacts", data.contacts);
+        if (data.chatRecords) localStorage.setItem("os_chat_records", data.chatRecords);
+        if (data.emojis) localStorage.setItem("os_emojis", data.emojis);
+        if (data.userMails) localStorage.setItem("os_user_mails", data.userMails);
+        if (data.noteHistory) localStorage.setItem("os_note_history", data.noteHistory);
+        if (data.moments) localStorage.setItem("os_moments", data.moments);
+        showToast("数据恢复成功！正在刷新页面...");
+        setTimeout(() => location.reload(), 1500);
+      } catch (err) { alert("导入失败：文件格式不正确！"); }
+    };
+    reader.readAsText(file);
+  };
+
+  window.clearCurrentChat = function() {
+    if(confirm("这会清空当前联系人的所有聊天记录。确定吗？")) {
+      chatRecords[currentChatId] = [];
+      saveChatRecords();
+      renderMessages();
+      showToast("聊天记录已清空");
+    }
+  };
+
+  window.saveSplashTexts = function() {
+    const text = document.getElementById("splashTextsInput").value.trim();
+    if(!text) return;
+    settings.splashTexts = text.split("\n").map(s=>s.trim()).filter(s=>s);
+    saveSettings(); showToast("开屏文字已保存！下次刷新生效");
+  };
+
+  window.saveBatchCards = function() {
+    const poolName = document.getElementById("poolSelector").value;
+    const text = document.getElementById("newCardBatch").value.trim(); if(!text) return;
+    text.split("\n").forEach(t => { if(t.trim()) pools[poolName].push(t.trim()); });
+    savePools(); document.getElementById("newCardBatch").value = ""; renderPoolList(); showToast(`已保存到 ${poolName} 卡池！`);
+  };
+
+  function runSplash() {
+    const splash = document.getElementById("splashScreen");
+    const container = document.getElementById("splashTextContainer");
+    const bar = document.getElementById("splashProgressBar");
+    if (settings.splashBg) { splash.style.backgroundImage = `url(${settings.splashBg})`; } 
+    else { splash.style.backgroundImage = 'linear-gradient(135deg, #2b1055, #7597de)'; }
+    container.innerHTML = "";
+    settings.splashTexts.forEach((text) => {
+      const div = document.createElement("div");
+      div.className = "splash-line";
+      div.textContent = text;
+      container.appendChild(div);
+    });
+    let progress = 0;
+    const timer = setInterval(() => {
+      progress += 2;
+      if(progress > 100) progress = 100;
+      bar.style.width = progress + '%';
+    }, 30);
+    setTimeout(() => {
+      clearInterval(timer); bar.style.width = '100%';
+      splash.style.opacity = '0';
+      setTimeout(() => { splash.style.display = 'none'; if(splash.parentNode) splash.parentNode.removeChild(splash); }, 500);
+    }, 3000);
+  }
+
+  window.addEventListener('DOMContentLoaded', () => {
+    try {
+      initData();
+      
+      updateTime();
+      setInterval(updateTime, 1000);
+
+      const sendBtn = document.getElementById("sendBtn");
+      const inputEl = document.getElementById("input");
+      
+      if(sendBtn) sendBtn.addEventListener("click", sendMessage);
+      if(inputEl) {
+        inputEl.addEventListener("keydown", function(e) {
+          if (e.key === 'Enter' || e.keyCode === 13) {
+            e.preventDefault();
+            sendMessage();
+          }
+        });
+      }
+
+      applyTheme(); 
+      renderHome();
+      renderPoolList(); 
+      
+      const safeSet = (id, prop, val) => {
+        const el = document.getElementById(id);
+        if (el) {
+          if (prop === 'textContent') el.textContent = val;
+          else el.value = val;
+        }
+      };
+
+      safeSet("splashTextsInput", "value", settings.splashTexts.join("\n"));
+      
+      safeSet("settingIgnore", "value", settings.ignoreRate); safeSet("ignoreLabel", "textContent", settings.ignoreRate);
+      safeSet("settingRecall", "value", settings.recallRate); safeSet("recallLabel", "textContent", settings.recallRate);
+      safeSet("settingProactive", "value", settings.proactiveRate); safeSet("proactiveLabel", "textContent", settings.proactiveRate);
+      safeSet("settingMailLen", "value", settings.mailMaxLen); safeSet("mailLenLabel", "textContent", settings.mailMaxLen);
+      safeSet("settingNoteLen", "value", settings.noteMaxLen); safeSet("noteLenLabel", "textContent", settings.noteMaxLen);
+      safeSet("settingMinDelay", "value", settings.minReplyTime); safeSet("minDelayLabel", "textContent", settings.minReplyTime);
+      safeSet("settingMaxDelay", "value", settings.maxReplyTime); safeSet("maxDelayLabel", "textContent", settings.maxReplyTime);
+      
+      const bindEvent = (id, event, callback) => {
+        const el = document.getElementById(id);
+        if (el) el.addEventListener(event, callback);
+      };
+
+      bindEvent("settingTheme", "change", (e) => { settings.theme = e.target.value; saveSettings(); applyTheme(); });
+      bindEvent("settingIgnore", "input", (e) => { settings.ignoreRate = e.target.value; safeSet("ignoreLabel", "textContent", e.target.value); saveSettings(); });
+      bindEvent("settingRecall", "input", (e) => { settings.recallRate = e.target.value; safeSet("recallLabel", "textContent", e.target.value); saveSettings(); });
+      bindEvent("settingProactive", "input", (e) => { settings.proactiveRate = e.target.value; safeSet("proactiveLabel", "textContent", e.target.value); saveSettings(); });
+      bindEvent("settingMailLen", "input", (e) => { settings.mailMaxLen = e.target.value; safeSet("mailLenLabel", "textContent", e.target.value); saveSettings(); });
+      bindEvent("settingNoteLen", "input", (e) => { settings.noteMaxLen = e.target.value; safeSet("noteLenLabel", "textContent", e.target.value); saveSettings(); });
+      
+      bindEvent("settingMinDelay", "input", (e) => { 
+        let minVal = parseFloat(e.target.value); 
+        let maxEl = document.getElementById("settingMaxDelay");
+        let maxVal = maxEl ? parseFloat(maxEl.value) : 10; 
+        if (minVal >= maxVal && maxEl) { 
+          maxVal = minVal + 0.5; 
+          maxEl.value = maxVal; 
+          safeSet("maxDelayLabel", "textContent", maxVal); 
+          settings.maxReplyTime = maxVal; 
+        } 
+        safeSet("minDelayLabel", "textContent", minVal); 
+        settings.minReplyTime = minVal; 
+        saveSettings(); 
+      });
+      
+      bindEvent("settingMaxDelay", "input", (e) => { 
+        let maxVal = parseFloat(e.target.value); 
+        let minEl = document.getElementById("settingMinDelay");
+        let minVal = minEl ? parseFloat(minEl.value) : 1; 
+        if (maxVal <= minVal && minEl) { 
+          minVal = maxVal - 0.5; if (minVal < 0.5) minVal = 0.5; 
+          minEl.value = minVal; 
+          safeSet("minDelayLabel", "textContent", minVal); 
+          settings.minReplyTime = minVal; 
+        } 
+        safeSet("maxDelayLabel", "textContent", maxVal); 
+        settings.maxReplyTime = maxVal; 
+        saveSettings(); 
+      });
+
+      bindEvent("splashBgUpload", "change", (e) => { const f = e.target.files[0]; if(!f) return; compressImage(f, 1200, (base64) => { settings.splashBg = base64; saveSettings(); showToast("开屏背景已保存"); }); });
+      bindEvent("homeBgUpload", "change", (e) => { const f = e.target.files[0]; if(!f) return; compressImage(f, 1200, (base64) => { settings.homeBg = base64; saveSettings(); applyTheme(); showToast("壁纸已保存"); }); });
+      bindEvent("chatBgUpload", "change", (e) => { const f = e.target.files[0]; if(!f) return; compressImage(f, 1200, (base64) => { settings.chatBg = base64; saveSettings(); applyTheme(); showToast("聊天背景已保存"); }); });
+      bindEvent("callBgUpload", "change", (e) => { const f = e.target.files[0]; if(!f) return; compressImage(f, 1000, (base64) => { settings.callBg = base64; saveSettings(); showToast("通话背景已保存"); }); });
+      bindEvent("emojiUpload", "change", (e) => {
+        const files = e.target.files; if(!files.length) return;
+        Array.from(files).forEach(file => {
+          compressImage(file, 100, (base64) => { 
+            customEmojis.push(base64); 
+            localStorage.setItem("os_emojis", JSON.stringify(customEmojis)); 
+          }, 'png');
+        });
+        showToast("自定义表情已添加！");
+      });
+
+      bindEvent("decisionBtn", "click", () => {
+        document.getElementById("decisionModal").style.display = 'flex';
+      });
+
+      runSplash(); 
+
+      (async function initDBAndMusic() {
+        try { await initDB(); await loadPlaylist(); } catch(e) { console.warn("音乐模块加载失败", e); }
+      })();
+
+    } catch(e) {
+      console.error(e);
+      alert("初始化报错：\n" + e.message);
+    }
+  });
+
+})();
+</script>
+</body>
+</html>
