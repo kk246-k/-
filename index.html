@@ -27,6 +27,14 @@ body{display:flex;flex-direction:column;height:100vh;color:var(--text);font-fami
 #statusBar{display:flex;justify-content:space-between;align-items:center;padding:10px 20px;font-size:14px;font-weight:600;z-index:10;color:#fff;text-shadow:0 1px 3px rgba(0,0,0,.5);position:relative;}
 [data-theme="light"] #statusBar,[data-theme="cute"] #statusBar,[data-theme="blue"] #statusBar,[data-theme="purple"] #statusBar,[data-theme="green"] #statusBar{color:var(--text);text-shadow:none;}.status-right{display:flex;gap:6px;}
 #homeScreen{flex:1;display:flex;flex-direction:column;padding:20px;z-index:5;overflow-y:auto;position:relative;}
+
+/* 桌面圆形头像 */
+.home-avatar-wrapper{display:flex;justify-content:center;margin-bottom:15px;margin-top:10px;}
+.home-avatar{width:75px;height:75px;border-radius:50%;background:rgba(255,255,255,0.2);border:2px solid rgba(255,255,255,0.4);display:flex;justify-content:center;align-items:center;overflow:hidden;cursor:pointer;box-shadow:0 4px 12px rgba(0,0,0,0.2);transition:transform 0.2s;}
+.home-avatar:active{transform:scale(0.95);}
+.home-avatar img{width:100%;height:100%;object-fit:cover;}
+.home-avatar svg{fill:#fff;width:40px;height:40px;}
+
 #widgetArea{display:flex;flex-direction:column;gap:15px;margin-bottom:20px;}
 .widget-card{border-radius:24px;padding:20px;color:#fff;position:relative;background-size:cover;background-position:center;background-color:rgba(255,255,255,.2);box-shadow:0 4px 10px rgba(0,0,0,.1);border:1px solid rgba(255,255,255,.3);display:flex;flex-direction:column;justify-content:space-between;overflow:hidden;min-height:100px;}
 .widget-content{position:relative;z-index:1;}.widget-text-lg{font-size:24px;font-weight:600;text-shadow:0 2px 4px rgba(0,0,0,.3);}.widget-text-sm{font-size:14px;opacity:.9;margin-top:5px;text-shadow:0 1px 2px rgba(0,0,0,.3);}
@@ -39,7 +47,7 @@ body{display:flex;flex-direction:column;height:100vh;color:var(--text);font-fami
 .app-icon svg{width:32px;height:32px;fill:#fff;}
 .app-icon img{width:100%;height:100%;object-fit:cover;}.app-icon .app-name{font-size:12px;color:#fff;text-shadow:0 1px 3px rgba(0,0,0,.5);}
 [data-theme="light"] .app-icon .app-name,[data-theme="cute"] .app-icon .app-name,[data-theme="blue"] .app-icon .app-name,[data-theme="purple"] .app-icon .app-name,[data-theme="green"] .app-icon .app-name{color:var(--text);text-shadow:none;}
-.edit-icon-btn{position:absolute;top:-5px;right:5px;background:var(--accent);color:#fff;border-radius:50%;width:18px;height:18px;display:flex;justify-content:center;align-items:center;font-size:14px;z-index:2;border:2px solid var(--bg);}
+
 .app-container{position:fixed;top:0;left:0;width:100%;height:100%;background:var(--bg);z-index:50;display:none;flex-direction:column;}.app-container.open{display:flex;}
 #app-chat{background-size:cover;background-position:center;}.app-header{display:flex;align-items:center;padding:15px 16px;background:var(--panel);border-bottom:1px solid var(--border);gap:15px;z-index:10;}
 .back-btn{background:none;border:none;font-size:20px;color:var(--accent);cursor:pointer;display:flex;align-items:center;padding:0;}.app-title{font-size:18px;font-weight:600;color:var(--text);flex:1;text-align:center;padding-right:24px;}
@@ -168,7 +176,18 @@ button.send{padding:0 16px;border-radius:20px;border:none;background:#007aff;col
 <div id="homeBg"></div><div id="bgMask"></div>
 <div id="floatingCall" onclick="openApp('app-call')"><div class="float-avatar" id="floatAvatarBox"><svg class="svg-icon" viewBox="0 0 24 24"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg></div><button class="float-end" onclick="event.stopPropagation(); hangupCall();">✖</button></div>
 <div id="statusBar"><div id="statusTime">12:00</div><div class="status-right"><span>5G</span><span>🔋</span></div></div>
-<div id="homeScreen"><div id="widgetArea"></div><div class="clock-widget"><div class="clock-time" id="homeTime">12:00:00</div><div class="clock-date" id="homeDate">获取时间中...</div></div><div class="app-grid" id="appGrid"></div></div>
+
+<div id="homeScreen">
+  <!-- 桌面顶部头像 -->
+  <div class="home-avatar-wrapper">
+    <div class="home-avatar" id="homeAvatar" onclick="document.getElementById('homeAvatarUpload').click()"></div>
+    <input type="file" id="homeAvatarUpload" accept="image/*" style="display:none;">
+  </div>
+
+  <div id="widgetArea"></div>
+  <div class="clock-widget"><div class="clock-time" id="homeTime">12:00:00</div><div class="clock-date" id="homeDate">获取时间中...</div></div>
+  <div class="app-grid" id="appGrid"></div>
+</div>
 
 <div id="app-contacts" class="app-container">
 <div class="app-header"><button class="back-btn" onclick="closeApp('app-contacts')"><svg class="svg-icon" viewBox="0 0 24 24"><path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"/></svg></button><div class="app-title">梦占通讯</div><div style="width:24px"></div></div>
@@ -259,6 +278,10 @@ button.send{padding:0 16px;border-radius:20px;border:none;background:#007aff;col
 <div class="form-group"><label>聊天界面背景</label><input type="file" id="chatBgUpload" accept="image/*"></div>
 <div class="form-group"><label>通话背景图</label><input type="file" id="callBgUpload" accept="image/*"></div>
 <div class="form-group"><label>界面主题</label><select id="settingTheme"><option value="dark">夜间暗黑</option><option value="light">白天纯白</option><option value="cute">可爱粉色</option><option value="blue">静谧淡蓝</option><option value="purple">梦幻淡紫</option><option value="green">生机淡绿</option></select></div>
+
+<div class="section-title">应用图标自定义</div>
+<div id="iconSettingsList" style="max-height: 250px; overflow-y: auto; margin-bottom: 20px;"></div>
+
 <div class="section-title">开屏文字自定义</div>
 <div class="form-group"><textarea id="splashTextsInput" rows="4" placeholder="正在连接梦境...&#10;读取潜意识碎片..."></textarea></div>
 <button class="admin-btn" onclick="saveSplashTexts()">保存开屏文字</button>
@@ -304,7 +327,6 @@ const DEFAULT_CONTACTS=[{id:"c1",name:"梦占灵体",avatar:"",bio:"来自深渊
 const DEFAULT_CHAT_RECORDS={"c1":[]};
 const DEFAULT_MOMENTS=[{id:"m1",authorId:"c1",text:"今天感觉如何？",time:"1小时前",likes:0,comments:[],images:[]}];
 
-// 为防止编码乱码导致白屏，全部使用 Unicode 转义字符
 const APP_CONFIG=[
 {id:"app-moments",name:"朋友圈",emoji:"\u{1F305}"},
 {id:"app-contacts",name:"通讯",emoji:"\u{1F4AC}"},
@@ -339,20 +361,81 @@ function compressImage(file,maxSize,callback,format){const reader=new FileReader
 function drawFromPool(poolName){let p=pools[poolName]||[];if(poolName==="tarot")p=[...DEFAULT_TAROT.map(t=>t.name),...p];if(p.length===0)return"池子空了";return p[Math.floor(Math.random()*p.length)];}
 function generatePuzzle(poolName,maxLen){let p=pools[poolName]||[];if(p.length===0)return"池子空了";let result="",count=0;while(result.length<maxLen&&count<5){let card=p[Math.floor(Math.random()*p.length)];result+=(result?"，":"")+card;count++;}if(result.length>maxLen)result=result.substring(0,maxLen)+"...";return result;}
 function applyTheme(){document.documentElement.setAttribute('data-theme',settings.theme||'cute');const themeSel=document.getElementById("settingTheme");if(themeSel)themeSel.value=settings.theme||'cute';const homeBg=document.getElementById("homeBg");if(homeBg)homeBg.style.backgroundImage=settings.homeBg?`url(${settings.homeBg})`:'linear-gradient(135deg, #2b1055, #7597de)';const chatApp=document.getElementById("app-chat");if(chatApp)chatApp.style.backgroundImage=settings.chatBg?`url(${settings.chatBg})`:'none';}
-function renderHome() {const grid = document.getElementById("appGrid");if(!grid) return;grid.innerHTML = "";APP_CONFIG.forEach(app => {const customIcon = settings.icons && settings.icons[app.id];const iconHtml = customIcon ? `<img src="${customIcon}" style="width:100%;height:100%;object-fit:cover;border-radius:16px;">` : `<span style="font-size:32px;line-height:1;">${app.emoji}</span>`;const editBtn = `<div class="edit-icon-btn" onclick="event.stopPropagation(); changeIcon('${app.id}')">+</div>`;const bgStyle = customIcon ? 'background:transparent;border:none;' : 'background:rgba(255,255,255,0.15);border:1px solid rgba(255,255,255,0.2);';grid.innerHTML += `<div class="app-icon" onclick="openApp('${app.id}')">${editBtn}<div class="icon-box" style="${bgStyle}">${iconHtml}</div><div class="app-name">${app.name}</div></div>`;});renderWidgets();}
+
+function renderHome() {
+  const grid = document.getElementById("appGrid");
+  if(!grid) return;
+  grid.innerHTML = "";
+  APP_CONFIG.forEach(app => {
+    const customIcon = settings.icons && settings.icons[app.id];
+    const iconHtml = customIcon 
+      ? `<img src="${customIcon}" style="width:100%;height:100%;object-fit:cover;border-radius:16px;">` 
+      : `<span style="font-size:32px;line-height:1;">${app.emoji}</span>`;
+    
+    const bgStyle = customIcon ? 'background:transparent;border:none;' : 'background:rgba(255,255,255,0.15);border:1px solid rgba(255,255,255,0.2);';
+    
+    grid.innerHTML += `
+      <div class="app-icon" onclick="openApp('${app.id}')">
+        <div class="icon-box" style="${bgStyle}">
+          ${iconHtml}
+        </div>
+        <div class="app-name">${app.name}</div>
+      </div>`;
+  });
+  
+  renderWidgets();
+
+  // 更新桌面头像
+  const avatarBox = document.getElementById("homeAvatar");
+  if(avatarBox) {
+    if(settings.userProfile && settings.userProfile.avatar) {
+      avatarBox.innerHTML = `<img src="${settings.userProfile.avatar}">`;
+    } else {
+      avatarBox.innerHTML = `<svg viewBox="0 0 24 24"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>`;
+    }
+  }
+}
+
+function renderSettingsIcons() {
+  const list = document.getElementById("iconSettingsList");
+  if(!list) return;
+  list.innerHTML = "";
+  APP_CONFIG.forEach(app => {
+    const item = document.createElement("div");
+    item.style.cssText = "display:flex; justify-content:space-between; align-items:center; padding:10px 0; border-bottom:1px solid var(--border);";
+    item.innerHTML = `<span style="font-size:15px;">${app.emoji} ${app.name}</span>
+      <label class="admin-btn" style="width:auto; padding:6px 12px; font-size:13px; margin:0; cursor:pointer;">更换图片
+        <input type="file" accept="image/*" style="display:none;" onchange="changeIconFromSettings(event, '${app.id}')">
+      </label>`;
+    list.appendChild(item);
+  });
+}
+
+window.changeIconFromSettings = function(e, appId) {
+  const file = e.target.files[0];
+  if(!file) return;
+  compressImage(file, 200, (base64) => {
+    if(!settings.icons) settings.icons = {};
+    settings.icons[appId] = base64;
+    saveSettings();
+    renderHome();
+    showToast("图标已更新");
+  }, 'png');
+  e.target.value = "";
+}
+
 function renderWidgets(){const area=document.getElementById("widgetArea");if(!area)return;area.innerHTML="";if(!settings.widgets)return;settings.widgets.forEach((w,index)=>{const div=document.createElement("div");div.className="widget-card";div.style.backgroundImage=w.img?`url(${w.img})`:'none';if(!w.img)div.style.backgroundColor='rgba(255,255,255,0.2)';div.innerHTML=`<div class="widget-del-btn" onclick="removeWidget(${index})">✕</div><div class="widget-content" style="text-align: ${w.img?'left':'center'}; margin-top:10px;">${w.textLg?`<div class="widget-text-lg">${escapeHtml(w.textLg)}</div>`:''}${w.textSm?`<div class="widget-text-sm">${escapeHtml(w.textSm)}</div>`:''}</div>`;area.appendChild(div);});}
-window.changeIcon=function(appId){const input=document.createElement('input');input.type='file';input.accept='image/*';input.onchange=e=>{const file=e.target.files[0];if(!file)return;compressImage(file,200,(compressedBase64)=>{if(!settings.icons)settings.icons={};settings.icons[appId]=compressedBase64;saveSettings();renderHome();showToast("图标已更换！");},'png');};input.click();};
 window.removeWidget=function(i){if(confirm("确定移除这个小组件吗？")){settings.widgets.splice(i,1);saveSettings();renderWidgets();}};
 window.clearWidgets=function(){if(confirm("确定清空所有小组件吗？")){settings.widgets=[];saveSettings();renderWidgets();}};
 window.addWidget=function(){const imgInp=document.getElementById("widgetImgUpload"),lg=document.getElementById("widgetTextLg").value,sm=document.getElementById("widgetTextSm").value;const process=(imgSrc)=>{if(!settings.widgets)settings.widgets=[];settings.widgets.push({img:imgSrc,textLg:lg,textSm:sm});saveSettings();renderWidgets();document.getElementById("widgetTextLg").value="";document.getElementById("widgetTextSm").value="";imgInp.value="";showToast("小组件已添加！");};if(imgInp.files&&imgInp.files[0]){compressImage(imgInp.files[0],800,(compressedBase64)=>{process(compressedBase64);});}else{process("");}};
 function updateTime(){try{const now=new Date(),y=now.getFullYear(),m=(now.getMonth()+1).toString().padStart(2,'0'),d=now.getDate().toString().padStart(2,'0'),weeks=["日","一","二","三","四","五","六"],week=weeks[now.getDay()];const timeStr=now.getHours().toString().padStart(2,'0')+":"+now.getMinutes().toString().padStart(2,'0')+":"+now.getSeconds().toString().padStart(2,'0'),dateStr=`${y}/${m}/${d} 星期${week}`;const st=document.getElementById("statusTime");if(st)st.textContent=timeStr;const ht=document.getElementById("homeTime");if(ht)ht.textContent=timeStr;const hd=document.getElementById("homeDate");if(hd)hd.textContent=dateStr;}catch(e){}}
-window.openApp=function(appId){document.getElementById(appId).classList.add("open");document.getElementById("homeScreen").style.display="none";if(appId==='app-contacts')renderContacts();if(appId==='app-moments'){renderMomentsFeed();switchMomentsTab('feed');}if(appId==='app-mail')renderMails();if(appId==='app-notes')renderNotes();if(appId==='app-music')renderPlaylist();if(appId==='app-call'){document.getElementById("floatingCall").classList.remove("show");if(!inCall)startCall();}if(appId==='app-chat'){updateStatusBar();scrollToBottom();}}
+window.openApp=function(appId){document.getElementById(appId).classList.add("open");document.getElementById("homeScreen").style.display="none";if(appId==='app-contacts')renderContacts();if(appId==='app-moments'){renderMomentsFeed();switchMomentsTab('feed');}if(appId==='app-mail')renderMails();if(appId==='app-notes')renderNotes();if(appId==='app-music')renderPlaylist();if(appId==='app-call'){document.getElementById("floatingCall").classList.remove("show");if(!inCall)startCall();}if(appId==='app-chat'){updateStatusBar();scrollToBottom();}if(appId==='app-settings')renderSettingsIcons();}
 window.closeApp=function(appId){document.getElementById(appId).classList.remove("open");document.getElementById("homeScreen").style.display="flex";}
 function updateStatusBar(){const bar=document.getElementById("oracleStatusBar");if(!bar)return;const changeStatus=()=>{bar.textContent=STATUS_LIST[Math.floor(Math.random()*STATUS_LIST.length)];};changeStatus();clearInterval(statusInterval);statusInterval=setInterval(changeStatus,5000);}
 window.switchMomentsTab=function(tab){const feed=document.getElementById('momentsFeed'),profile=document.getElementById('momentsProfile'),btns=document.querySelectorAll('#app-moments .tab-btn'),addBtn=document.getElementById('momentsAddBtn');btns.forEach(b=>b.classList.remove('active'));if(tab==='feed'){feed.style.display='block';profile.style.display='none';btns[0].classList.add('active');addBtn.style.display='flex';}else{feed.style.display='none';profile.style.display='block';btns[1].classList.add('active');addBtn.style.display='none';renderMyProfile();}}
 function renderMomentsFeed(){const coverBg=document.getElementById('momentsCoverBg'),avatarBox=document.getElementById('momentsUserAvatar'),nameBox=document.getElementById('momentsUserName');coverBg.style.backgroundImage=settings.userProfile.cover?`url(${settings.userProfile.cover})`:'linear-gradient(135deg, var(--accent), var(--border))';nameBox.textContent=settings.userProfile.name;if(settings.userProfile.avatar){avatarBox.innerHTML=`<img src="${settings.userProfile.avatar}">`;}else{avatarBox.innerHTML=`<svg class="avatar-svg" viewBox="0 0 24 24"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>`;}const list=document.getElementById('momentsList');list.innerHTML="";if(moments.length===0){list.innerHTML='<div style="text-align:center; color:var(--muted); margin-top:50px;">暂无动态</div>';return;}moments.forEach(m=>{const isMe=m.authorId==="user";let authorName=isMe?settings.userProfile.name:"未知灵体",authorAvatar=isMe?settings.userProfile.avatar:"";if(!isMe){const c=contacts.find(x=>x.id===m.authorId);if(c){authorName=c.name;authorAvatar=c.avatar;}}const avHtml=authorAvatar?`<img src="${authorAvatar}">`:`<svg class="avatar-svg" viewBox="0 0 24 24"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>`;let imgsHtml="";if(m.images&&m.images.length>0){imgsHtml=`<div class="moment-post-imgs">`+m.images.map(img=>`<img src="${img}">`).join('')+`</div>`;}let commentsHtml="";if(m.comments&&m.comments.length>0){commentsHtml=`<div class="moment-comments-box">`+m.comments.map(c=>{let cName="我";if(c.authorId!=="user"){const cc=contacts.find(x=>x.id===c.authorId);cName=cc?cc.name:"灵体";}let cText=safeText(c.text);return`<div class="moment-comment"><b>${escapeHtml(cName)}</b>：${cText}</div>`;}).join('')+`</div>`;}const post=document.createElement('div');post.className="moment-post";post.innerHTML=`<div class="moment-post-avatar">${avHtml}</div><div class="moment-post-content"><div class="moment-post-name">${escapeHtml(authorName)}</div><div class="moment-post-text">${escapeHtml(m.text)}</div>${imgsHtml}<div class="moment-post-meta"><span>${escapeHtml(m.time)}</span><div class="moment-post-actions"><div class="moment-post-btn" onclick="likeMoment('${m.id}')">❤️ ${m.likes||0}</div><div class="moment-post-btn" onclick="promptComment('${m.id}')">💬</div></div></div>${commentsHtml}</div>`;list.appendChild(post);});}
 function renderMyProfile(){const coverBg=document.getElementById('profileCoverBg'),avatarBox=document.getElementById('profileUserAvatar');coverBg.style.backgroundImage=settings.userProfile.cover?`url(${settings.userProfile.cover})`:'linear-gradient(135deg, var(--accent), var(--border))';if(settings.userProfile.avatar){avatarBox.innerHTML=`<img src="${settings.userProfile.avatar}">`;}else{avatarBox.innerHTML=`<svg class="avatar-svg" viewBox="0 0 24 24"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>`;}document.getElementById('profileUserName').textContent=settings.userProfile.name;document.getElementById('profileUserSign').textContent=settings.userProfile.sign;document.getElementById('editUserName').value=settings.userProfile.name;document.getElementById('editUserSign').value=settings.userProfile.sign;}
-window.saveUserProfile=function(){settings.userProfile.name=document.getElementById('editUserName').value.trim()||"梦主";settings.userProfile.sign=document.getElementById('editUserSign').value.trim()||"这个人很懒，什么都没有留下。";const coverFile=document.getElementById('editCoverUpload').files[0],avatarFile=document.getElementById('editUserAvatar').files[0];const finish=()=>{saveSettings();renderMyProfile();document.getElementById('editProfileModal').style.display='none';showToast("资料已更新");};if(coverFile){compressImage(coverFile,800,(base64)=>{settings.userProfile.cover=base64;if(avatarFile){compressImage(avatarFile,200,(avBase64)=>{settings.userProfile.avatar=avBase64;finish();},'png');}else finish();});}else if(avatarFile){compressImage(avatarFile,200,(avBase64)=>{settings.userProfile.avatar=avBase64;finish();},'png');}else{finish();}};
+window.saveUserProfile=function(){settings.userProfile.name=document.getElementById('editUserName').value.trim()||"梦主";settings.userProfile.sign=document.getElementById('editUserSign').value.trim()||"这个人很懒，什么都没有留下。";const coverFile=document.getElementById('editCoverUpload').files[0],avatarFile=document.getElementById('editUserAvatar').files[0];const finish=()=>{saveSettings();renderMyProfile();renderHome();document.getElementById('editProfileModal').style.display='none';showToast("资料已更新");};if(coverFile){compressImage(coverFile,800,(base64)=>{settings.userProfile.cover=base64;if(avatarFile){compressImage(avatarFile,200,(avBase64)=>{settings.userProfile.avatar=avBase64;finish();},'png');}else finish();});}else if(avatarFile){compressImage(avatarFile,200,(avBase64)=>{settings.userProfile.avatar=avBase64;finish();},'png');}else{finish();}};
 window.openAddMomentModal=function(){document.getElementById('momentInput').value="";pendingMomentImgs=[];document.getElementById('momentImgPreview').innerHTML="";document.getElementById('momentImgUpload').value="";document.getElementById('addMomentModal').style.display='flex';};
 window.closeAddMomentModal=function(){document.getElementById('addMomentModal').style.display='none';};
 window.postMoment=function(){const text=document.getElementById('momentInput').value.trim();if(!text&&pendingMomentImgs.length===0)return showToast("请输入内容或添加图片");const newMoment={id:genId(),authorId:"user",text:text,time:"刚刚",likes:0,comments:[],images:[...pendingMomentImgs]};moments.unshift(newMoment);saveMoments();closeAddMomentModal();renderMomentsFeed();showToast("动态已发布");triggerAIInteraction(newMoment.id);};
@@ -452,7 +535,21 @@ window.addEventListener('DOMContentLoaded',()=>{
     if(sendBtn)sendBtn.addEventListener("click",sendMessage);
     if(inputEl){inputEl.addEventListener("keydown",function(e){if(e.key==='Enter'||e.keyCode===13){e.preventDefault();sendMessage();}});}
     
-    // 把原本在全局的绑定移到这里，防止因为 DOM 未加载完报错
+    // 桌面头像上传逻辑
+    const homeAvatarUpload = document.getElementById("homeAvatarUpload");
+    if (homeAvatarUpload) {
+      homeAvatarUpload.onchange = function(e) {
+        const file = e.target.files[0]; if(!file) return;
+        compressImage(file, 200, (base64) => {
+          settings.userProfile.avatar = base64;
+          saveSettings();
+          renderHome();
+          showToast("头像已更新");
+        }, 'png');
+        e.target.value = "";
+      };
+    }
+
     const musicUpload = document.getElementById("musicUpload");
     if (musicUpload) {
       musicUpload.onchange = async (e) => {
@@ -514,7 +611,6 @@ window.addEventListener('DOMContentLoaded',()=>{
     (async function initDBAndMusic(){try{await initDB();await loadPlaylist();}catch(e){console.warn("音乐模块加载失败",e);}})();
   }catch(e){
     console.error(e);
-    // 如果初始化出错，强杀开屏保护
     const splash = document.getElementById('splashScreen');
     if(splash) splash.style.display = 'none';
     document.getElementById('homeScreen').style.display = 'flex';
