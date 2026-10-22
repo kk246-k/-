@@ -146,40 +146,40 @@
   .emoji-item { font-size: 24px; cursor: pointer; }
   .emoji-img { width: 36px; height: 36px; object-fit: cover; border-radius: 8px; cursor: pointer; border: 1px solid var(--border); }
 
-  /* 动态页与名片 */
-  .tab-bar { display: flex; background: var(--panel); border-bottom: 1px solid var(--border); }
-  .tab-item { flex: 1; text-align: center; padding: 12px 0; font-size: 15px; color: var(--muted); cursor: pointer; font-weight: 500; border-bottom: 2px solid transparent; }
-  .tab-item.active { color: var(--accent); border-bottom-color: var(--accent); }
-  .moments-container { flex: 1; overflow-y: auto; padding: 15px; display: none; }
-  .moments-container.active { display: block; }
-  .moment-card { background: var(--panel); border-radius: 12px; padding: 15px; margin-bottom: 15px; border: 1px solid var(--border); }
-  .moment-header { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
-  .moment-author { font-weight: bold; color: var(--text); font-size: 15px; flex: 1;}
-  .moment-time { font-size: 12px; color: var(--muted); }
-  .moment-text { font-size: 15px; line-height: 1.5; color: var(--text); margin-bottom: 12px; white-space: pre-wrap;}
-  .moment-actions { display: flex; gap: 20px; font-size: 13px; color: var(--muted); padding-top: 10px; border-top: 1px solid var(--border);}
-  .moment-btn { cursor: pointer; display: flex; align-items: center; gap: 5px; }
-  .moment-btn.liked { color: var(--accent); }
-  .moment-comments { background: var(--bg); border-radius: 8px; padding: 10px; margin-top: 10px; font-size: 13px; }
-  .moment-comment { margin-bottom: 6px; color: var(--text); line-height: 1.4;}
-  .moment-comment:last-child { margin-bottom: 0; }
-  .add-moment-btn { position: absolute; bottom: 20px; right: 20px; width: 50px; height: 50px; border-radius: 50%; background: var(--accent); color: #fff; font-size: 24px; border: none; box-shadow: 0 4px 10px rgba(0,0,0,0.2); cursor: pointer; z-index: 10; display: flex; justify-content: center; align-items: center; }
+  /* ====== 灵界圈 (朋友圈) ====== */
+  #app-moments { background: var(--bg); display: none; }
+  #app-moments.open { display: flex; }
+  .moments-main { flex: 1; overflow-y: auto; padding-bottom: 60px; }
+  
+  .moments-cover { width: 100%; height: 240px; background: linear-gradient(135deg, var(--accent), var(--border)); background-size: cover; background-position: center; position: relative; }
+  .moments-user-info { position: absolute; bottom: -20px; right: 15px; display: flex; align-items: flex-end; gap: 15px; z-index: 2;}
+  .moments-user-name { color: #fff; font-size: 18px; font-weight: bold; text-shadow: 0 1px 3px rgba(0,0,0,0.6); margin-bottom: 25px;}
+  .moments-user-avatar { width: 70px; height: 70px; border-radius: 12px; border: 3px solid var(--bg); background: var(--panel); overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,0.2); display:flex; justify-content:center; align-items:center;}
+  .moments-user-avatar img { width: 100%; height: 100%; object-fit: cover; }
+  
+  .moment-post { display: flex; padding: 15px; gap: 12px; border-bottom: 1px solid var(--border); margin-top: 20px;}
+  .moment-post:first-of-type { margin-top: 30px; }
+  .moment-post-avatar { width: 44px; height: 44px; border-radius: 8px; background: var(--panel); overflow: hidden; display: flex; justify-content: center; align-items: center; flex-shrink: 0;}
+  .moment-post-avatar img { width: 100%; height: 100%; object-fit: cover; }
+  .moment-post-content { flex: 1; min-width: 0; }
+  .moment-post-name { font-weight: bold; color: var(--accent); font-size: 15px; margin-bottom: 4px; }
+  .moment-post-text { font-size: 15px; line-height: 1.5; color: var(--text); margin-bottom: 8px; white-space: pre-wrap; word-break: break-word;}
+  .moment-post-imgs { display: flex; flex-wrap: wrap; gap: 5px; margin-bottom: 8px; }
+  .moment-post-imgs img { width: calc(33.33% - 5px); aspect-ratio: 1; object-fit: cover; border-radius: 6px; }
+  .moment-post-meta { display: flex; justify-content: space-between; align-items: center; font-size: 12px; color: var(--muted); margin-bottom: 8px;}
+  .moment-post-actions { display: flex; gap: 15px; font-size: 13px; color: var(--text); background: var(--panel); padding: 6px 12px; border-radius: 8px; width: fit-content; margin-left: auto; }
+  .moment-post-btn { cursor: pointer; display: flex; align-items: center; gap: 4px;}
+  
+  .moment-comments-box { background: var(--panel); border-radius: 8px; padding: 10px; font-size: 13px; line-height: 1.5; margin-top: 8px; }
+  .moment-comment { margin-bottom: 6px; color: var(--text); word-break: break-word; }
+  .moment-comment b { color: var(--accent); }
+  .moment-comment img { width: 24px; height: 24px; vertical-align: middle; border-radius: 4px; margin: 0 2px;}
 
-  /* 个人主页(QQ名片风) */
-  #profileModal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); z-index: 10002; display: none; justify-content: center; align-items: center; backdrop-filter: blur(3px); }
-  .profile-card { width: 85%; max-width: 320px; background: var(--panel); border-radius: 20px; overflow: hidden; box-shadow: 0 10px 30px rgba(0,0,0,0.3); position: relative; border: 1px solid var(--border);}
-  .profile-cover { height: 120px; background: linear-gradient(135deg, var(--accent), var(--border)); background-size: cover; background-position: center;}
-  .profile-avatar { width: 80px; height: 80px; border-radius: 50%; border: 4px solid var(--panel); background: var(--bg); position: absolute; top: 80px; left: 20px; overflow: hidden; display: flex; justify-content: center; align-items: center; }
-  .profile-avatar img { width: 100%; height: 100%; object-fit: cover; }
-  .profile-info { padding: 50px 20px 20px; }
-  .profile-name { font-size: 20px; font-weight: bold; color: var(--text); margin-bottom: 5px; }
-  .profile-sign { font-size: 13px; color: var(--muted); margin-bottom: 15px; line-height: 1.4;}
-  .profile-stats { display: flex; gap: 20px; border-top: 1px solid var(--border); padding-top: 15px; margin-bottom: 15px;}
-  .stat-item { text-align: center; }
-  .stat-num { font-size: 18px; font-weight: bold; color: var(--text); }
-  .stat-label { font-size: 12px; color: var(--muted); }
-  .profile-close { position: absolute; top: 10px; right: 15px; font-size: 24px; color: #fff; cursor: pointer; text-shadow: 0 1px 3px rgba(0,0,0,0.5); z-index: 10;}
-  .profile-btn { width: 100%; padding: 12px; border-radius: 24px; border: none; background: var(--accent); color: #fff; font-size: 16px; font-weight: bold; cursor: pointer; }
+  .bottom-tab { position: absolute; bottom: 0; left: 0; width: 100%; height: 55px; background: var(--panel); border-top: 1px solid var(--border); display: flex; z-index: 100; padding-bottom: env(safe-area-inset-bottom);}
+  .tab-btn { flex: 1; display: flex; flex-direction: column; justify-content: center; align-items: center; color: var(--muted); font-size: 11px; gap: 2px; cursor: pointer; }
+  .tab-btn svg { width: 24px; height: 24px; fill: currentColor; }
+  .tab-btn.active { color: var(--accent); }
+  .moments-add-btn { position: absolute; bottom: 70px; right: 20px; width: 50px; height: 50px; border-radius: 50%; background: var(--accent); color: #fff; font-size: 24px; border: none; box-shadow: 0 4px 10px rgba(0,0,0,0.2); cursor: pointer; z-index: 10; display: flex; justify-content: center; align-items: center; }
 
   /* 塔罗 */
   #app-tarot { background: var(--bg); }
@@ -262,7 +262,7 @@
   #toast { position: fixed; top: 10%; left: 50%; transform: translateX(-50%) translateY(-20px); background: rgba(0, 0, 0, 0.8); color: #fff; padding: 10px 20px; border-radius: 8px; font-size: 14px; z-index: 100000; opacity: 0; pointer-events: none; transition: all 0.3s ease; max-width: 80%; text-align: center;}
   #toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
 
-  #writeModal, #editContactModal, #decisionModal, #addMomentModal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 10001; display: none; justify-content: center; align-items: center; }
+  #writeModal, #editContactModal, #decisionModal, #addMomentModal, #editProfileModal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 10001; display: none; justify-content: center; align-items: center; }
   .write-box { background: var(--panel); padding: 20px; border-radius: 12px; width: 85%; max-width: 320px; max-height: 90vh; overflow-y: auto;}
   .write-box textarea { width: 100%; height: 80px; padding: 10px; border-radius: 8px; border: 1px solid var(--border); background: var(--bg); color: var(--text); font-size: 15px; resize: none; margin-bottom: 10px; }
   .write-box input[type="text"] { width: 100%; padding: 10px; border-radius: 8px; border: 1px solid var(--border); background: var(--bg); color: var(--text); font-size: 15px; margin-bottom: 10px; outline: none;}
@@ -271,6 +271,26 @@
   .write-box button { flex: 1; padding: 10px; border-radius: 8px; border: none; font-weight: bold; cursor: pointer; }
   .write-box .cancel { background: var(--border); color: var(--text); }
   .write-box .confirm { background: var(--accent); color: #fff; }
+
+  /* 图片预览网格 */
+  .upload-preview { display: flex; gap: 5px; flex-wrap: wrap; margin-bottom: 10px;}
+  .upload-preview img { width: 60px; height: 60px; object-fit: cover; border-radius: 6px; }
+
+  /* 个人主页(QQ名片风) */
+  #profileModal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); z-index: 10002; display: none; justify-content: center; align-items: center; backdrop-filter: blur(3px); }
+  .profile-card { width: 85%; max-width: 320px; background: var(--panel); border-radius: 20px; overflow: hidden; box-shadow: 0 10px 30px rgba(0,0,0,0.3); position: relative; border: 1px solid var(--border);}
+  .profile-cover { height: 120px; background: linear-gradient(135deg, var(--accent), var(--border)); background-size: cover; background-position: center;}
+  .profile-avatar { width: 80px; height: 80px; border-radius: 50%; border: 4px solid var(--panel); background: var(--bg); position: absolute; top: 80px; left: 20px; overflow: hidden; display: flex; justify-content: center; align-items: center; }
+  .profile-avatar img { width: 100%; height: 100%; object-fit: cover; }
+  .profile-info { padding: 50px 20px 20px; }
+  .profile-name { font-size: 20px; font-weight: bold; color: var(--text); margin-bottom: 5px; }
+  .profile-sign { font-size: 13px; color: var(--muted); margin-bottom: 15px; line-height: 1.4;}
+  .profile-stats { display: flex; gap: 20px; border-top: 1px solid var(--border); padding-top: 15px; margin-bottom: 15px;}
+  .stat-item { text-align: center; }
+  .stat-num { font-size: 18px; font-weight: bold; color: var(--text); }
+  .stat-label { font-size: 12px; color: var(--muted); }
+  .profile-close { position: absolute; top: 10px; right: 15px; font-size: 24px; color: #fff; cursor: pointer; text-shadow: 0 1px 3px rgba(0,0,0,0.5); z-index: 10;}
+  .profile-btn { width: 100%; padding: 12px; border-radius: 24px; border: none; background: var(--accent); color: #fff; font-size: 16px; font-weight: bold; cursor: pointer; }
 </style>
 </head>
 <body>
@@ -309,18 +329,51 @@
     <div class="app-title">梦占通讯</div>
     <div style="width:24px"></div>
   </div>
-  
-  <div class="tab-bar">
-    <div class="tab-item active" onclick="switchContactTab('contacts')">联系人</div>
-    <div class="tab-item" onclick="switchContactTab('moments')">动态</div>
+  <div class="contact-list" id="contactList"></div>
+  <button class="add-contact-btn" onclick="addContact()">+</button>
+</div>
+
+<!-- 灵界圈 App -->
+<div id="app-moments" class="app-container">
+  <!-- 动态流页面 -->
+  <div id="momentsFeed" class="moments-main">
+    <div class="moments-cover" id="momentsCoverBg">
+      <div class="moments-user-info">
+        <div class="moments-user-name" id="momentsUserName">我</div>
+        <div class="moments-user-avatar" id="momentsUserAvatar"></div>
+      </div>
+    </div>
+    <div id="momentsList" style="padding-top:20px;"></div>
   </div>
 
-  <div class="contact-list" id="contactList"></div>
-  
-  <div class="moments-container" id="momentsContainer"></div>
+  <!-- 我的主页页面 -->
+  <div id="momentsProfile" class="moments-main" style="display:none; background: var(--panel);">
+    <div class="moments-cover" id="profileCoverBg"></div>
+    <div style="padding: 20px; display: flex; align-items: center; gap: 20px; border-bottom: 1px solid var(--border);">
+      <div class="contact-avatar" id="profileUserAvatar" style="width: 70px; height: 70px; border-radius: 12px; cursor: default;"></div>
+      <div style="flex:1;">
+        <div style="font-size: 20px; font-weight: bold; color: var(--text); margin-bottom: 5px;" id="profileUserName">我的昵称</div>
+        <div style="font-size: 13px; color: var(--muted);" id="profileUserSign">暂无签名</div>
+      </div>
+    </div>
+    <div style="padding: 20px;">
+      <button class="admin-btn" onclick="document.getElementById('editProfileModal').style.display='flex'">编辑个人资料</button>
+    </div>
+  </div>
 
-  <button class="add-contact-btn" id="addContactBtn" onclick="addContact()">+</button>
-  <button class="add-moment-btn" id="addMomentBtn" onclick="document.getElementById('addMomentModal').style.display='flex'" style="display:none;">✎</button>
+  <button class="moments-add-btn" id="momentsAddBtn" onclick="openAddMomentModal()">✎</button>
+
+  <!-- 底部导航 -->
+  <div class="bottom-tab">
+    <div class="tab-btn active" onclick="switchMomentsTab('feed')">
+      <svg viewBox="0 0 24 24"><path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/></svg>
+      动态
+    </div>
+    <div class="tab-btn" onclick="switchMomentsTab('profile')">
+      <svg viewBox="0 0 24 24"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>
+      我的
+    </div>
+  </div>
 </div>
 
 <div id="app-chat" class="app-container">
@@ -525,13 +578,36 @@
   </div>
 </div>
 
-<!-- 发动态弹窗 -->
+<!-- 发布动态弹窗 -->
 <div id="addMomentModal">
   <div class="write-box">
-    <textarea id="momentInput" placeholder="分享你的心情..."></textarea>
+    <h3 style="margin-top:0; color:var(--text)">发表动态</h3>
+    <textarea id="momentInput" placeholder="这一刻的想法..."></textarea>
+    <div class="upload-preview" id="momentImgPreview"></div>
+    <label style="display:block; padding:8px; background:var(--bg); border:1px dashed var(--border); text-align:center; border-radius:8px; cursor:pointer; margin-bottom:15px; color:var(--muted); font-size:14px;">
+      + 添加图片 (最多3张)
+      <input type="file" id="momentImgUpload" accept="image/*" multiple style="display:none;">
+    </label>
     <div class="btns">
-      <button class="cancel" onclick="document.getElementById('addMomentModal').style.display='none'">取消</button>
-      <button class="confirm" onclick="postMoment()">发布</button>
+      <button class="cancel" onclick="closeAddMomentModal()">取消</button>
+      <button class="confirm" onclick="postMoment()">发表</button>
+    </div>
+  </div>
+</div>
+
+<!-- 编辑资料弹窗 -->
+<div id="editProfileModal">
+  <div class="write-box">
+    <h3 style="margin-top:0; color:var(--text)">编辑资料</h3>
+    <label style="font-size:12px; color:var(--muted); margin-bottom:5px; display:block;">更换背景图</label>
+    <input type="file" id="editCoverUpload" accept="image/*" style="margin-bottom:15px; font-size:14px; color:var(--text); width:100%;">
+    <label style="font-size:12px; color:var(--muted); margin-bottom:5px; display:block;">更换头像</label>
+    <input type="file" id="editUserAvatar" accept="image/*" style="margin-bottom:15px; font-size:14px; color:var(--text); width:100%;">
+    <input type="text" id="editUserName" placeholder="你的昵称">
+    <input type="text" id="editUserSign" placeholder="个性签名">
+    <div class="btns">
+      <button class="cancel" onclick="document.getElementById('editProfileModal').style.display='none'">取消</button>
+      <button class="confirm" onclick="saveUserProfile()">保存</button>
     </div>
   </div>
 </div>
@@ -618,16 +694,18 @@
     theme: "cute", ignoreRate: 20, recallRate: 10, proactiveRate: 20, minReplyTime: 1, maxReplyTime: 3, mailMaxLen: 50, noteMaxLen: 50,
     splashBg: "", homeBg: "", chatBg: "", callBg: "", icons: {}, 
     widgets: [{ img: "", textLg: "Hello", textSm: "今天也要开心哦" }],
-    splashTexts: ["正在连接梦境...", "读取潜意识碎片...", "命运正在编织...", "准备好了吗？"]
+    splashTexts: ["正在连接梦境...", "读取潜意识碎片...", "命运正在编织...", "准备好了吗？"],
+    userProfile: { name: "梦主", avatar: "", cover: "", sign: "这个人很懒，什么都没有留下。" }
   };
-  const DEFAULT_POOLS = { chat: ["顺其自然", "我在听"], tarot: [], mail: ["风带来了消息"], notes: ["今天阳光很好"] };
+  const DEFAULT_POOLS = { chat: ["顺其自然", "我在听", "确实如此", "你觉得呢？"], tarot: [], mail: ["风带来了消息"], notes: ["今天阳光很好"] };
   const DEFAULT_CONTACTS = [{ id: "c1", name: "梦占灵体", avatar: "", bio: "来自深渊的凝视。" }];
   const DEFAULT_CHAT_RECORDS = { "c1": [] };
   const DEFAULT_MOMENTS = [
-    { id: "m1", authorId: "c1", text: "今天感觉如何？", time: "1小时前", likes: 0, comments: [] }
+    { id: "m1", authorId: "c1", text: "今天感觉如何？", time: "1小时前", likes: 0, comments: [], images: [] }
   ];
 
   const APP_CONFIG = [
+    { id: "app-moments", name: "灵界圈", svg: '<path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 17.93c-3.95-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1c0 1.1.9 2 2 2v1.93zm6.9-2.54c-.26-.81-1-1.39-1.9-1.39h-1v-3c0-.55-.45-1-1-1H8v-2h2c.55 0 1-.45 1-1V7h2c1.1 0 2-.9 2-2v-.41c2.93 1.19 5 4.06 5 7.41 0 2.08-.8 3.97-2.1 5.39z"/>' },
     { id: "app-contacts", name: "梦占通讯", svg: '<path d="M20 2H4c-1.1 0-2 .9-2 2v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2z"/>' },
     { id: "app-music", name: "一起听歌", svg: '<path d="M12 3v10.55c-.59-.34-1.27-.55-2-.55-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4V7h4V3h-6z"/>' },
     { id: "app-tarot", name: "韦特塔罗", svg: '<path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-7 14l-4-4 1.41-1.41L12 14.17l4.59-4.59L18 11l-6 6z"/>' },
@@ -680,7 +758,7 @@
   let callTimeout = null;
   let callSeconds = 0;
   let inCall = false;
-  let currentTab = 'contacts';
+  let pendingMomentImgs = []; // 待发布的图片
 
   // ================= 工具函数 =================
   function escapeHtml(s) {
@@ -711,6 +789,9 @@
 
   function initData() {
     settings = safeParse("os_settings", DEFAULT_SETTINGS);
+    // 确保 userProfile 字段存在
+    if (!settings.userProfile) settings.userProfile = { name: "梦主", avatar: "", cover: "", sign: "这个人很懒，什么都没有留下。" };
+
     pools = safeParse("os_pools", DEFAULT_POOLS);
     contacts = safeParse("os_contacts", JSON.parse(JSON.stringify(DEFAULT_CONTACTS)));
     chatRecords = safeParse("os_chat_records", JSON.parse(JSON.stringify(DEFAULT_CHAT_RECORDS)));
@@ -906,9 +987,8 @@
   window.openApp = function(appId) {
     document.getElementById(appId).classList.add("open");
     document.getElementById("homeScreen").style.display = "none";
-    if(appId === 'app-contacts') {
-      switchContactTab(currentTab);
-    }
+    if(appId === 'app-contacts') renderContacts();
+    if(appId === 'app-moments') { renderMomentsFeed(); switchMomentsTab('feed'); }
     if(appId === 'app-mail') renderMails();
     if(appId === 'app-notes') renderNotes();
     if(appId === 'app-music') renderPlaylist();
@@ -930,29 +1010,276 @@
     changeStatus(); clearInterval(statusInterval); statusInterval = setInterval(changeStatus, 5000);
   }
 
-  // ===== 通讯录与动态 =====
-  window.switchContactTab = function(tab) {
-    currentTab = tab;
-    document.querySelectorAll('.tab-item').forEach(el => el.classList.remove('active'));
-    document.querySelectorAll('.moments-container').forEach(el => el.classList.remove('active'));
-    document.getElementById('contactList').style.display = 'none';
-    document.getElementById('momentsContainer').style.display = 'none';
-    document.getElementById('addContactBtn').style.display = 'none';
-    document.getElementById('addMomentBtn').style.display = 'none';
+  // ===== 灵界圈 App 逻辑 =====
+  window.switchMomentsTab = function(tab) {
+    const feed = document.getElementById('momentsFeed');
+    const profile = document.getElementById('momentsProfile');
+    const btns = document.querySelectorAll('#app-moments .tab-btn');
+    const addBtn = document.getElementById('momentsAddBtn');
 
-    if (tab === 'contacts') {
-      document.querySelectorAll('.tab-item')[0].classList.add('active');
-      document.getElementById('contactList').style.display = 'block';
-      document.getElementById('addContactBtn').style.display = 'flex';
-      renderContacts();
+    btns.forEach(b => b.classList.remove('active'));
+    if (tab === 'feed') {
+      feed.style.display = 'block';
+      profile.style.display = 'none';
+      btns[0].classList.add('active');
+      addBtn.style.display = 'flex';
     } else {
-      document.querySelectorAll('.tab-item')[1].classList.add('active');
-      document.getElementById('momentsContainer').style.display = 'block';
-      document.getElementById('addMomentBtn').style.display = 'flex';
-      renderMoments();
+      feed.style.display = 'none';
+      profile.style.display = 'block';
+      btns[1].classList.add('active');
+      addBtn.style.display = 'none';
+      renderMyProfile();
     }
   }
 
+  function renderMomentsFeed() {
+    // 顶部背景和头像
+    const coverBg = document.getElementById('momentsCoverBg');
+    const avatarBox = document.getElementById('momentsUserAvatar');
+    const nameBox = document.getElementById('momentsUserName');
+    
+    coverBg.style.backgroundImage = settings.userProfile.cover ? `url(${settings.userProfile.cover})` : 'linear-gradient(135deg, var(--accent), var(--border))';
+    nameBox.textContent = settings.userProfile.name;
+    if(settings.userProfile.avatar) {
+      avatarBox.innerHTML = `<img src="${settings.userProfile.avatar}">`;
+    } else {
+      avatarBox.innerHTML = `<svg class="avatar-svg" viewBox="0 0 24 24"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>`;
+    }
+
+    // 动态列表
+    const list = document.getElementById('momentsList');
+    list.innerHTML = "";
+    if (moments.length === 0) {
+      list.innerHTML = '<div style="text-align:center; color:var(--muted); margin-top:50px;">暂无动态</div>';
+      return;
+    }
+
+    moments.forEach(m => {
+      const isMe = m.authorId === "user";
+      let authorName = isMe ? settings.userProfile.name : "未知灵体";
+      let authorAvatar = isMe ? settings.userProfile.avatar : "";
+      
+      if (!isMe) {
+        const c = contacts.find(x => x.id === m.authorId);
+        if (c) {
+          authorName = c.name;
+          authorAvatar = c.avatar;
+        }
+      }
+
+      const avHtml = authorAvatar ? `<img src="${authorAvatar}">` : `<svg class="avatar-svg" viewBox="0 0 24 24"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>`;
+
+      // 渲染图片
+      let imgsHtml = "";
+      if (m.images && m.images.length > 0) {
+        imgsHtml = `<div class="moment-post-imgs">` + m.images.map(img => `<img src="${img}">`).join('') + `</div>`;
+      }
+
+      // 渲染评论
+      let commentsHtml = "";
+      if (m.comments && m.comments.length > 0) {
+        commentsHtml = `<div class="moment-comments-box">` + m.comments.map(c => {
+          let cName = "我";
+          if (c.authorId !== "user") {
+            const cc = contacts.find(x => x.id === c.authorId);
+            cName = cc ? cc.name : "灵体";
+          }
+          let cText = safeText(c.text);
+          return `<div class="moment-comment"><b>${escapeHtml(cName)}</b>：${cText}</div>`;
+        }).join('') + `</div>`;
+      }
+
+      const post = document.createElement('div');
+      post.className = "moment-post";
+      post.innerHTML = `
+        <div class="moment-post-avatar">${avHtml}</div>
+        <div class="moment-post-content">
+          <div class="moment-post-name">${escapeHtml(authorName)}</div>
+          <div class="moment-post-text">${escapeHtml(m.text)}</div>
+          ${imgsHtml}
+          <div class="moment-post-meta">
+            <span>${escapeHtml(m.time)}</span>
+            <div class="moment-post-actions">
+              <div class="moment-post-btn" onclick="likeMoment('${m.id}')">❤️ ${m.likes || 0}</div>
+              <div class="moment-post-btn" onclick="promptComment('${m.id}')">💬</div>
+            </div>
+          </div>
+          ${commentsHtml}
+        </div>
+      `;
+      list.appendChild(post);
+    });
+  }
+
+  function renderMyProfile() {
+    const coverBg = document.getElementById('profileCoverBg');
+    const avatarBox = document.getElementById('profileUserAvatar');
+    
+    coverBg.style.backgroundImage = settings.userProfile.cover ? `url(${settings.userProfile.cover})` : 'linear-gradient(135deg, var(--accent), var(--border))';
+    if(settings.userProfile.avatar) {
+      avatarBox.innerHTML = `<img src="${settings.userProfile.avatar}">`;
+    } else {
+      avatarBox.innerHTML = `<svg class="avatar-svg" viewBox="0 0 24 24"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>`;
+    }
+    document.getElementById('profileUserName').textContent = settings.userProfile.name;
+    document.getElementById('profileUserSign').textContent = settings.userProfile.sign;
+    
+    // 填充编辑表单
+    document.getElementById('editUserName').value = settings.userProfile.name;
+    document.getElementById('editUserSign').value = settings.userProfile.sign;
+  }
+
+  window.saveUserProfile = function() {
+    settings.userProfile.name = document.getElementById('editUserName').value.trim() || "梦主";
+    settings.userProfile.sign = document.getElementById('editUserSign').value.trim() || "这个人很懒，什么都没有留下。";
+    
+    const coverFile = document.getElementById('editCoverUpload').files[0];
+    const avatarFile = document.getElementById('editUserAvatar').files[0];
+    
+    const finish = () => {
+      saveSettings();
+      renderMyProfile();
+      document.getElementById('editProfileModal').style.display = 'none';
+      showToast("资料已更新");
+    };
+
+    if (coverFile) {
+      compressImage(coverFile, 800, (base64) => {
+        settings.userProfile.cover = base64;
+        if (avatarFile) {
+          compressImage(avatarFile, 200, (avBase64) => {
+            settings.userProfile.avatar = avBase64;
+            finish();
+          }, 'png');
+        } else finish();
+      });
+    } else if (avatarFile) {
+      compressImage(avatarFile, 200, (avBase64) => {
+        settings.userProfile.avatar = avBase64;
+        finish();
+      }, 'png');
+    } else {
+      finish();
+    }
+  };
+
+  window.openAddMomentModal = function() {
+    document.getElementById('momentInput').value = "";
+    pendingMomentImgs = [];
+    document.getElementById('momentImgPreview').innerHTML = "";
+    document.getElementById('momentImgUpload').value = "";
+    document.getElementById('addMomentModal').style.display = 'flex';
+  };
+  window.closeAddMomentModal = function() {
+    document.getElementById('addMomentModal').style.display = 'none';
+  };
+
+  // 处理选图预览
+  document.getElementById('momentImgUpload').addEventListener('change', function(e) {
+    const files = Array.from(e.target.files);
+    if (files.length + pendingMomentImgs.length > 3) {
+      showToast("最多只能上传3张图片哦");
+      return;
+    }
+    const preview = document.getElementById('momentImgPreview');
+    
+    files.forEach(file => {
+      compressImage(file, 800, (base64) => {
+        pendingMomentImgs.push(base64);
+        const img = document.createElement('img');
+        img.src = base64;
+        preview.appendChild(img);
+      });
+    });
+    this.value = ""; // 允许重复选
+  });
+
+  window.postMoment = function() {
+    const text = document.getElementById('momentInput').value.trim();
+    if (!text && pendingMomentImgs.length === 0) return showToast("请输入内容或添加图片");
+    
+    const newMoment = {
+      id: genId(),
+      authorId: "user",
+      text: text,
+      time: "刚刚",
+      likes: 0,
+      comments: [],
+      images: [...pendingMomentImgs]
+    };
+    moments.unshift(newMoment);
+    saveMoments();
+    closeAddMomentModal();
+    renderMomentsFeed();
+    showToast("动态已发布");
+
+    // 触发灵体互动
+    triggerAIInteraction(newMoment.id);
+  };
+
+  function triggerAIInteraction(momentId) {
+    if (contacts.length === 0) return;
+    const c = contacts[0]; // 默认第一个灵体互动
+
+    setTimeout(() => {
+      const m = moments.find(x => x.id === momentId);
+      if (!m) return;
+
+      // 灵体点赞 (80%概率)
+      if (Math.random() < 0.8) {
+        m.likes = (m.likes || 0) + 1;
+        saveMoments();
+        if (document.getElementById('app-moments').classList.contains('open')) renderMomentsFeed();
+      }
+
+      // 灵体评论 (70%概率)
+      if (Math.random() < 0.7) {
+        setTimeout(() => {
+          let cText = "";
+          // 30%概率用表情包，70%用卡池文字
+          if (customEmojis.length > 0 && Math.random() < 0.3) {
+            const imgSrc = customEmojis[Math.floor(Math.random() * customEmojis.length)];
+            cText = `<img src="${imgSrc}" style="width:24px;height:24px;vertical-align:middle;border-radius:4px;margin:0 2px;">`;
+          } else {
+            cText = drawFromPool("chat");
+          }
+          
+          m.comments.push({ authorId: c.id, text: cText });
+          saveMoments();
+          if (document.getElementById('app-moments').classList.contains('open')) {
+            renderMomentsFeed();
+            // 简单滚动到底部提示
+            const list = document.getElementById('momentsFeed');
+            list.scrollTop = list.scrollHeight;
+          }
+        }, 3000 + Math.random() * 2000);
+      }
+    }, 2000);
+  }
+
+  window.likeMoment = function(id) {
+    const m = moments.find(x => x.id === id);
+    if(!m) return;
+    // 由于现在没记录是我点的还是灵体点的，做个简单判断
+    // 如果没记录过，就直接+1
+    m.likes = (m.likes || 0) + 1;
+    saveMoments();
+    renderMomentsFeed();
+  };
+
+  window.promptComment = function(id) {
+    const text = prompt("输入评论内容：");
+    if(text && text.trim()) {
+      const m = moments.find(x => x.id === id);
+      if(m) {
+        m.comments.push({ authorId: "user", text: text.trim() });
+        saveMoments();
+        renderMomentsFeed();
+      }
+    }
+  };
+
+  // ===== 通讯录与聊天 =====
   function renderContacts() {
     const list = document.getElementById("contactList"); if(!list) return;
     list.innerHTML = "";
@@ -971,120 +1298,6 @@
       list.appendChild(item);
     });
   }
-
-  function renderMoments() {
-    const list = document.getElementById("momentsContainer"); if(!list) return;
-    list.innerHTML = "";
-    if (moments.length === 0) {
-      list.innerHTML = '<div style="text-align:center; color:var(--muted); margin-top:50px;">暂无动态</div>';
-      return;
-    }
-    moments.forEach(m => {
-      const author = contacts.find(c => c.id === m.authorId);
-      const isMe = m.authorId === "user";
-      const authorName = isMe ? "我" : (author ? author.name : "未知");
-      const avatar = isMe ? "" : (author && author.avatar ? `<img src="${author.avatar}">` : `<svg class="avatar-svg" viewBox="0 0 24 24"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>`);
-      
-      const card = document.createElement('div');
-      card.className = "moment-card";
-      
-      let commentsHtml = "";
-      if (m.comments && m.comments.length > 0) {
-        commentsHtml = `<div class="moment-comments">` + m.comments.map(c => {
-          const cAuthor = c.authorId === "user" ? "我" : (contacts.find(cc=>cc.id===c.authorId)?.name || "TA");
-          return `<div class="moment-comment"><b>${escapeHtml(cAuthor)}</b>：${escapeHtml(c.text)}</div>`;
-        }).join('') + `</div>`;
-      }
-
-      card.innerHTML = `
-        <div class="moment-header">
-          <div class="contact-avatar" style="width:36px;height:36px;" onclick="${isMe ? '' : `openProfile('${m.authorId}')`}">${avatar}</div>
-          <div class="moment-author">${escapeHtml(authorName)}</div>
-          <div class="moment-time">${escapeHtml(m.time)}</div>
-        </div>
-        <div class="moment-text">${escapeHtml(m.text)}</div>
-        <div class="moment-actions">
-          <div class="moment-btn ${m.likedByMe ? 'liked' : ''}" onclick="likeMoment('${m.id}')">❤️ ${m.likes || 0}</div>
-          <div class="moment-btn" onclick="promptComment('${m.id}')">💬 评论</div>
-        </div>
-        ${commentsHtml}
-      `;
-      list.appendChild(card);
-    });
-  }
-
-  window.postMoment = function() {
-    const text = document.getElementById("momentInput").value.trim();
-    if(!text) return showToast("内容不能为空");
-    moments.unshift({ id: genId(), authorId: "user", text: text, time: "刚刚", likes: 0, comments: [] });
-    saveMoments();
-    document.getElementById("momentInput").value = "";
-    document.getElementById("addMomentModal").style.display = 'none';
-    renderMoments();
-    showToast("发布成功");
-    
-    // AI 随机点赞或评论
-    setTimeout(() => {
-      if(contacts.length > 0) {
-        const c = contacts[0];
-        const m = moments[0];
-        if(Math.random() < 0.7) {
-          m.likes = (m.likes || 0) + 1;
-          if(!m.likedByMe) m.likedByMe = false;
-          saveMoments();
-          if(currentTab === 'moments') renderMoments();
-        }
-        if(Math.random() < 0.5) {
-          m.comments.push({ authorId: c.id, text: drawFromPool("chat") });
-          saveMoments();
-          if(currentTab === 'moments') renderMoments();
-        }
-      }
-    }, 3000);
-  };
-
-  window.likeMoment = function(id) {
-    const m = moments.find(x => x.id === id);
-    if(!m) return;
-    if(m.likedByMe) {
-      m.likes = Math.max(0, (m.likes || 1) - 1);
-      m.likedByMe = false;
-    } else {
-      m.likes = (m.likes || 0) + 1;
-      m.likedByMe = true;
-    }
-    saveMoments();
-    renderMoments();
-  };
-
-  window.promptComment = function(id) {
-    const text = prompt("输入评论内容：");
-    if(text && text.trim()) {
-      const m = moments.find(x => x.id === id);
-      if(m) {
-        m.comments.push({ authorId: "user", text: text.trim() });
-        saveMoments();
-        renderMoments();
-      }
-    }
-  };
-
-  window.openProfile = function(id) {
-    const c = contacts.find(x => x.id === id) || { name: "未知", avatar: "", bio: "暂无签名" };
-    const msgs = chatRecords[id] || [];
-    const mCount = moments.filter(m => m.authorId === id).length;
-    
-    document.getElementById("profileName").textContent = c.name;
-    document.getElementById("profileSign").textContent = c.bio || "这个人很懒，什么都没有留下。";
-    document.getElementById("statMsgCount").textContent = msgs.filter(m => !m.isRecalled).length;
-    document.getElementById("statMomentCount").textContent = mCount;
-    
-    const avBox = document.getElementById("profileAvatar");
-    if(c.avatar) avBox.innerHTML = `<img src="${c.avatar}">`;
-    else avBox.innerHTML = `<svg class="avatar-svg" viewBox="0 0 24 24" style="width:100%;height:100%;"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>`;
-    
-    document.getElementById("profileModal").style.display = 'flex';
-  };
 
   window.addContact = function() {
     const name = prompt("输入新联系人名称：", "新联系人"); if(!name) return;
@@ -1173,7 +1386,6 @@
         const aiId = genId();
         if(chatRecords[chatId]) {
           let replyText = "";
-          // 20%概率回自定义表情包（如果有的话）
           if (customEmojis.length > 0 && Math.random() < 0.2) {
             const emoji = customEmojis[Math.floor(Math.random() * customEmojis.length)];
             replyText = `<img src="${emoji}" style="max-width:80px;border-radius:8px;">`;
@@ -1397,7 +1609,6 @@
       if (chatId === currentChatId) renderMessages(); 
       document.getElementById("emojiPanel").classList.remove("show");
       
-      // 让对方对表情包有回应
       setTimeout(() => {
         const idx = chatRecords[chatId].findIndex(m => m.id === msgId);
         if(idx>-1) { 
@@ -1407,7 +1618,6 @@
         }
       }, getRandomDelay());
       triggerAIReply(chatId);
-
     } catch(e) { showToast("发送失败"); }
   }
   document.getElementById("emojiBtn") && (document.getElementById("emojiBtn").onclick = () => { renderEmojiPanel(); document.getElementById("emojiPanel").classList.toggle("show"); });
@@ -1434,7 +1644,7 @@
     }, 1000);
   }
 
-  // ====== 音乐模块 (IndexedDB 修复) ======
+  // ====== 音乐模块 ======
   let db;
   const DB_NAME = "OracleOS_DB", STORE_NAME = "music";
   
@@ -1472,7 +1682,6 @@
   document.getElementById("musicUpload") && (document.getElementById("musicUpload").onchange = async (e) => {
     const file = e.target.files[0]; if(!file) return;
     
-    // 提示容量
     if (file.size > 20 * 1024 * 1024) {
       if(!confirm("该文件超过20MB，部分手机浏览器可能会因为内存不足导致上传失败。确定继续吗？")) {
         e.target.value = "";
