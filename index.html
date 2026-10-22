@@ -18,7 +18,6 @@ body{display:flex;flex-direction:column;height:100vh;color:var(--text);font-fami
 /* ====== 开屏动画 ====== */
 #splashScreen{position:fixed;top:0;left:0;width:100%;height:100%;background-color:var(--bg);z-index:9999;display:flex;flex-direction:column;justify-content:center;align-items:center;background-size:cover;background-position:center;transition:opacity .5s ease;}
 #splashTextContainer{text-align:center;font-size:17px;color:#fff;line-height:2.2;letter-spacing:2px;padding:0 20px;font-family:serif;text-shadow:0 2px 5px rgba(0,0,0,.5);z-index:1;}
-/* 逐行上浮浮现动画 */
 .splash-line{opacity:0;transform:translateY(15px);animation:splashFadeInUp 1s cubic-bezier(0.2,0.8,0.2,1) forwards;}
 @keyframes splashFadeInUp{to{opacity:1;transform:translateY(0);}}
 #splashProgressContainer{position:absolute;bottom:60px;width:50%;height:2px;background-color:rgba(255,255,255,.2);border-radius:2px;overflow:hidden;z-index:1;}
@@ -305,15 +304,16 @@ const DEFAULT_CONTACTS=[{id:"c1",name:"梦占灵体",avatar:"",bio:"来自深渊
 const DEFAULT_CHAT_RECORDS={"c1":[]};
 const DEFAULT_MOMENTS=[{id:"m1",authorId:"c1",text:"今天感觉如何？",time:"1小时前",likes:0,comments:[],images:[]}];
 
+// 为防止编码乱码导致白屏，全部使用 Unicode 转义字符
 const APP_CONFIG=[
-{id:"app-moments",name:"朋友圈",emoji:"🌅"},
-{id:"app-contacts",name:"通讯",emoji:"💬"},
-{id:"app-music",name:"听歌",emoji:"🎵"},
-{id:"app-tarot",name:"塔罗",emoji:"🔮"},
-{id:"app-mail",name:"信箱",emoji:"✉️"},
-{id:"app-notes",name:"便签",emoji:"📝"},
-{id:"app-call",name:"热线",emoji:"📞"},
-{id:"app-settings",name:"设置",emoji:"⚙️"}
+{id:"app-moments",name:"朋友圈",emoji:"\u{1F305}"},
+{id:"app-contacts",name:"通讯",emoji:"\u{1F4AC}"},
+{id:"app-music",name:"听歌",emoji:"\u{1F3B5}"},
+{id:"app-tarot",name:"塔罗",emoji:"\u{1F52E}"},
+{id:"app-mail",name:"信箱",emoji:"\u{2709}\u{FE0F}"},
+{id:"app-notes",name:"便签",emoji:"\u{1F4DD}"},
+{id:"app-call",name:"热线",emoji:"\u{1F4DE}"},
+{id:"app-settings",name:"设置",emoji:"\u{2699}\u{FE0F}"}
 ];
 
 const DEFAULT_TAROT=[{name:"0 愚者",meaning:"纯真、冒险、新开始。不要害怕未知，带着信任向前走。"},{name:"I 魔术师",meaning:"创造力、行动力。你拥有实现目标的所有资源，现在行动吧。"},{name:"II 女祭司",meaning:"直觉、潜意识。答案在内心里，静下心来倾听。"},{name:"III 皇后",meaning:"丰盛、孕育。事情将开花结果，享受美好与富足。"},{name:"IV 皇帝",meaning:"秩序、权威。需要建立规则，理智地掌控局面。"},{name:"V 教皇",meaning:"指引、传统。寻求有经验的人的帮助。"},{name:"VI 恋人",meaning:"结合、选择。面临重要的抉择或关系深化。"},{name:"VII 战车",meaning:"意志、胜利。只要有决心，就能克服一切困难。"},{name:"VIII 力量",meaning:"勇气、包容。用温柔和耐心降服困难。"},{name:"IX 隐士",meaning:"内省、独处。退回内心反思，寻找内心的光。"},{name:"X 命运之轮",meaning:"转变、契机。顺应变化，好运即将到来。"},{name:"XI 正义",meaning:"平衡、因果。种什么因得什么果。"},{name:"XII 倒吊人",meaning:"牺牲、换位。换个角度看问题，停滞是为了收获。"},{name:"XIII 死神",meaning:"结束、新生。放下过去才能迎来新生。"},{name:"XIV 节制",meaning:"调和、中庸。慢慢磨合，保持平衡。"},{name:"XV 恶魔",meaning:"诱惑、束缚。看清欲望的真相，解脱自己。"},{name:"XVI 高塔",meaning:"突变、破坏。打破虚假的稳定，为了重建。"},{name:"XVII 星星",meaning:"希望、疗愈。黑暗中有曙光，一切都会好起来。"},{name:"XVIII 月亮",meaning:"不安、未知。恐惧浮现，需防范欺骗。"},{name:"XIX 太阳",meaning:"成功、喜悦。充满活力与成功，享受快乐。"},{name:"XX 审判",meaning:"唤醒、复活。过去的努力得到回报。"},{name:"XXI 世界",meaning:"圆满、完成。达成目标，享受成功的喜悦。"}];
@@ -355,7 +355,6 @@ function renderMyProfile(){const coverBg=document.getElementById('profileCoverBg
 window.saveUserProfile=function(){settings.userProfile.name=document.getElementById('editUserName').value.trim()||"梦主";settings.userProfile.sign=document.getElementById('editUserSign').value.trim()||"这个人很懒，什么都没有留下。";const coverFile=document.getElementById('editCoverUpload').files[0],avatarFile=document.getElementById('editUserAvatar').files[0];const finish=()=>{saveSettings();renderMyProfile();document.getElementById('editProfileModal').style.display='none';showToast("资料已更新");};if(coverFile){compressImage(coverFile,800,(base64)=>{settings.userProfile.cover=base64;if(avatarFile){compressImage(avatarFile,200,(avBase64)=>{settings.userProfile.avatar=avBase64;finish();},'png');}else finish();});}else if(avatarFile){compressImage(avatarFile,200,(avBase64)=>{settings.userProfile.avatar=avBase64;finish();},'png');}else{finish();}};
 window.openAddMomentModal=function(){document.getElementById('momentInput').value="";pendingMomentImgs=[];document.getElementById('momentImgPreview').innerHTML="";document.getElementById('momentImgUpload').value="";document.getElementById('addMomentModal').style.display='flex';};
 window.closeAddMomentModal=function(){document.getElementById('addMomentModal').style.display='none';};
-document.getElementById('momentImgUpload').addEventListener('change',function(e){const files=Array.from(e.target.files);if(files.length+pendingMomentImgs.length>3){showToast("最多只能上传3张图片哦");return;}const preview=document.getElementById('momentImgPreview');files.forEach(file=>{compressImage(file,800,(base64)=>{pendingMomentImgs.push(base64);const img=document.createElement('img');img.src=base64;preview.appendChild(img);});});this.value="";});
 window.postMoment=function(){const text=document.getElementById('momentInput').value.trim();if(!text&&pendingMomentImgs.length===0)return showToast("请输入内容或添加图片");const newMoment={id:genId(),authorId:"user",text:text,time:"刚刚",likes:0,comments:[],images:[...pendingMomentImgs]};moments.unshift(newMoment);saveMoments();closeAddMomentModal();renderMomentsFeed();showToast("动态已发布");triggerAIInteraction(newMoment.id);};
 function triggerAIInteraction(momentId){if(contacts.length===0)return;const c=contacts[0];setTimeout(()=>{const m=moments.find(x=>x.id===momentId);if(!m)return;if(Math.random()<0.8){m.likes=(m.likes||0)+1;saveMoments();if(document.getElementById('app-moments').classList.contains('open'))renderMomentsFeed();}if(Math.random()<0.7){setTimeout(()=>{let cText="";if(customEmojis.length>0&&Math.random()<0.3){const imgSrc=customEmojis[Math.floor(Math.random()*customEmojis.length)];cText=`<img src="${imgSrc}" style="width:24px;height:24px;vertical-align:middle;border-radius:4px;margin:0 2px;">`;}else{cText=drawFromPool("chat");}m.comments.push({authorId:c.id,text:cText});saveMoments();if(document.getElementById('app-moments').classList.contains('open')){renderMomentsFeed();const list=document.getElementById('momentsFeed');list.scrollTop=list.scrollHeight;}},3000+Math.random()*2000);}},2000);}
 window.likeMoment=function(id){const m=moments.find(x=>x.id===id);if(!m)return;m.likes=(m.likes||0)+1;saveMoments();renderMomentsFeed();};
@@ -372,6 +371,7 @@ function triggerAIReply(chatId){if(Math.random()*100>settings.ignoreRate){setTim
 window.sendMessage=function(){try{const inputEl=document.getElementById("input");if(!inputEl)return;const val=inputEl.value.trim();if(!val)return;const chatId=currentChatId||"c1";if(!chatRecords[chatId])chatRecords[chatId]=[];isWaitingForUser=false;const timeStr=getTodayTimeStr(),msgId=genId();chatRecords[chatId].push({id:msgId,role:"user",text:val,time:timeStr,quote:currentQuote,read:false});saveChatRecords();renderMessages();inputEl.value="";clearQuote();document.getElementById("emojiPanel").classList.remove("show");setTimeout(()=>{if(chatRecords[chatId]){const idx=chatRecords[chatId].findIndex(m=>m.id===msgId);if(idx>-1){chatRecords[chatId][idx].read=true;saveChatRecords();if(chatId===currentChatId&&document.getElementById("app-chat").classList.contains("open"))renderMessages();}}},getRandomDelay());triggerAIReply(chatId);}catch(err){console.error(err);showToast("发送出错："+err.message);}};
 window.submitDecision=function(){const q=document.getElementById("decisionQuestion").value.trim(),a=document.getElementById("decisionA").value.trim(),b=document.getElementById("decisionB").value.trim(),c=document.getElementById("decisionC").value.trim(),type=document.getElementById("decisionType").value;if(!q||!a||!b)return showToast("题目和选项A/B不能为空");const options=[a,b];if(c)options.push(c);let optStr="";options.forEach((opt,i)=>{optStr+=`${String.fromCharCode(65+i)}. ${opt}\n`;});const fullText=`【向TA提问】\n题目：${q}\n${optStr.trim()}`;document.getElementById("decisionModal").style.display='none';document.getElementById("decisionQuestion").value="";document.getElementById("decisionA").value="";document.getElementById("decisionB").value="";document.getElementById("decisionC").value="";const chatId=currentChatId,timeStr=getTodayTimeStr(),msgId=genId();if(!chatRecords[chatId])chatRecords[chatId]=[];chatRecords[chatId].push({id:msgId,role:"user",text:fullText,time:timeStr,quote:null,read:false});saveChatRecords();renderMessages();scrollToBottom();setTimeout(()=>{if(!chatRecords[chatId])return;const idx=chatRecords[chatId].findIndex(m=>m.id===msgId);if(idx>-1){chatRecords[chatId][idx].read=true;saveChatRecords();if(chatId===currentChatId&&document.getElementById("app-chat").classList.contains("open"))renderMessages();}let selectedOpts=[];if(type==="single"){selectedOpts.push(options[Math.floor(Math.random()*options.length)]);}else{const count=Math.floor(Math.random()*options.length)+1,shuffled=[...options].sort(()=>Math.random()-0.5);selectedOpts=shuffled.slice(0,count);}const replyText=`我选：${selectedOpts.join('，')}`;setTimeout(()=>{if(!chatRecords[chatId])return;const aiId=genId();chatRecords[chatId].push({id:aiId,role:"oracle",text:replyText,time:getTodayTimeStr()});saveChatRecords();if(chatId===currentChatId&&document.getElementById("app-chat").classList.contains("open"))renderMessages();},getRandomDelay());},getRandomDelay());};
 setInterval(()=>{if(isWaitingForUser)return;const homeVisible=document.getElementById("homeScreen").style.display!=="none",chatOpen=document.getElementById("app-chat").classList.contains("open");if(!homeVisible&&!chatOpen)return;if(Math.random()*100<settings.proactiveRate){const chatId=currentChatId;if(!chatRecords[chatId])chatRecords[chatId]=[];let text="";if(customEmojis.length>0&&Math.random()<0.3){text=`<img src="${customEmojis[Math.floor(Math.random()*customEmojis.length)]}" style="max-width:80px;border-radius:8px;">`;}else{text=Math.random()<0.5?PROACTIVE_MSGS[Math.floor(Math.random()*PROACTIVE_MSGS.length)]:drawFromPool("chat");}chatRecords[chatId].push({id:genId(),role:"oracle",text:text,time:getTodayTimeStr()});saveChatRecords();if(chatOpen&&chatId===currentChatId)renderMessages();isWaitingForUser=true;}},30000);
+
 const messagesBox=document.getElementById("messages");messagesBox?.addEventListener("click",(e)=>{const bubble=e.target.closest(".msg-bubble");if(!bubble)return;selectedMsgId=bubble.getAttribute("data-id");const menu=document.getElementById("actionMenu");if(!menu)return;const menuW=130,menuH=44;let top=e.clientY+10,left=e.clientX+10;if(top+menuH>window.innerHeight)top=e.clientY-menuH-10;if(left+menuW>window.innerWidth)left=window.innerWidth-menuW-10;if(top<0)top=10;if(left<0)left=10;menu.style.top=top+"px";menu.style.left=left+"px";menu.classList.add("show");});
 document.addEventListener("click",(e)=>{const menu=document.getElementById("actionMenu");if(!menu||!menu.classList.contains("show"))return;if(menu.contains(e.target))return;if(e.target.closest(".msg-bubble"))return;menu.classList.remove("show");});
 document.getElementById("actQuote")&&(document.getElementById("actQuote").onclick=()=>{const msg=(chatRecords[currentChatId]||[]).find(m=>m.id===selectedMsgId);if(msg){const preview=/^<img\s+/.test(msg.text)?'[图片]':msg.text;currentQuote=`${msg.role==='user'?'我':'TA'}：${preview}`;document.getElementById("quoteText").textContent=currentQuote;document.getElementById("quotePreview").classList.add("show");}document.getElementById("actionMenu").classList.remove("show");});
@@ -390,26 +390,6 @@ async function dbSet(key,value){if(!db)await initDB();return new Promise((res,re
 async function dbGetAll(){if(!db)await initDB();return new Promise((res,rej)=>{const req=db.transaction(STORE_NAME,"readonly").objectStore(STORE_NAME).getAll();req.onsuccess=e=>res(e.target.result);req.onerror=rej;});}
 async function dbDelete(key){if(!db)await initDB();return new Promise((res,rej)=>{const req=db.transaction(STORE_NAME,"readwrite").objectStore(STORE_NAME).delete(key);req.onsuccess=res;req.onerror=rej;});}
 const audio=document.getElementById("audioPlayer");
-
-document.getElementById("musicUpload").onchange = async (e) => {
-    const file = e.target.files[0]; if(!file) return;
-    if (!file.type.startsWith('audio/') && !file.name.endsWith('.mp3') && !file.name.endsWith('.m4a') && !file.name.endsWith('.wav')) { showToast("不支持的文件格式，请选择音频文件"); e.target.value = ""; return; }
-    if (file.size > 50 * 1024 * 1024) { showToast("文件太大啦，建议上传小于50MB的音乐~"); e.target.value = ""; return; }
-    try {
-        showToast("正在读取并存入本地...");
-        const arrayBuffer = await file.arrayBuffer();
-        const blob = new Blob([arrayBuffer], { type: file.type || 'audio/mpeg' });
-        const song = { id: "song_" + Date.now(), name: file.name, blob: blob };
-        await dbSet(song.id, song); 
-        await loadPlaylist();
-        if(currentSongIndex === -1) playSong(playlist.length - 1);
-        showToast("音乐上传成功！");
-    } catch(err) { 
-        console.error(err);
-        showToast("上传失败！若在微信内打开，请点右上角选择“在浏览器中打开”"); 
-    }
-    e.target.value = "";
-};
 
 async function loadPlaylist(){try{playlist=await dbGetAll();renderPlaylist();}catch(e){console.warn(e);}}
 function renderPlaylist(){const list=document.getElementById("playlistItems");if(!list)return;list.innerHTML="";if(playlist.length===0){list.innerHTML='<div style="padding:15px;color:var(--muted);text-align:center;">暂无音乐</div>';return;}playlist.forEach((song,i)=>{const item=document.createElement('div');item.className="playlist-item"+(i===currentSongIndex?' active':'');const nameSpan=document.createElement('span');nameSpan.textContent=song.name;nameSpan.style.flex="1";nameSpan.style.overflow="hidden";nameSpan.style.textOverflow="ellipsis";nameSpan.style.whiteSpace="nowrap";nameSpan.onclick=()=>playSong(i);const delSpan=document.createElement('span');delSpan.className="del-btn";delSpan.textContent="✕";delSpan.onclick=(e)=>{e.stopPropagation();deleteSong(song.id,i);};item.appendChild(nameSpan);item.appendChild(delSpan);list.appendChild(item);});}
@@ -447,13 +427,14 @@ function runSplash(){
   const splash=document.getElementById("splashScreen"),
         container=document.getElementById("splashTextContainer"),
         bar=document.getElementById("splashProgressBar");
+  if(!splash || !container || !bar) return;
+  
   if(settings.splashBg){splash.style.backgroundImage=`url(${settings.splashBg})`;}else{splash.style.backgroundImage='linear-gradient(135deg, #2b1055, #7597de)';}
   container.innerHTML="";
   settings.splashTexts.forEach((text,index)=>{
     const div=document.createElement("div");
     div.className="splash-line";
     div.textContent=text;
-    // 逐行设置延迟，让文字一行一行上浮出现
     div.style.animationDelay = (index * 0.3) + 's';
     container.appendChild(div);
   });
@@ -462,9 +443,84 @@ function runSplash(){
   setTimeout(()=>{clearInterval(timer);bar.style.width='100%';splash.style.opacity='0';setTimeout(()=>{splash.style.display='none';if(splash.parentNode)splash.parentNode.removeChild(splash);},500);},3000);
 }
 
-window.addEventListener('DOMContentLoaded',()=>{try{initData();updateTime();setInterval(updateTime,1000);const sendBtn=document.getElementById("sendBtn"),inputEl=document.getElementById("input");if(sendBtn)sendBtn.addEventListener("click",sendMessage);if(inputEl){inputEl.addEventListener("keydown",function(e){if(e.key==='Enter'||e.keyCode===13){e.preventDefault();sendMessage();}});}applyTheme();renderHome();renderPoolList();const safeSet=(id,prop,val)=>{const el=document.getElementById(id);if(el){if(prop==='textContent')el.textContent=val;else el.value=val;}};safeSet("splashTextsInput","value",settings.splashTexts.join("\n"));safeSet("settingIgnore","value",settings.ignoreRate);safeSet("ignoreLabel","textContent",settings.ignoreRate);safeSet("settingRecall","value",settings.recallRate);safeSet("recallLabel","textContent",settings.recallRate);safeSet("settingProactive","value",settings.proactiveRate);safeSet("proactiveLabel","textContent",settings.proactiveRate);safeSet("settingMailLen","value",settings.mailMaxLen);safeSet("mailLenLabel","textContent",settings.mailMaxLen);safeSet("settingNoteLen","value",settings.noteMaxLen);safeSet("noteLenLabel","textContent",settings.noteMaxLen);safeSet("settingMinDelay","value",settings.minReplyTime);safeSet("minDelayLabel","textContent",settings.minReplyTime);safeSet("settingMaxDelay","value",settings.maxReplyTime);safeSet("maxDelayLabel","textContent",settings.maxReplyTime);const bindEvent=(id,event,callback)=>{const el=document.getElementById(id);if(el)el.addEventListener(event,callback);};bindEvent("settingTheme","change",(e)=>{settings.theme=e.target.value;saveSettings();applyTheme();});bindEvent("settingIgnore","input",(e)=>{settings.ignoreRate=e.target.value;safeSet("ignoreLabel","textContent",e.target.value);saveSettings();});bindEvent("settingRecall","input",(e)=>{settings.recallRate=e.target.value;safeSet("recallLabel","textContent",e.target.value);saveSettings();});bindEvent("settingProactive","input",(e)=>{settings.proactiveRate=e.target.value;safeSet("proactiveLabel","textContent",e.target.value);saveSettings();});bindEvent("settingMailLen","input",(e)=>{settings.mailMaxLen=e.target.value;safeSet("mailLenLabel","textContent",e.target.value);saveSettings();});bindEvent("settingNoteLen","input",(e)=>{settings.noteMaxLen=e.target.value;safeSet("noteLenLabel","textContent",e.target.value);saveSettings();});bindEvent("settingMinDelay","input",(e)=>{let minVal=parseFloat(e.target.value),maxEl=document.getElementById("settingMaxDelay"),maxVal=maxEl?parseFloat(maxEl.value):10;if(minVal>=maxVal&&maxEl){maxVal=minVal+0.5;maxEl.value=maxVal;safeSet("maxDelayLabel","textContent",maxVal);settings.maxReplyTime=maxVal;}safeSet("minDelayLabel","textContent",minVal);settings.minReplyTime=minVal;saveSettings();});bindEvent("settingMaxDelay","input",(e)=>{let maxVal=parseFloat(e.target.value),minEl=document.getElementById("settingMinDelay"),minVal=minEl?parseFloat(minEl.value):1;if(maxVal<=minVal&&minEl){minVal=maxVal-0.5;if(minVal<0.5)minVal=0.5;minEl.value=minVal;safeSet("minDelayLabel","textContent",minVal);settings.minReplyTime=minVal;}safeSet("maxDelayLabel","textContent",maxVal);settings.maxReplyTime=maxVal;saveSettings();});bindEvent("splashBgUpload","change",(e)=>{const f=e.target.files[0];if(!f)return;compressImage(f,1200,(base64)=>{settings.splashBg=base64;saveSettings();showToast("开屏背景已保存");});});bindEvent("homeBgUpload","change",(e)=>{const f=e.target.files[0];if(!f)return;compressImage(f,1200,(base64)=>{settings.homeBg=base64;saveSettings();applyTheme();showToast("壁纸已保存");});});bindEvent("chatBgUpload","change",(e)=>{const f=e.target.files[0];if(!f)return;compressImage(f,1200,(base64)=>{settings.chatBg=base64;saveSettings();applyTheme();showToast("聊天背景已保存");});});bindEvent("callBgUpload","change",(e)=>{const f=e.target.files[0];if(!f)return;compressImage(f,1000,(base64)=>{settings.callBg=base64;saveSettings();showToast("通话背景已保存");});});bindEvent("emojiUpload","change",(e)=>{const files=e.target.files;if(!files.length)return;Array.from(files).forEach(file=>{compressImage(file,100,(base64)=>{customEmojis.push(base64);localStorage.setItem("os_emojis",JSON.stringify(customEmojis));},'png');});showToast("自定义表情已添加！");});bindEvent("decisionBtn","click",()=>{document.getElementById("decisionModal").style.display='flex';});
-setInterval(()=>{if(Math.random()<0.05){if(contacts.length===0)return;const c=contacts[0];let poolName=Math.random()<0.5?"chat":"notes",text=drawFromPool(poolName);const newMoment={id:genId(),authorId:c.id,text:text,time:"刚刚",likes:Math.floor(Math.random()*5),comments:[],images:customEmojis.length>0&&Math.random()<0.5?[customEmojis[Math.floor(Math.random()*customEmojis.length)]]:[]};moments.unshift(newMoment);saveMoments();if(document.getElementById('app-moments').classList.contains('open')){renderMomentsFeed();}}},60000);
-runSplash();(async function initDBAndMusic(){try{await initDB();await loadPlaylist();}catch(e){console.warn("音乐模块加载失败",e);}})();}catch(e){console.error(e);alert("初始化报错：\n"+e.message);}});
+window.addEventListener('DOMContentLoaded',()=>{
+  try{
+    initData();
+    updateTime();
+    setInterval(updateTime,1000);
+    const sendBtn=document.getElementById("sendBtn"),inputEl=document.getElementById("input");
+    if(sendBtn)sendBtn.addEventListener("click",sendMessage);
+    if(inputEl){inputEl.addEventListener("keydown",function(e){if(e.key==='Enter'||e.keyCode===13){e.preventDefault();sendMessage();}});}
+    
+    // 把原本在全局的绑定移到这里，防止因为 DOM 未加载完报错
+    const musicUpload = document.getElementById("musicUpload");
+    if (musicUpload) {
+      musicUpload.onchange = async (e) => {
+        const file = e.target.files[0]; if(!file) return;
+        if (!file.type.startsWith('audio/') && !file.name.endsWith('.mp3') && !file.name.endsWith('.m4a') && !file.name.endsWith('.wav')) { showToast("不支持的文件格式"); e.target.value = ""; return; }
+        if (file.size > 50 * 1024 * 1024) { showToast("文件太大啦，建议上传小于50MB的音乐~"); e.target.value = ""; return; }
+        try {
+            showToast("正在读取并存入本地...");
+            const arrayBuffer = await file.arrayBuffer();
+            const blob = new Blob([arrayBuffer], { type: file.type || 'audio/mpeg' });
+            const song = { id: "song_" + Date.now(), name: file.name, blob: blob };
+            await dbSet(song.id, song); 
+            await loadPlaylist();
+            if(currentSongIndex === -1) playSong(playlist.length - 1);
+            showToast("音乐上传成功！");
+        } catch(err) { 
+            console.error(err);
+            showToast("上传失败！若在微信内打开，请点右上角选择“在浏览器中打开”"); 
+        }
+        e.target.value = "";
+      };
+    }
+
+    const momentImgUpload = document.getElementById('momentImgUpload');
+    if (momentImgUpload) {
+      momentImgUpload.addEventListener('change',function(e){const files=Array.from(e.target.files);if(files.length+pendingMomentImgs.length>3){showToast("最多只能上传3张图片哦");return;}const preview=document.getElementById('momentImgPreview');files.forEach(file=>{compressImage(file,800,(base64)=>{pendingMomentImgs.push(base64);const img=document.createElement('img');img.src=base64;preview.appendChild(img);});});this.value="";});
+    }
+
+    applyTheme();renderHome();renderPoolList();
+    const safeSet=(id,prop,val)=>{const el=document.getElementById(id);if(el){if(prop==='textContent')el.textContent=val;else el.value=val;}};
+    safeSet("splashTextsInput","value",settings.splashTexts.join("\n"));
+    safeSet("settingIgnore","value",settings.ignoreRate);safeSet("ignoreLabel","textContent",settings.ignoreRate);
+    safeSet("settingRecall","value",settings.recallRate);safeSet("recallLabel","textContent",settings.recallRate);
+    safeSet("settingProactive","value",settings.proactiveRate);safeSet("proactiveLabel","textContent",settings.proactiveRate);
+    safeSet("settingMailLen","value",settings.mailMaxLen);safeSet("mailLenLabel","textContent",settings.mailMaxLen);
+    safeSet("settingNoteLen","value",settings.noteMaxLen);safeSet("noteLenLabel","textContent",settings.noteMaxLen);
+    safeSet("settingMinDelay","value",settings.minReplyTime);safeSet("minDelayLabel","textContent",settings.minReplyTime);
+    safeSet("settingMaxDelay","value",settings.maxReplyTime);safeSet("maxDelayLabel","textContent",settings.maxReplyTime);
+    
+    const bindEvent=(id,event,callback)=>{const el=document.getElementById(id);if(el)el.addEventListener(event,callback);};
+    bindEvent("settingTheme","change",(e)=>{settings.theme=e.target.value;saveSettings();applyTheme();});
+    bindEvent("settingIgnore","input",(e)=>{settings.ignoreRate=e.target.value;safeSet("ignoreLabel","textContent",e.target.value);saveSettings();});
+    bindEvent("settingRecall","input",(e)=>{settings.recallRate=e.target.value;safeSet("recallLabel","textContent",e.target.value);saveSettings();});
+    bindEvent("settingProactive","input",(e)=>{settings.proactiveRate=e.target.value;safeSet("proactiveLabel","textContent",e.target.value);saveSettings();});
+    bindEvent("settingMailLen","input",(e)=>{settings.mailMaxLen=e.target.value;safeSet("mailLenLabel","textContent",e.target.value);saveSettings();});
+    bindEvent("settingNoteLen","input",(e)=>{settings.noteMaxLen=e.target.value;safeSet("noteLenLabel","textContent",e.target.value);saveSettings();});
+    bindEvent("settingMinDelay","input",(e)=>{let minVal=parseFloat(e.target.value),maxEl=document.getElementById("settingMaxDelay"),maxVal=maxEl?parseFloat(maxEl.value):10;if(minVal>=maxVal&&maxEl){maxVal=minVal+0.5;maxEl.value=maxVal;safeSet("maxDelayLabel","textContent",maxVal);settings.maxReplyTime=maxVal;}safeSet("minDelayLabel","textContent",minVal);settings.minReplyTime=minVal;saveSettings();});
+    bindEvent("settingMaxDelay","input",(e)=>{let maxVal=parseFloat(e.target.value),minEl=document.getElementById("settingMinDelay"),minVal=minEl?parseFloat(minEl.value):1;if(maxVal<=minVal&&minEl){minVal=maxVal-0.5;if(minVal<0.5)minVal=0.5;minEl.value=minVal;safeSet("minDelayLabel","textContent",minVal);settings.minReplyTime=minVal;}safeSet("maxDelayLabel","textContent",maxVal);settings.maxReplyTime=maxVal;saveSettings();});
+    bindEvent("splashBgUpload","change",(e)=>{const f=e.target.files[0];if(!f)return;compressImage(f,1200,(base64)=>{settings.splashBg=base64;saveSettings();showToast("开屏背景已保存");});});
+    bindEvent("homeBgUpload","change",(e)=>{const f=e.target.files[0];if(!f)return;compressImage(f,1200,(base64)=>{settings.homeBg=base64;saveSettings();applyTheme();showToast("壁纸已保存");});});
+    bindEvent("chatBgUpload","change",(e)=>{const f=e.target.files[0];if(!f)return;compressImage(f,1200,(base64)=>{settings.chatBg=base64;saveSettings();applyTheme();showToast("聊天背景已保存");});});
+    bindEvent("callBgUpload","change",(e)=>{const f=e.target.files[0];if(!f)return;compressImage(f,1000,(base64)=>{settings.callBg=base64;saveSettings();showToast("通话背景已保存");});});
+    bindEvent("emojiUpload","change",(e)=>{const files=e.target.files;if(!files.length)return;Array.from(files).forEach(file=>{compressImage(file,100,(base64)=>{customEmojis.push(base64);localStorage.setItem("os_emojis",JSON.stringify(customEmojis));},'png');});showToast("自定义表情已添加！");});
+    bindEvent("decisionBtn","click",()=>{document.getElementById("decisionModal").style.display='flex';});
+
+    setInterval(()=>{if(Math.random()<0.05){if(contacts.length===0)return;const c=contacts[0];let poolName=Math.random()<0.5?"chat":"notes",text=drawFromPool(poolName);const newMoment={id:genId(),authorId:c.id,text:text,time:"刚刚",likes:Math.floor(Math.random()*5),comments:[],images:customEmojis.length>0&&Math.random()<0.5?[customEmojis[Math.floor(Math.random()*customEmojis.length)]]:[]};moments.unshift(newMoment);saveMoments();if(document.getElementById('app-moments').classList.contains('open')){renderMomentsFeed();}}},60000);
+
+    runSplash();
+    (async function initDBAndMusic(){try{await initDB();await loadPlaylist();}catch(e){console.warn("音乐模块加载失败",e);}})();
+  }catch(e){
+    console.error(e);
+    // 如果初始化出错，强杀开屏保护
+    const splash = document.getElementById('splashScreen');
+    if(splash) splash.style.display = 'none';
+    document.getElementById('homeScreen').style.display = 'flex';
+    alert("初始化报错：\n"+e.message);
+  }
+});
 })();
 </script>
 </body>
