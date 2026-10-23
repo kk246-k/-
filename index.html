@@ -178,12 +178,10 @@ button.send{padding:0 16px;border-radius:20px;border:none;background:#007aff;col
 <div id="statusBar"><div id="statusTime">12:00</div><div class="status-right"><span>5G</span><span>🔋</span></div></div>
 
 <div id="homeScreen">
-  <!-- 桌面顶部头像 -->
   <div class="home-avatar-wrapper">
     <div class="home-avatar" id="homeAvatar" onclick="document.getElementById('homeAvatarUpload').click()"></div>
     <input type="file" id="homeAvatarUpload" accept="image/*" style="display:none;">
   </div>
-
   <div id="widgetArea"></div>
   <div class="clock-widget"><div class="clock-time" id="homeTime">12:00:00</div><div class="clock-date" id="homeDate">获取时间中...</div></div>
   <div class="app-grid" id="appGrid"></div>
@@ -385,7 +383,6 @@ function renderHome() {
   
   renderWidgets();
 
-  // 更新桌面头像
   const avatarBox = document.getElementById("homeAvatar");
   if(avatarBox) {
     if(settings.userProfile && settings.userProfile.avatar) {
@@ -441,7 +438,40 @@ window.closeAddMomentModal=function(){document.getElementById('addMomentModal').
 window.postMoment=function(){const text=document.getElementById('momentInput').value.trim();if(!text&&pendingMomentImgs.length===0)return showToast("请输入内容或添加图片");const newMoment={id:genId(),authorId:"user",text:text,time:"刚刚",likes:0,comments:[],images:[...pendingMomentImgs]};moments.unshift(newMoment);saveMoments();closeAddMomentModal();renderMomentsFeed();showToast("动态已发布");triggerAIInteraction(newMoment.id);};
 function triggerAIInteraction(momentId){if(contacts.length===0)return;const c=contacts[0];setTimeout(()=>{const m=moments.find(x=>x.id===momentId);if(!m)return;if(Math.random()<0.8){m.likes=(m.likes||0)+1;saveMoments();if(document.getElementById('app-moments').classList.contains('open'))renderMomentsFeed();}if(Math.random()<0.7){setTimeout(()=>{let cText="";if(customEmojis.length>0&&Math.random()<0.3){const imgSrc=customEmojis[Math.floor(Math.random()*customEmojis.length)];cText=`<img src="${imgSrc}" style="width:24px;height:24px;vertical-align:middle;border-radius:4px;margin:0 2px;">`;}else{cText=drawFromPool("chat");}m.comments.push({authorId:c.id,text:cText});saveMoments();if(document.getElementById('app-moments').classList.contains('open')){renderMomentsFeed();const list=document.getElementById('momentsFeed');list.scrollTop=list.scrollHeight;}},3000+Math.random()*2000);}},2000);}
 window.likeMoment=function(id){const m=moments.find(x=>x.id===id);if(!m)return;m.likes=(m.likes||0)+1;saveMoments();renderMomentsFeed();};
-window.promptComment=function(id){const text=prompt("输入评论内容：");if(text&&text.trim()){const m=moments.find(x=>x.id===id);if(m){m.comments.push({authorId:"user",text:text.trim()});saveMoments();renderMomentsFeed();}}};
+
+// 用户给灵体评论，灵体概率回复
+window.promptComment=function(id){
+  const text=prompt("输入评论内容：");
+  if(text&&text.trim()){
+    const m=moments.find(x=>x.id===id);
+    if(m){
+      m.comments.push({authorId:"user",text:text.trim()});
+      saveMoments();
+      renderMomentsFeed();
+      
+      // 70% 概率触发灵体回复
+      if(Math.random() < 0.7 && contacts.length > 0) {
+        const c = contacts[0];
+        setTimeout(() => {
+          // 随机从卡池抽两句话拼接，或者用表情包
+          let replyText = "";
+          if(customEmojis.length > 0 && Math.random() < 0.3) {
+            const imgSrc = customEmojis[Math.floor(Math.random()*customEmojis.length)];
+            replyText = `<img src="${imgSrc}" style="width:24px;height:24px;vertical-align:middle;border-radius:4px;margin:0 2px;">`;
+          } else {
+            replyText = drawFromPool("chat") + "，" + drawFromPool("chat");
+          }
+          m.comments.push({authorId: c.id, text: replyText});
+          saveMoments();
+          if(document.getElementById('app-moments').classList.contains('open')){
+            renderMomentsFeed();
+          }
+        }, 3000 + Math.random() * 4000); // 等待 3-7 秒回复
+      }
+    }
+  }
+};
+
 function renderContacts(){const list=document.getElementById("contactList");if(!list)return;list.innerHTML="";contacts.forEach(c=>{const msgs=chatRecords[c.id]||[];let lastMsg='暂无消息';if(msgs.length>0){const last=msgs[msgs.length-1];lastMsg=last.isRecalled?'[撤回了一条消息]':(last.text||'');if(/^<img\s+/.test(lastMsg))lastMsg='[图片]';}const av=c.avatar?`<img src="${c.avatar}">`:`<svg class="avatar-svg" viewBox="0 0 24 24"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>`;const item=document.createElement('div');item.className="contact-item";item.innerHTML=`<div class="contact-avatar" onclick="event.stopPropagation(); openProfile('${c.id}')">${av}</div><div class="contact-info" onclick="switchChat('${c.id}')"><div class="contact-name">${escapeHtml(c.name)}</div><div class="contact-last">${escapeHtml(lastMsg)}</div></div>`;list.appendChild(item);});}
 window.addContact=function(){const name=prompt("输入新联系人名称：","新联系人");if(!name)return;const id="c_"+Date.now();contacts.push({id,name,avatar:"",bio:"这个人很懒，什么都没有留下。"});chatRecords[id]=[];saveContacts();saveChatRecords();renderContacts();}
 window.switchChat=function(id){currentChatId=id;if(!chatRecords[currentChatId])chatRecords[currentChatId]=[];const c=contacts.find(x=>x.id===id)||{name:"未知",avatar:""};document.getElementById("chatTitle").textContent=c.name;closeApp('app-contacts');openApp('app-chat');renderMessages();}
@@ -488,13 +518,113 @@ window.seekAudio=function(val){if(audio&&audio.duration)audio.currentTime=(val/1
 function formatTime(sec){const m=Math.floor(sec/60).toString().padStart(2,'0'),s=Math.floor(sec%60).toString().padStart(2,'0');return`${m}:${s}`;}
 document.getElementById("inviteMusicBtn")&&(document.getElementById("inviteMusicBtn").onclick=()=>{const c=contacts.find(x=>x.id===currentChatId),puzzle=generatePuzzle("notes",settings.noteMaxLen),sysMsg=`系统提示：你们在音乐中感受到了神谕 -> ${puzzle}`;const chatId=currentChatId;if(!chatRecords[chatId])chatRecords[chatId]=[];chatRecords[chatId].push({id:genId(),role:"oracle",text:`【邀请】${c?c.name:'TA'} 邀请你一起听歌。\n${sysMsg}`,time:getTodayTimeStr()});saveChatRecords();renderMessages();openApp("app-music");});
 
+// ===== 信箱系统重构（每日最多4封，随机延迟） =====
 function showMailDetail(text,date){const list=document.getElementById("mailList"),detail=document.getElementById("mailDetail");list.style.display="none";detail.innerHTML="";const d1=document.createElement('div');d1.style.cssText="font-size:12px;color:var(--muted);margin-bottom:10px;";d1.textContent=date;const d2=document.createElement('div');d2.style.cssText="white-space:pre-wrap;";d2.textContent=text;detail.appendChild(d1);detail.appendChild(d2);detail.classList.add("show");}
-function renderMails(){const list=document.getElementById("mailList"),detail=document.getElementById("mailDetail");if(!list||!detail)return;detail.classList.remove("show");list.style.display="block";list.innerHTML="";const today=getTodayDateStr();userMails.slice().reverse().forEach((mail,idx)=>{const realIdx=userMails.length-1-idx,item=document.createElement('div');item.className="mail-item";const dateDiv=document.createElement('div');dateDiv.className="mail-date";dateDiv.textContent=mail.date;const senderDiv=document.createElement('div');senderDiv.className="mail-sender";senderDiv.style.cssText="display:flex; justify-content:space-between;";const senderSpan=document.createElement('span');senderSpan.textContent="我的信件";const delSpan=document.createElement('span');delSpan.className="del-icon-btn";delSpan.textContent="删除";senderDiv.appendChild(senderSpan);senderDiv.appendChild(delSpan);const subjDiv=document.createElement('div');subjDiv.className="mail-subject";subjDiv.textContent=(mail.text||'').substring(0,10)+'...';item.appendChild(dateDiv);item.appendChild(senderDiv);item.appendChild(subjDiv);item.addEventListener('click',(ev)=>{if(ev.target.classList.contains('del-icon-btn')){ev.stopPropagation();deleteUserMail(realIdx);return;}item.classList.remove('unread');showMailDetail(mail.text,mail.date);});list.appendChild(item);});for(let i=0;i<3;i++){const t=generatePuzzle("mail",settings.mailMaxLen),item=document.createElement('div');item.className="mail-item unread";const dateDiv=document.createElement('div');dateDiv.className="mail-date";dateDiv.textContent=today;const senderDiv=document.createElement('div');senderDiv.className="mail-sender";senderDiv.textContent="未知发件人";const subjDiv=document.createElement('div');subjDiv.className="mail-subject";subjDiv.textContent=t.substring(0,10)+'...';item.appendChild(dateDiv);item.appendChild(senderDiv);item.appendChild(subjDiv);item.addEventListener('click',()=>{item.classList.remove('unread');showMailDetail(t,today);});list.appendChild(item);}detail.onclick=()=>{detail.classList.remove("show");list.style.display="block";};}
+
+function checkAndGenerateMails() {
+  let mailData = safeParse("os_mail_system", { mails: [], todayCount: 0, lastDate: "", nextMailTime: 0 });
+  const now = new Date();
+  const todayStr = getTodayDateStr();
+
+  // 如果跨天了，重置每日计数
+  if (mailData.lastDate !== todayStr) {
+    mailData.lastDate = todayStr;
+    mailData.todayCount = 0;
+    mailData.nextMailTime = 0; 
+  }
+
+  // 每天最多 4 封
+  if (mailData.todayCount < 4) {
+    if (mailData.nextMailTime === 0) {
+      // 随机间隔：2小时到5小时之间生成下一封
+      const randomDelay = (2 + Math.random() * 3) * 60 * 60 * 1000; 
+      mailData.nextMailTime = Date.now() + randomDelay;
+    } else if (Date.now() >= mailData.nextMailTime) {
+      // 时间到了，生成新信
+      const t = generatePuzzle("mail", settings.mailMaxLen);
+      mailData.mails.unshift({ text: t, date: todayStr, id: genId() });
+      mailData.todayCount++;
+      mailData.nextMailTime = 0; // 重置，等下次触发重新计算
+    }
+  }
+
+  localStorage.setItem("os_mail_system", JSON.stringify(mailData));
+}
+
+function renderMails(){
+  checkAndGenerateMails(); // 每次打开检查是否该出新信
+  let mailData = safeParse("os_mail_system", { mails: [], todayCount: 0, lastDate: "", nextMailTime: 0 });
+  
+  const list=document.getElementById("mailList"),detail=document.getElementById("mailDetail");
+  if(!list||!detail)return;
+  detail.classList.remove("show");list.style.display="block";list.innerHTML="";
+  
+  // 渲染我写的信
+  userMails.slice().reverse().forEach((mail,idx)=>{
+    const realIdx=userMails.length-1-idx,item=document.createElement('div');
+    item.className="mail-item";
+    const dateDiv=document.createElement('div');dateDiv.className="mail-date";dateDiv.textContent=mail.date;
+    const senderDiv=document.createElement('div');senderDiv.className="mail-sender";senderDiv.style.cssText="display:flex; justify-content:space-between;";
+    const senderSpan=document.createElement('span');senderSpan.textContent="我的信件";
+    const delSpan=document.createElement('span');delSpan.className="del-icon-btn";delSpan.textContent="删除";
+    senderDiv.appendChild(senderSpan);senderDiv.appendChild(delSpan);
+    const subjDiv=document.createElement('div');subjDiv.className="mail-subject";subjDiv.textContent=(mail.text||'').substring(0,10)+'...';
+    item.appendChild(dateDiv);item.appendChild(senderDiv);item.appendChild(subjDiv);
+    item.addEventListener('click',(ev)=>{
+      if(ev.target.classList.contains('del-icon-btn')){ev.stopPropagation();deleteUserMail(realIdx);return;}
+      item.classList.remove('unread');showMailDetail(mail.text,mail.date);
+    });
+    list.appendChild(item);
+  });
+
+  // 渲染未知信件
+  mailData.mails.forEach((mail) => {
+    const item=document.createElement('div');
+    item.className="mail-item unread";
+    const dateDiv=document.createElement('div');dateDiv.className="mail-date";dateDiv.textContent=mail.date;
+    const senderDiv=document.createElement('div');senderDiv.className="mail-sender";senderDiv.textContent="未知发件人";
+    const subjDiv=document.createElement('div');subjDiv.className="mail-subject";subjDiv.textContent=mail.text.substring(0,10)+'...';
+    item.appendChild(dateDiv);item.appendChild(senderDiv);item.appendChild(subjDiv);
+    item.addEventListener('click',()=>{
+      item.classList.remove('unread');
+      showMailDetail(mail.text, mail.date);
+    });
+    list.appendChild(item);
+  });
+  
+  detail.onclick=()=>{detail.classList.remove('show');list.style.display="block";};
+}
+
 window.deleteUserMail=function(idx){if(confirm("确定删除这封信件吗？")){userMails.splice(idx,1);localStorage.setItem("os_user_mails",JSON.stringify(userMails));renderMails();}};
 window.saveUserMail=function(){const content=document.getElementById("writeContent").value.trim();if(!content)return;userMails.push({text:content,date:getTodayDateStr()});localStorage.setItem("os_user_mails",JSON.stringify(userMails));document.getElementById("writeContent").value="";document.getElementById("writeModal").style.display='none';renderMails();showToast("信件已保存");};
+
+// ===== 便签 =====
 function renderNotes(){const area=document.getElementById("noteHistory");if(!area)return;area.innerHTML="";noteHistory.forEach((item,index)=>{const div=document.createElement('div');if(item.role==="user"){div.className="note-msg user-msg";}else{div.className="note-msg sys-msg";}const dateSpan=document.createElement('span');dateSpan.className="note-date";dateSpan.textContent=item.date;const delSpan=document.createElement('span');delSpan.className="del-icon-btn";delSpan.textContent="✕";delSpan.onclick=()=>deleteNote(index);dateSpan.appendChild(document.createTextNode(" "));dateSpan.appendChild(delSpan);div.appendChild(dateSpan);div.appendChild(document.createTextNode(item.role==="sys"?"回复："+item.text:item.text));area.appendChild(div);});if(noteHistory.length===0){const t=generatePuzzle("notes",settings.noteMaxLen),div=document.createElement('div');div.className="note-msg sys-msg";const dateSpan=document.createElement('span');dateSpan.className="note-date";dateSpan.textContent=getTodayDateStr();div.appendChild(dateSpan);div.appendChild(document.createTextNode("今日神谕："+t));area.appendChild(div);}setTimeout(()=>{area.scrollTop=area.scrollHeight;},50);}
 window.deleteNote=function(idx){if(confirm("确定删除这条便签记录吗？")){noteHistory.splice(idx,1);localStorage.setItem("os_note_history",JSON.stringify(noteHistory));renderNotes();}};
-window.sendNote=function(){const input=document.getElementById("noteInput"),val=input.value.trim();if(!val)return;const today=getTodayDateStr();noteHistory.push({role:"user",text:val,date:today});input.value="";const reply=generatePuzzle("notes",settings.noteMaxLen);noteHistory.push({role:"sys",text:reply,date:today});localStorage.setItem("os_note_history",JSON.stringify(noteHistory));renderNotes();};
+
+window.sendNote=function(){
+  const input=document.getElementById("noteInput"),val=input.value.trim();
+  if(!val)return;
+  const today=getTodayDateStr();
+  noteHistory.push({role:"user",text:val,date:today});
+  input.value="";
+  localStorage.setItem("os_note_history",JSON.stringify(noteHistory));
+  renderNotes();
+  
+  // 延迟回复：20分钟 ~ 2小时
+  const delayMs = (20 + Math.random() * 100) * 60 * 1000;
+  showToast("留言已收到，命运正在酝酿回复...");
+  
+  setTimeout(() => {
+    const reply = generatePuzzle("notes", settings.noteMaxLen);
+    noteHistory.push({role:"sys",text:reply,date:getTodayDateStr()});
+    localStorage.setItem("os_note_history",JSON.stringify(noteHistory));
+    if(document.getElementById('app-notes').classList.contains('open')) {
+      renderNotes();
+    }
+  }, delayMs);
+};
+
 function startCall(){if(inCall)return;inCall=true;clearInterval(callTimer);clearTimeout(callTimeout);const c=contacts.find(x=>x.id===currentChatId);document.getElementById("callName").textContent=c?.name||"灵体";const avatarBox=document.getElementById("callAvatarBox");if(c&&c.avatar){avatarBox.innerHTML=`<img src="${c.avatar}">`;}else{avatarBox.innerHTML=`<svg class="svg-icon" viewBox="0 0 24 24" style="width:50px;height:50px;fill:#fff;"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>`;}const floatBox=document.getElementById("floatAvatarBox");if(floatBox){floatBox.innerHTML=c&&c.avatar?`<img src="${c.avatar}">`:`<svg class="svg-icon" viewBox="0 0 24 24"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>`;}const callApp=document.getElementById("app-call");callApp.style.backgroundImage=settings.callBg?`url(${settings.callBg})`:'linear-gradient(135deg, #1a1a1a, #333)';const statusEl=document.getElementById("callStatus");statusEl.textContent="正在呼叫...";statusEl.style.color="#aaa";document.getElementById("callMinimizeBtn").style.display="none";document.getElementById("callHangupBtn").style.width="70px";document.getElementById("callHangupBtn").style.height="70px";callTimeout=setTimeout(()=>{if(!inCall)return;statusEl.textContent="00:00";statusEl.style.color="#4caf50";callSeconds=0;document.getElementById("callMinimizeBtn").style.display="flex";document.getElementById("callHangupBtn").style.width="60px";document.getElementById("callHangupBtn").style.height="60px";clearInterval(callTimer);callTimer=setInterval(()=>{callSeconds++;const m=Math.floor(callSeconds/60).toString().padStart(2,'0'),s=(callSeconds%60).toString().padStart(2,'0');statusEl.textContent=`${m}:${s}`;},1000);},3000);}
 window.minimizeCall=function(){closeApp('app-call');document.getElementById("floatingCall").classList.add("show");}
 window.hangupCall=function(){inCall=false;closeApp('app-call');document.getElementById("floatingCall").classList.remove("show");clearInterval(callTimer);clearTimeout(callTimeout);callTimer=null;callTimeout=null;showToast("通话已结束");}
@@ -535,7 +665,6 @@ window.addEventListener('DOMContentLoaded',()=>{
     if(sendBtn)sendBtn.addEventListener("click",sendMessage);
     if(inputEl){inputEl.addEventListener("keydown",function(e){if(e.key==='Enter'||e.keyCode===13){e.preventDefault();sendMessage();}});}
     
-    // 桌面头像上传逻辑
     const homeAvatarUpload = document.getElementById("homeAvatarUpload");
     if (homeAvatarUpload) {
       homeAvatarUpload.onchange = function(e) {
