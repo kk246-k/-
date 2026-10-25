@@ -576,16 +576,23 @@ button.send{padding:0 16px;border-radius:20px;border:none;background:#007aff;col
 <button class="admin-btn" style="background:var(--danger); margin-top:5px;" onclick="clearWidgets()">清空所有小组件</button>
 <div class="section-title">行为与时长控制</div>
 <div class="form-group"><label>已读不回 (<span id="ignoreLabel">20</span>%)</label><input type="range" id="settingIgnore" min="0" max="100" step="10"></div>
-<div class="form-group"><label>撤回消息 (<span id="settingRecall">10</span>%)</label><input type="range" id="settingRecall" min="0" max="100" step="5"></div>
+<div class="form-group"><label>撤回消息 (<span id="recallLabel">10</span>%)</label><input type="range" id="settingRecall" min="0" max="100" step="5"></div>
 <div class="form-group"><label>主动发消息概率 (<span id="proactiveLabel">20</span>%)</label><input type="range" id="settingProactive" min="0" max="100" step="5"></div>
 <div class="form-group" style="margin-top:15px; border-top:1px dashed var(--border); padding-top:15px;"><label>最短回复延迟 (<span id="minDelayLabel">1</span> 秒)</label><input type="range" id="settingMinDelay" min="0.5" max="10" step="0.5"></div>
 <div class="form-group"><label>最长回复延迟 (<span id="maxDelayLabel">3</span> 秒)</label><input type="range" id="settingMaxDelay" min="1" max="30" step="0.5"></div>
 <div class="section-title">字数上限控制</div>
 <div class="form-group"><label>信箱字数上限 (<span id="mailLenLabel">50</span>字)</label><input type="range" id="settingMailLen" min="10" max="200" step="10"></div>
 <div class="form-group"><label>便签字数上限 (<span id="noteLenLabel">50</span>字)</label><input type="range" id="settingNoteLen" min="10" max="200" step="10"></div>
+
+<!-- 卡池分组功能 -->
 <div class="section-title">独立卡池与自定义表情</div>
-<div class="form-group"><select id="poolSelector" onchange="renderPoolList()"><option value="chat">通讯卡池</option><option value="tarot">塔罗附加</option><option value="mail">信箱卡池</option><option value="notes">便签卡池</option></select></div>
-<div class="form-group"><textarea id="newCardBatch" rows="3" placeholder="每行一句，添加到当前选中的卡池"></textarea></div>
+<div class="form-group"><select id="poolSelector" onchange="updateGroupSelector()"><option value="chat">通讯卡池</option><option value="tarot">塔罗附加</option><option value="mail">信箱卡池</option><option value="notes">便签卡池</option></select></div>
+<div class="form-group" style="display:flex; gap:10px; margin-top:10px;">
+    <select id="poolGroupSelector" onchange="renderPoolList()" style="flex:1;"></select>
+    <button class="admin-btn" style="width:auto; padding:0 12px; margin:0; font-size:14px;" onclick="addPoolGroup()">+ 分组</button>
+    <button class="admin-btn" style="width:auto; padding:0 12px; margin:0; font-size:14px; background:var(--danger);" onclick="deletePoolGroup()">✕ 分组</button>
+</div>
+<div class="form-group"><textarea id="newCardBatch" rows="3" placeholder="每行一句，添加到当前选中的卡池分组"></textarea></div>
 <button class="admin-btn" onclick="saveBatchCards()">保存到卡池</button>
 <div id="poolListArea" style="margin-top: 10px; margin-bottom: 20px; max-height: 200px; overflow-y: auto;"></div>
 <div class="form-group" style="margin-top:20px;"><label>上传自定义表情包 (图片)</label><input type="file" id="emojiUpload" accept="image/*" multiple></div>
@@ -605,7 +612,13 @@ button.send{padding:0 16px;border-radius:20px;border:none;background:#007aff;col
 <script>
 (function() {
 const DEFAULT_SETTINGS={theme:"cute",ignoreRate:20,recallRate:10,proactiveRate:20,minReplyTime:1,maxReplyTime:3,mailMaxLen:50,noteMaxLen:50,splashBg:"",homeBg:"",chatBg:"",callBg:"",icons:{},widgets:[{img:"",textLg:"Hello",textSm:"今天也要开心哦"}],splashTexts:["正在连接梦境...","读取潜意识碎片...","命运正在编织...","准备好了吗？"],userProfile:{name:"梦主",avatar:"",cover:"",sign:"这个人很懒，什么都没有留下。"}};
-const DEFAULT_POOLS={chat:["顺其自然","我在听","确实如此","你觉得呢？"],tarot:[],mail:["风带来了消息"],notes:["今天阳光很好"]};
+// 改为分组结构
+const DEFAULT_POOLS={
+    chat:{"默认":["顺其自然","我在听","确实如此","你觉得呢？"]},
+    tarot:{"默认":[]},
+    mail:{"默认":["风带来了消息"]},
+    notes:{"默认":["今天阳光很好"]}
+};
 const DEFAULT_CONTACTS=[{id:"c1",name:"梦占灵体",avatar:"",bio:"来自深渊的凝视。"}];
 const DEFAULT_CHAT_RECORDS={"c1":[]};
 const DEFAULT_MOMENTS=[{id:"m1",authorId:"c1",text:"今天感觉如何？",time:"1小时前",likes:0,comments:[],images:[]}];
@@ -653,8 +666,15 @@ function initData(){
     if(!Array.isArray(noteHistory))noteHistory=[];
     if(!Array.isArray(customEmojis))customEmojis=[];
     if(!Array.isArray(moments))moments=JSON.parse(JSON.stringify(DEFAULT_MOMENTS));
-    if(typeof pools!=='object'||pools===null)pools={...DEFAULT_POOLS};
-    for(let p in DEFAULT_POOLS){if(!Array.isArray(pools[p]))pools[p]=[];}
+    
+    // 兼容旧版数组卡池转对象分组结构
+    if(typeof pools!=='object'||pools===null)pools=JSON.parse(JSON.stringify(DEFAULT_POOLS));
+    for(let p in DEFAULT_POOLS){
+        if(!pools[p]) pools[p] = JSON.parse(JSON.stringify(DEFAULT_POOLS[p]));
+        if(Array.isArray(pools[p])){
+            pools[p] = {"默认": pools[p]};
+        }
+    }
 }
 
 function getRelativeTime(time) {
@@ -685,8 +705,44 @@ function saveMoments(){
 function saveProfileData(){localStorage.setItem("os_profile_data",JSON.stringify(profileData));}
 function showToast(msg){const $t=document.getElementById("toast");if(!$t)return;$t.textContent=msg;$t.classList.add("show");clearTimeout($t._timer);$t._timer=setTimeout(()=>$t.classList.remove("show"),2000);}
 function compressImage(file,maxSize,callback,format){const reader=new FileReader();reader.onload=function(e){const img=new Image();img.onload=function(){const canvas=document.createElement('canvas'),ctx=canvas.getContext('2d');let width=img.width,height=img.height;if(width>height){if(width>maxSize){height*=maxSize/width;width=maxSize;}}else{if(height>maxSize){width*=maxSize/height;height=maxSize;}}canvas.width=width;canvas.height=height;const mime=format==='png'?'image/png':'image/jpeg';if(format==='png'){ctx.drawImage(img,0,0,width,height);}else{ctx.fillStyle="#ffffff";ctx.fillRect(0,0,width,height);ctx.drawImage(img,0,0,width,height);}callback(canvas.toDataURL(mime,format==='png'?undefined:0.75));};img.src=e.target.result;};reader.readAsDataURL(file);}
-function drawFromPool(poolName){let p=pools[poolName]||[];if(poolName==="tarot")p=[...DEFAULT_TAROT.map(t=>t.name),...p];if(p.length===0)return"池子空了";return p[Math.floor(Math.random()*p.length)];}
-function generatePuzzle(poolName,maxLen){let p=pools[poolName]||[];if(p.length===0)return"池子空了";let result="",count=0;while(result.length<maxLen&&count<5){let card=p[Math.floor(Math.random()*p.length)];result+=(result?"，":"")+card;count++;}if(result.length>maxLen)result=result.substring(0,maxLen)+"...";return result;}
+
+// 兼容分组结构的抽取逻辑
+function drawFromPool(poolName){
+    let p=pools[poolName]||{};
+    let allCards=[];
+    if(Array.isArray(p)){
+        allCards=p;
+    }else{
+        for(let g in p){
+            if(Array.isArray(p[g])) allCards=allCards.concat(p[g]);
+        }
+    }
+    if(poolName==="tarot")allCards=[...DEFAULT_TAROT.map(t=>t.name),...allCards];
+    if(allCards.length===0)return"池子空了";
+    return allCards[Math.floor(Math.random()*allCards.length)];
+}
+
+function generatePuzzle(poolName,maxLen){
+    let p=pools[poolName]||{};
+    let allCards=[];
+    if(Array.isArray(p)){
+        allCards=p;
+    }else{
+        for(let g in p){
+            if(Array.isArray(p[g])) allCards=allCards.concat(p[g]);
+        }
+    }
+    if(allCards.length===0)return"池子空了";
+    let result="",count=0;
+    while(result.length<maxLen&&count<5){
+        let card=allCards[Math.floor(Math.random()*allCards.length)];
+        result+=(result?"，":"")+card;
+        count++;
+    }
+    if(result.length>maxLen)result=result.substring(0,maxLen)+"...";
+    return result;
+}
+
 function applyTheme(){document.documentElement.setAttribute('data-theme',settings.theme||'cute');const themeSel=document.getElementById("settingTheme");if(themeSel)themeSel.value=settings.theme||'cute';const homeBg=document.getElementById("homeBg");if(homeBg)homeBg.style.backgroundImage=settings.homeBg?`url(${settings.homeBg})`:'linear-gradient(135deg, #2b1055, #7597de)';const chatApp=document.getElementById("app-chat");if(chatApp)chatApp.style.backgroundImage=settings.chatBg?`url(${settings.chatBg})`:'none';}
 
 function renderHome() {
@@ -766,7 +822,7 @@ window.openApp=function(appId){
     if(appId==='app-music')renderPlaylist();
     if(appId==='app-call'){document.getElementById("floatingCall").classList.remove("show");if(!inCall)startCall();}
     if(appId==='app-chat'){updateStatusBar();scrollToBottom();}
-    if(appId==='app-settings')renderSettingsIcons();
+    if(appId==='app-settings'){renderSettingsIcons();updateGroupSelector();}
     if(appId==='app-archive')renderArchiveApp();
 }
 window.closeApp=function(appId){document.getElementById(appId).classList.remove("open");document.getElementById("homeScreenWrapper").style.display="flex";}
@@ -966,7 +1022,7 @@ function renderEmojiPanel(){const panel=document.getElementById("emojiPanel");if
 window.insertEmoji=function(e){const inp=document.getElementById("input");if(inp){inp.value+=e;inp.focus();}}
 window.sendEmojiImg=function(src){try{const chatId=currentChatId;if(!chatRecords[chatId])chatRecords[chatId]=[];const msgId=genId(),timeStr=getTodayTimeStr();chatRecords[chatId].push({id:msgId,role:"user",text:`<img src="${src}" style="max-width:80px;border-radius:8px;">`,time:timeStr,read:false});saveChatRecords();if(chatId===currentChatId)renderMessages();document.getElementById("emojiPanel").classList.remove("show");setTimeout(()=>{const idx=chatRecords[chatId].findIndex(m=>m.id===msgId);if(idx>-1){chatRecords[chatId][idx].read=true;saveChatRecords();if(chatId===currentChatId&&document.getElementById("app-chat").classList.contains("open"))renderMessages();}},getRandomDelay());triggerAIReply(chatId);}catch(e){showToast("发送失败");}};
 document.getElementById("emojiBtn")&&(document.getElementById("emojiBtn").onclick=()=>{renderEmojiPanel();document.getElementById("emojiPanel").classList.toggle("show");});
-window.drawTarot=function(){const q=document.getElementById("tarotQuestion").value.trim(),count=parseInt(document.getElementById("tarotCount").value),area=document.getElementById("tarotResultArea");if(!q){alert("请先写下你的问题哦~");return;}area.innerHTML="<div style='color:var(--muted);margin-top:20px;'>正在洗牌，连接命运...</div>";setTimeout(()=>{area.innerHTML="";let p=[...DEFAULT_TAROT,...pools.tarot.map(t=>({name:t,meaning:"这是你的自定义神谕。"}))];p=p.sort(()=>Math.random()-0.5);for(let i=0;i<count;i++){const card=p[i%p.length],div=document.createElement("div");div.className="tarot-card-item";let posName=count===3?(i===0?"【过去】":i===1?"【现在】":"【未来】"):"";div.innerHTML=`<div class="tarot-card-title">${escapeHtml(posName)} ${escapeHtml(card.name)}</div><div class="tarot-card-meaning">${escapeHtml(card.meaning)}</div>`;area.appendChild(div);}},1000);};
+window.drawTarot=function(){const q=document.getElementById("tarotQuestion").value.trim(),count=parseInt(document.getElementById("tarotCount").value),area=document.getElementById("tarotResultArea");if(!q){alert("请先写下你的问题哦~");return;}area.innerHTML="<div style='color:var(--muted);margin-top:20px;'>正在洗牌，连接命运...</div>";setTimeout(()=>{area.innerHTML="";let allCustom=[];let pt=pools.tarot||{};if(Array.isArray(pt))allCustom=pt;else{for(let g in pt){if(Array.isArray(pt[g]))allCustom=allCustom.concat(pt[g]);}}let p=[...DEFAULT_TAROT,...allCustom.map(t=>({name:t,meaning:"这是你的自定义神谕。"}))];p=p.sort(()=>Math.random()-0.5);for(let i=0;i<count;i++){const card=p[i%p.length],div=document.createElement("div");div.className="tarot-card-item";let posName=count===3?(i===0?"【过去】":i===1?"【现在】":"【未来】"):"";div.innerHTML=`<div class="tarot-card-title">${escapeHtml(posName)} ${escapeHtml(card.name)}</div><div class="tarot-card-meaning">${escapeHtml(card.meaning)}</div>`;area.appendChild(div);}},1000);};
 
 let db;const DB_NAME="OracleOS_DB",STORE_NAME="music";
 function initDB(){return new Promise((res,rej)=>{if(db)return res();const req=indexedDB.open(DB_NAME,1);req.onupgradeneeded=e=>{if(!e.target.result.objectStoreNames.contains(STORE_NAME))e.target.result.createObjectStore(STORE_NAME);};req.onsuccess=e=>{db=e.target.result;res();};req.onerror=rej;});}
@@ -1162,13 +1218,109 @@ window.sendNote=function(){
 function startCall(){if(inCall)return;inCall=true;clearInterval(callTimer);clearTimeout(callTimeout);const c=contacts.find(x=>x.id===currentChatId);document.getElementById("callName").textContent=c?.name||"灵体";const avatarBox=document.getElementById("callAvatarBox");if(c&&c.avatar){avatarBox.innerHTML=`<img src="${c.avatar}">`;}else{avatarBox.innerHTML=`<svg class="svg-icon" viewBox="0 0 24 24" style="width:50px;height:50px;fill:#fff;"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>`;}const floatBox=document.getElementById("floatAvatarBox");if(floatBox){floatBox.innerHTML=c&&c.avatar?`<img src="${c.avatar}">`:`<svg class="svg-icon" viewBox="0 0 24 24"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>`;}const callApp=document.getElementById("app-call");callApp.style.backgroundImage=settings.callBg?`url(${settings.callBg})`:'linear-gradient(135deg, #1a1a1a, #333)';const statusEl=document.getElementById("callStatus");statusEl.textContent="正在呼叫...";statusEl.style.color="#aaa";document.getElementById("callMinimizeBtn").style.display="none";document.getElementById("callHangupBtn").style.width="70px";document.getElementById("callHangupBtn").style.height="70px";callTimeout=setTimeout(()=>{if(!inCall)return;statusEl.textContent="00:00";statusEl.style.color="#4caf50";callSeconds=0;document.getElementById("callMinimizeBtn").style.display="flex";document.getElementById("callHangupBtn").style.width="60px";document.getElementById("callHangupBtn").style.height="60px";clearInterval(callTimer);callTimer=setInterval(()=>{callSeconds++;const m=Math.floor(callSeconds/60).toString().padStart(2,'0'),s=(callSeconds%60).toString().padStart(2,'0');statusEl.textContent=`${m}:${s}`;},1000);},3000);}
 window.minimizeCall=function(){closeApp('app-call');document.getElementById("floatingCall").classList.add("show");}
 window.hangupCall=function(){inCall=false;closeApp('app-call');document.getElementById("floatingCall").classList.remove("show");clearInterval(callTimer);clearTimeout(callTimeout);callTimer=null;callTimeout=null;showToast("通话已结束");}
-window.renderPoolList=function(){const poolName=document.getElementById("poolSelector").value,arr=pools[poolName]||[],area=document.getElementById("poolListArea");area.innerHTML="";if(arr.length===0){area.innerHTML='<div style="font-size:12px; color:var(--muted); text-align:center;">暂无字卡</div>';return;}arr.forEach((text,index)=>{const div=document.createElement("div");div.style.cssText="display:flex; justify-content:space-between; align-items:center; background:var(--panel); border:1px solid var(--border); padding:8px 12px; margin-bottom:5px; border-radius:6px; font-size:14px;";const span=document.createElement('span');span.style.cssText="flex:1; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;";span.textContent=text;const del=document.createElement('span');del.style.cssText="color:var(--danger); cursor:pointer; padding:0 5px; font-weight:bold;";del.textContent="✕";del.onclick=()=>deletePoolCard(poolName,index);div.appendChild(span);div.appendChild(del);area.appendChild(div);});};
-window.deletePoolCard=function(poolName,index){if(confirm("确定要删除这张字卡吗？")){pools[poolName].splice(index,1);savePools();renderPoolList();}};
+
+// ====== 分组管理逻辑 ======
+window.updateGroupSelector = function() {
+    const poolName = document.getElementById("poolSelector").value;
+    const groupSel = document.getElementById("poolGroupSelector");
+    if(!groupSel) return;
+    groupSel.innerHTML = "";
+    const p = pools[poolName] || {};
+    for(let group in p) {
+        const opt = document.createElement('option');
+        opt.value = group;
+        opt.textContent = group;
+        groupSel.appendChild(opt);
+    }
+    renderPoolList();
+};
+
+window.addPoolGroup = function() {
+    const poolName = document.getElementById("poolSelector").value;
+    const groupName = prompt("请输入新分组名称：");
+    if(!groupName) return;
+    if(!pools[poolName]) pools[poolName] = {};
+    if(pools[poolName][groupName]) return showToast("该分组已存在");
+    pools[poolName][groupName] = [];
+    savePools();
+    updateGroupSelector();
+    document.getElementById("poolGroupSelector").value = groupName;
+    renderPoolList();
+    showToast("分组已创建");
+};
+
+window.deletePoolGroup = function() {
+    const poolName = document.getElementById("poolSelector").value;
+    const groupName = document.getElementById("poolGroupSelector").value;
+    if(!groupName) return;
+    if(Object.keys(pools[poolName]).length <= 1) return showToast("至少保留一个分组");
+    if(confirm(`确定删除分组“${groupName}”及其包含的所有字卡吗？`)) {
+        delete pools[poolName][groupName];
+        savePools();
+        updateGroupSelector();
+        showToast("分组已删除");
+    }
+};
+
+window.renderPoolList=function(){
+    const poolName=document.getElementById("poolSelector").value;
+    const groupName=document.getElementById("poolGroupSelector").value;
+    if(!groupName) return;
+    
+    const arr=pools[poolName]?.[groupName]||[];
+    const area=document.getElementById("poolListArea");
+    area.innerHTML="";
+    if(arr.length===0){
+        area.innerHTML='<div style="font-size:12px; color:var(--muted); text-align:center;">当前分组暂无字卡</div>';
+        return;
+    }
+    arr.forEach((text,index)=>{
+        const div=document.createElement("div");
+        div.style.cssText="display:flex; justify-content:space-between; align-items:center; background:var(--panel); border:1px solid var(--border); padding:8px 12px; margin-bottom:5px; border-radius:6px; font-size:14px;";
+        const span=document.createElement('span');
+        span.style.cssText="flex:1; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;";
+        span.textContent=text;
+        const del=document.createElement('span');
+        del.style.cssText="color:var(--danger); cursor:pointer; padding:0 5px; font-weight:bold;";
+        del.textContent="✕";
+        del.onclick=()=>deletePoolCard(poolName,groupName,index);
+        div.appendChild(span);
+        div.appendChild(del);
+        area.appendChild(div);
+    });
+};
+
+window.deletePoolCard=function(poolName,groupName,index){
+    if(confirm("确定要删除这张字卡吗？")){
+        pools[poolName][groupName].splice(index,1);
+        savePools();
+        renderPoolList();
+    }
+};
+
+window.saveBatchCards=function(){
+    const poolName=document.getElementById("poolSelector").value;
+    const groupName=document.getElementById("poolGroupSelector").value;
+    if(!groupName) return showToast("请先选择分组");
+    const text=document.getElementById("newCardBatch").value.trim();
+    if(!text)return;
+    text.split("\n").forEach(t=>{
+        if(t.trim()) {
+            if(!pools[poolName][groupName]) pools[poolName][groupName] = [];
+            pools[poolName][groupName].push(t.trim());
+        }
+    });
+    savePools();
+    document.getElementById("newCardBatch").value="";
+    renderPoolList();
+    showToast(`已保存到 ${groupName} 分组！`);
+};
+// ====== 分组管理逻辑结束 ======
+
 window.exportData=function(){const backupData={settings:localStorage.getItem("os_settings"),pools:localStorage.getItem("os_pools"),contacts:localStorage.getItem("os_contacts"),chatRecords:localStorage.getItem("os_chat_records"),emojis:localStorage.getItem("os_emojis"),userMails:localStorage.getItem("os_user_mails"),noteHistory:localStorage.getItem("os_note_history"),moments:localStorage.getItem("os_moments"),profileData:localStorage.getItem("os_profile_data")};const dataStr=JSON.stringify(backupData),blob=new Blob([dataStr],{type:"application/json"}),url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download=`梦占OS备份_${getTodayDateStr().replace(/\//g,'-')}.json`;document.body.appendChild(a);a.click();document.body.removeChild(a);showToast("备份文件已下载，请妥善保存！");};
 window.importData=function(event){const file=event.target.files[0];if(!file)return;const reader=new FileReader();reader.onload=function(e){try{const data=JSON.parse(e.target.result);if(data.settings)localStorage.setItem("os_settings",data.settings);if(data.pools)localStorage.setItem("os_pools",data.pools);if(data.contacts)localStorage.setItem("os_contacts",data.contacts);if(data.chatRecords)localStorage.setItem("os_chat_records",data.chatRecords);if(data.emojis)localStorage.setItem("os_emojis",data.emojis);if(data.userMails)localStorage.setItem("os_user_mails",data.userMails);if(data.noteHistory)localStorage.setItem("os_note_history",data.noteHistory);if(data.moments)localStorage.setItem("os_moments",data.moments);if(data.profileData)localStorage.setItem("os_profile_data",data.profileData);showToast("数据恢复成功！正在刷新页面...");setTimeout(()=>location.reload(),1500);}catch(err){alert("导入失败：文件格式不正确！");}};reader.readAsText(file);};
 window.clearCurrentChat=function(){if(confirm("这会清空当前联系人的所有聊天记录。确定吗？")){chatRecords[currentChatId]=[];saveChatRecords();renderMessages();showToast("聊天记录已清空");}};
 window.saveSplashTexts=function(){const text=document.getElementById("splashTextsInput").value.trim();if(!text)return;settings.splashTexts=text.split("\n").map(s=>s.trim()).filter(s=>s);saveSettings();showToast("开屏文字已保存！下次刷新生效");};
-window.saveBatchCards=function(){const poolName=document.getElementById("poolSelector").value,text=document.getElementById("newCardBatch").value.trim();if(!text)return;text.split("\n").forEach(t=>{if(t.trim())pools[poolName].push(t.trim());});savePools();document.getElementById("newCardBatch").value="";renderPoolList();showToast(`已保存到 ${poolName} 卡池！`);};
 
 function runSplash(){
   const splash=document.getElementById("splashScreen"),
@@ -1265,7 +1417,7 @@ window.addEventListener('DOMContentLoaded',()=>{
       momentImgUpload.addEventListener('change',function(e){const files=Array.from(e.target.files);if(files.length+pendingMomentImgs.length>3){showToast("最多只能上传3张图片哦");return;}const preview=document.getElementById('momentImgPreview');files.forEach(file=>{compressImage(file,800,(base64)=>{pendingMomentImgs.push(base64);const img=document.createElement('img');img.src=base64;preview.appendChild(img);});});this.value="";});
     }
 
-    applyTheme();renderHome();renderPoolList();
+    applyTheme();renderHome();updateGroupSelector();
     const safeSet=(id,prop,val)=>{const el=document.getElementById(id);if(el){if(prop==='textContent')el.textContent=val;else el.value=val;}};
     safeSet("splashTextsInput","value",settings.splashTexts.join("\n"));
     safeSet("settingIgnore","value",settings.ignoreRate);safeSet("ignoreLabel","textContent",settings.ignoreRate);
