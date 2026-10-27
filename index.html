@@ -727,7 +727,7 @@ button.send{padding:0 16px;border-radius:20px;border:none;background:#007aff;col
 
 <!-- 卡池分组功能 -->
 <div class="section-title">独立卡池与自定义表情</div>
-<div class="form-group"><select id="poolSelector" onchange="updateGroupSelector()"><option value="chat">通讯卡池</option><option value="tarot">塔罗附加</option><option value="mail">信箱卡池</option><option value="notes">便签卡池</option></select></div>
+<div class="form-group"><select id="poolSelector" onchange="updateGroupSelector()"><option value="chat">通讯卡池</option><option value="tarot">塔罗附加</option><option value="mail">信箱卡池</option><option value="notes">便签卡池</option><option value="status">状态栏卡池</option></select></div>
 <div class="form-group" style="display:flex; gap:10px; margin-top:10px;">
     <select id="poolGroupSelector" onchange="renderPoolList()" style="flex:1;"></select>
     <button class="admin-btn" style="width:auto; padding:0 12px; margin:0; font-size:14px;" onclick="addPoolGroup()">+ 分组</button>
@@ -800,7 +800,8 @@ const DEFAULT_POOLS={
     chat:{"默认":["顺其自然","我在听","确实如此","你觉得呢？"]},
     tarot:{"默认":[]},
     mail:{"默认":["风带来了消息"]},
-    notes:{"默认":["今天阳光很好"]}
+    notes:{"默认":["今天阳光很好"]},
+    status:{"默认":["正在凝视深渊","刚刚苏醒","心情不错","有点困了","正在思考","不想理你"]}
 };
 const DEFAULT_CONTACTS=[{id:"c1",name:"梦占灵体",avatar:"",bio:"来自深渊的凝视。"}];
 const DEFAULT_CHAT_RECORDS={"c1":[]};
@@ -1529,6 +1530,11 @@ function renderMails(){
   checkAndGenerateMails();
   let mailData = safeParse("os_mail_system", { mails: [], todayCount: 0, lastDate: "", nextMailTime: 0 });
   
+  // 给旧数据补上 id，确保每封信都能被单独删除
+  let changed = false;
+  (mailData.mails || []).forEach(m => { if(!m.id){ m.id = genId(); changed = true; } });
+  if(changed) localStorage.setItem("os_mail_system", JSON.stringify(mailData));
+
   const list=document.getElementById("mailList"),detail=document.getElementById("mailDetail");
   if(!list||!detail)return;
   detail.classList.remove("show");list.style.display="block";list.innerHTML="";
@@ -1550,14 +1556,36 @@ function renderMails(){
     list.appendChild(item);
   });
 
-  mailData.mails.forEach((mail) => {
+  (mailData.mails || []).forEach((mail) => {
     const item=document.createElement('div');
     item.className="mail-item unread";
     const dateDiv=document.createElement('div');dateDiv.className="mail-date";dateDiv.textContent=mail.date;
-    const senderDiv=document.createElement('div');senderDiv.className="mail-sender";senderDiv.textContent="未知发件人";
-    const subjDiv=document.createElement('div');subjDiv.className="mail-subject";subjDiv.textContent=mail.text.substring(0,10)+'...';
-    item.appendChild(dateDiv);item.appendChild(senderDiv);item.appendChild(subjDiv);
-    item.addEventListener('click',()=>{
+
+    const senderDiv=document.createElement('div');
+    senderDiv.className="mail-sender";
+    senderDiv.style.cssText="display:flex; justify-content:space-between;";
+    const senderSpan=document.createElement('span');
+    senderSpan.textContent="未知发件人";
+    const delSpan=document.createElement('span');
+    delSpan.className="del-icon-btn";
+    delSpan.textContent="删除";
+    senderDiv.appendChild(senderSpan);
+    senderDiv.appendChild(delSpan);
+
+    const subjDiv=document.createElement('div');
+    subjDiv.className="mail-subject";
+    subjDiv.textContent=(mail.text||'').substring(0,10)+'...';
+
+    item.appendChild(dateDiv);
+    item.appendChild(senderDiv);
+    item.appendChild(subjDiv);
+
+    item.addEventListener('click',(ev)=>{
+      if(ev.target.classList.contains('del-icon-btn')){
+        ev.stopPropagation();
+        deleteSysMail(mail.id);
+        return;
+      }
       item.classList.remove('unread');
       showMailDetail(mail.text, mail.date);
     });
@@ -1568,6 +1596,17 @@ function renderMails(){
 }
 
 window.deleteUserMail=function(idx){if(confirm("确定删除这封信件吗？")){userMails.splice(idx,1);localStorage.setItem("os_user_mails",JSON.stringify(userMails));renderMails();}};
+
+// ★ 新增：删除系统生成的信件
+window.deleteSysMail = function(id){
+    if(!confirm("确定删除这封神秘来信吗？")) return;
+    let mailData = safeParse("os_mail_system", { mails: [], todayCount: 0, lastDate: "", nextMailTime: 0 });
+    mailData.mails = (mailData.mails || []).filter(m => m.id !== id);
+    localStorage.setItem("os_mail_system", JSON.stringify(mailData));
+    renderMails();
+    showToast("信件已删除");
+};
+
 window.saveUserMail=function(){const content=document.getElementById("writeContent").value.trim();if(!content)return;userMails.push({text:content,date:getTodayDateStr()});localStorage.setItem("os_user_mails",JSON.stringify(userMails));document.getElementById("writeContent").value="";document.getElementById("writeModal").style.display='none';renderMails();showToast("信件已保存");};
 
 function checkPendingNotes() {
