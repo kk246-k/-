@@ -160,7 +160,7 @@ body.p1-editing .p1-card{outline:2px dashed var(--accent);outline-offset:2px;}
     -webkit-backdrop-filter: blur(15px);
     box-shadow: 0 4px 12px rgba(0,0,0,0.08);
     border: 1px solid rgba(255,255,255,0.2);
-    transition: background-color 0.3s ease;
+    transition: background-color 0.3s ease, border-radius 0.25s ease, box-shadow 0.25s ease, backdrop-filter 0.25s ease;
 }
 
 /* 右侧（用户）磨砂气泡 */
@@ -188,6 +188,51 @@ body.p1-editing .p1-card{outline:2px dashed var(--accent);outline-offset:2px;}
 
 .msg-meta{font-size:11px;color:var(--muted);margin-top:4px;padding:0 4px;text-align:right;}
 .msg-row.oracle .msg-meta{text-align:left;}
+
+/* ====== 聊天气泡样式切换（四种） ====== */
+/* ① 半透明磨砂气泡 */
+[data-bubble="frosted"] .msg-bubble{
+    backdrop-filter: blur(30px) saturate(160%);
+    -webkit-backdrop-filter: blur(30px) saturate(160%);
+    border: 1px solid rgba(255,255,255,0.38);
+    box-shadow: 0 6px 22px rgba(0,0,0,0.1);
+}
+[data-bubble="frosted"] .msg-row.user .msg-bubble{
+    background: rgba(0, 122, 255, 0.42);
+    box-shadow: 0 6px 22px rgba(0,122,255,0.28);
+    border-color: rgba(255,255,255,0.45);
+}
+[data-bubble="frosted"] .msg-row.oracle .msg-bubble{
+    background: rgba(255,255,255,0.38);
+    border-color: rgba(255,255,255,0.55);
+}
+[data-theme="dark"][data-bubble="frosted"] .msg-row.oracle .msg-bubble{
+    background: rgba(72, 64, 96, 0.42);
+    border-color: rgba(255,255,255,0.16);
+    box-shadow: 0 6px 22px rgba(0,0,0,0.28);
+}
+
+/* ② 圆角气泡 */
+[data-bubble="round"] .msg-bubble{
+    border-radius: 22px;
+    box-shadow: 0 4px 14px rgba(0,0,0,0.1);
+}
+[data-bubble="round"] .msg-row.user .msg-bubble{ border-bottom-right-radius: 22px; }
+[data-bubble="round"] .msg-row.oracle .msg-bubble{ border-bottom-left-radius: 22px; }
+
+/* ③ 方角气泡 */
+[data-bubble="square"] .msg-bubble{
+    border-radius: 6px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.12);
+}
+[data-bubble="square"] .msg-row.user .msg-bubble{ border-bottom-right-radius: 6px; }
+[data-bubble="square"] .msg-row.oracle .msg-bubble{ border-bottom-left-radius: 6px; }
+
+/* 设置页气泡预览区 */
+#bubblePreview{margin-bottom:15px;padding:12px;border-radius:12px;background:var(--bg);border:1px dashed var(--border);display:flex;flex-direction:column;gap:10px;}
+#bubblePreview .msg-row{max-width:85%;}
+#bubblePreview .msg-row.user{align-self:flex-end;}
+#bubblePreview .msg-row.oracle{align-self:flex-start;}
 
 /* 输入区也稍微通透一点 */
 .input-area{background:var(--card-bg);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);border-top:1px solid rgba(255,255,255,0.1);display:flex;flex-direction:column;position:relative;z-index:100;}
@@ -621,6 +666,24 @@ button.send{padding:0 16px;border-radius:20px;border:none;background:#007aff;col
 <div class="form-group"><label>通话背景图</label><input type="file" id="callBgUpload" accept="image/*"></div>
 <div class="form-group"><label>界面主题</label><select id="settingTheme"><option value="dark">夜间暗黑</option><option value="light">白天纯白</option><option value="cute">可爱粉色</option><option value="blue">静谧淡蓝</option><option value="purple">梦幻淡紫</option><option value="green">生机淡绿</option></select></div>
 
+<div class="section-title">聊天气泡样式</div>
+<div class="form-group"><label>选择气泡风格</label>
+    <select id="settingBubbleStyle">
+        <option value="imessage">iMessage 磨砂气泡</option>
+        <option value="frosted">半透明磨砂气泡</option>
+        <option value="round">圆角气泡</option>
+        <option value="square">方角气泡</option>
+    </select>
+</div>
+<div id="bubblePreview">
+    <div class="msg-row oracle">
+        <div class="msg-content-wrapper"><div class="msg-bubble">这是灵体的气泡，正在凝视你。</div></div>
+    </div>
+    <div class="msg-row user">
+        <div class="msg-content-wrapper"><div class="msg-bubble">这是我的气泡，看看吧。</div></div>
+    </div>
+</div>
+
 <div class="section-title">应用图标自定义</div>
 <div id="iconSettingsList" style="max-height: 250px; overflow-y: auto; margin-bottom: 20px;"></div>
 
@@ -672,7 +735,7 @@ button.send{padding:0 16px;border-radius:20px;border:none;background:#007aff;col
 
 <script>
 (function() {
-const DEFAULT_SETTINGS={theme:"cute",ignoreRate:20,recallRate:10,proactiveRate:20,minReplyTime:1,maxReplyTime:3,mailMaxLen:50,noteMaxLen:50,splashBg:"",homeBg:"",chatBg:"",callBg:"",icons:{},widgets:[{img:"",textLg:"Hello",textSm:"今天也要开心哦"}],splashTexts:["正在连接梦境...","读取潜意识碎片...","命运正在编织...","准备好了吗？"],userProfile:{name:"梦主",avatar:"",cover:"",sign:"这个人很懒，什么都没有留下。"},page1:null};
+const DEFAULT_SETTINGS={theme:"cute",ignoreRate:20,recallRate:10,proactiveRate:20,minReplyTime:1,maxReplyTime:3,mailMaxLen:50,noteMaxLen:50,splashBg:"",homeBg:"",chatBg:"",callBg:"",icons:{},widgets:[{img:"",textLg:"Hello",textSm:"今天也要开心哦"}],splashTexts:["正在连接梦境...","读取潜意识碎片...","命运正在编织...","准备好了吗？"],userProfile:{name:"梦主",avatar:"",cover:"",sign:"这个人很懒，什么都没有留下。"},page1:null,bubbleStyle:"imessage"};
 
 const DEFAULT_PAGE1={
     music:{title:"Breath",sub:"James Blake",curTime:"01:24",totalTime:"03:56",progress:35,img:""},
@@ -752,6 +815,7 @@ function safeParse(key,defaultVal){try{const data=localStorage.getItem(key);if(!
 function initData(){
     settings=safeParse("os_settings",DEFAULT_SETTINGS);
     if(!settings.userProfile)settings.userProfile={name:"梦主",avatar:"",cover:"",sign:"这个人很懒，什么都没有留下。"};
+    if(!settings.bubbleStyle)settings.bubbleStyle="imessage";
     pools=safeParse("os_pools",DEFAULT_POOLS);
     contacts=safeParse("os_contacts",JSON.parse(JSON.stringify(DEFAULT_CONTACTS)));
     chatRecords=safeParse("os_chat_records",JSON.parse(JSON.stringify(DEFAULT_CHAT_RECORDS)));
@@ -868,7 +932,18 @@ function generatePuzzle(poolName,maxLen){
     return result;
 }
 
-function applyTheme(){document.documentElement.setAttribute('data-theme',settings.theme||'cute');const themeSel=document.getElementById("settingTheme");if(themeSel)themeSel.value=settings.theme||'cute';const homeBg=document.getElementById("homeBg");if(homeBg)homeBg.style.backgroundImage=settings.homeBg?`url(${settings.homeBg})`:'linear-gradient(135deg, #2b1055, #7597de)';const chatApp=document.getElementById("app-chat");if(chatApp)chatApp.style.backgroundImage=settings.chatBg?`url(${settings.chatBg})`:'none';}
+function applyTheme(){
+    document.documentElement.setAttribute('data-theme',settings.theme||'cute');
+    document.documentElement.setAttribute('data-bubble',settings.bubbleStyle||'imessage');
+    const themeSel=document.getElementById("settingTheme");
+    if(themeSel)themeSel.value=settings.theme||'cute';
+    const bubbleSel=document.getElementById("settingBubbleStyle");
+    if(bubbleSel)bubbleSel.value=settings.bubbleStyle||'imessage';
+    const homeBg=document.getElementById("homeBg");
+    if(homeBg)homeBg.style.backgroundImage=settings.homeBg?`url(${settings.homeBg})`:'linear-gradient(135deg, #2b1055, #7597de)';
+    const chatApp=document.getElementById("app-chat");
+    if(chatApp)chatApp.style.backgroundImage=settings.chatBg?`url(${settings.chatBg})`:'none';
+}
 
 /* ====== 第一页组件渲染 ====== */
 function renderPage1(){
@@ -1777,9 +1852,11 @@ window.addEventListener('DOMContentLoaded',()=>{
     safeSet("settingNoteLen","value",settings.noteMaxLen);safeSet("noteLenLabel","textContent",settings.noteMaxLen);
     safeSet("settingMinDelay","value",settings.minReplyTime);safeSet("minDelayLabel","textContent",settings.minReplyTime);
     safeSet("settingMaxDelay","value",settings.maxReplyTime);safeSet("maxDelayLabel","textContent",settings.maxReplyTime);
+    safeSet("settingBubbleStyle","value",settings.bubbleStyle||"imessage");
     
     const bindEvent=(id,event,callback)=>{const el=document.getElementById(id);if(el)el.addEventListener(event,callback);};
     bindEvent("settingTheme","change",(e)=>{settings.theme=e.target.value;saveSettings();applyTheme();});
+    bindEvent("settingBubbleStyle","change",(e)=>{settings.bubbleStyle=e.target.value;saveSettings();applyTheme();showToast("气泡样式已切换");});
     bindEvent("settingIgnore","input",(e)=>{settings.ignoreRate=e.target.value;safeSet("ignoreLabel","textContent",e.target.value);saveSettings();});
     bindEvent("settingRecall","input",(e)=>{settings.recallRate=e.target.value;safeSet("recallLabel","textContent",e.target.value);saveSettings();});
     bindEvent("settingProactive","input",(e)=>{settings.proactiveRate=e.target.value;safeSet("proactiveLabel","textContent",e.target.value);saveSettings();});
