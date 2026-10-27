@@ -58,13 +58,23 @@ body{display:flex;flex-direction:column;height:100vh;color:var(--text);font-fami
 .neo-icon-box { width: 40px; height: 40px; border-radius: 12px; display: flex; justify-content: center; align-items: center; background: rgba(255,255,255,0.2); box-shadow: var(--inner-shadow); }
 [data-theme="dark"] .neo-icon-box { background: rgba(255,255,255,0.05); }
 
+/* ====== 第一页组件编辑 ====== */
+.p1-edit-toggle{width:32px;height:32px;border-radius:50%;background:rgba(255,255,255,0.18);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);border:1px solid rgba(255,255,255,0.35);display:flex;justify-content:center;align-items:center;font-size:15px;color:#fff;cursor:pointer;transition:transform .15s;}
+.p1-edit-toggle:active{transform:scale(0.9);}
+[data-theme="light"] .p1-edit-toggle,[data-theme="cute"] .p1-edit-toggle,[data-theme="blue"] .p1-edit-toggle,[data-theme="purple"] .p1-edit-toggle,[data-theme="green"] .p1-edit-toggle{color:var(--text);background:rgba(255,255,255,0.75);border-color:rgba(0,0,0,0.08);}
+.p1-edit-badge{display:none;position:absolute;top:8px;right:8px;width:26px;height:26px;border-radius:50%;background:var(--accent);color:#fff;font-size:13px;line-height:1;justify-content:center;align-items:center;cursor:pointer;z-index:25;box-shadow:0 2px 8px rgba(0,0,0,0.3);}
+body.p1-editing .p1-edit-badge{display:flex;}
+body.p1-editing .p1-card{outline:2px dashed var(--accent);outline-offset:2px;}
+#p1EditModal{position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,.5);z-index:10001;display:none;justify-content:center;align-items:center;}
+#p1EditFields input,#p1EditFields select{width:100%;padding:10px;border-radius:8px;border:1px solid var(--border);background:var(--bg);color:var(--text);font-size:15px;margin-bottom:6px;outline:none;font-family:inherit;}
+
 /* ====== 页1：组件区 ====== */
 /* 音乐播放器组件 */
-.music-widget-card .album-art { width: 60px; height: 60px; border-radius: 16px; background: linear-gradient(135deg, #a8edea 0%, #fed6e3 100%); box-shadow: var(--inner-shadow); margin-right: 15px; }
+.music-widget-card .album-art { width: 60px; height: 60px; border-radius: 16px; background: linear-gradient(135deg, #a8edea 0%, #fed6e3 100%); background-size: cover; background-position: center; box-shadow: var(--inner-shadow); margin-right: 15px; flex-shrink: 0; }
 .music-progress-bar-mini { height: 4px; background: rgba(0,0,0,0.1); border-radius: 2px; margin-top: 15px; position: relative; }
 [data-theme="dark"] .music-progress-bar-mini { background: rgba(255,255,255,0.1); }
-.music-progress-fill { width: 35%; height: 100%; background: var(--accent); border-radius: 2px; }
-.music-controls-mini { display: flex; justify-content: space-between; margin-top: 12px; color: var(--muted); }
+.music-progress-fill { width: 35%; height: 100%; background: var(--accent); border-radius: 2px; transition: width .3s; }
+.music-controls-mini { display: flex; justify-content: space-between; align-items: center; margin-top: 12px; color: var(--muted); }
 .music-controls-mini svg { width: 20px; height: 20px; cursor: pointer; }
 
 /* 登机牌组件 */
@@ -100,7 +110,7 @@ body{display:flex;flex-direction:column;height:100vh;color:var(--text);font-fami
 
 /* 自定义旧版组件重制 */
 #widgetArea{display:grid;grid-template-columns:repeat(2,1fr);gap:12px;margin-bottom:10px;}
-.widget-card{border-radius:20px;padding:16px;color:var(--text);position:relative;background:var(--card-bg);backdrop-filter:blur(20px);box-shadow:var(--card-shadow);border:1px solid rgba(255,255,255,0.1);display:flex;flex-direction:column;justify-content:center;overflow:hidden;min-height:90px;grid-column:span 2;}
+.widget-card{border-radius:20px;padding:16px;color:var(--text);position:relative;background:var(--card-bg);backdrop-filter:blur(20px);box-shadow:var(--card-shadow);border:1px solid rgba(255,255,255,0.1);display:flex;flex-direction:column;justify-content:center;overflow:hidden;min-height:90px;grid-column:span 2;background-size:cover;background-position:center;}
 [data-theme="light"] .widget-card, [data-theme="cute"] .widget-card, [data-theme="blue"] .widget-card, [data-theme="purple"] .widget-card, [data-theme="green"] .widget-card { border: 1px solid rgba(255,255,255,0.6); }
 .widget-content{position:relative;z-index:1;}.widget-text-lg{font-size:20px;font-weight:600;}.widget-text-sm{font-size:13px;opacity:.8;margin-top:4px;}
 .widget-del-btn{position:absolute;top:10px;right:10px;width:24px;height:24px;background:rgba(224,83,83,.9);color:#fff;border-radius:50%;display:flex;justify-content:center;align-items:center;font-size:12px;cursor:pointer;z-index:10;box-shadow:0 2px 5px rgba(0,0,0,.2);}
@@ -394,19 +404,25 @@ button.send{padding:0 16px;border-radius:20px;border:none;background:#007aff;col
     
     <!-- 第一页：展示型高级小组件 -->
     <div class="home-page" id="page1">
+
+        <div style="display:flex; justify-content:flex-end; margin-bottom:-8px;">
+            <div class="p1-edit-toggle" onclick="togglePage1Edit()" title="编辑第一页组件">✎</div>
+        </div>
+
         <!-- 音乐组件 -->
-        <div class="neo-card music-widget-card">
+        <div class="neo-card music-widget-card p1-card">
+            <div class="p1-edit-badge" onclick="openP1Editor('music')">✎</div>
             <div class="neo-flex">
-                <div class="album-art"></div>
-                <div style="flex:1;">
-                    <div style="font-size:16px; font-weight:600;">Breath</div>
-                    <div style="font-size:12px; color:var(--muted); margin-top:2px;">James Blake</div>
+                <div class="album-art" id="p1MusicArt"></div>
+                <div style="flex:1; min-width:0;">
+                    <div style="font-size:16px; font-weight:600; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;" id="p1MusicTitle">Breath</div>
+                    <div style="font-size:12px; color:var(--muted); margin-top:2px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;" id="p1MusicSub">James Blake</div>
                 </div>
                 <div class="neo-icon-box" style="width:32px;height:32px;"><svg class="svg-icon" style="width:16px;height:16px;" viewBox="0 0 24 24"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg></div>
             </div>
-            <div class="music-progress-bar-mini"><div class="music-progress-fill"></div></div>
+            <div class="music-progress-bar-mini"><div class="music-progress-fill" id="p1MusicProgress"></div></div>
             <div style="display:flex; justify-content:space-between; font-size:10px; color:var(--muted); margin-top:5px;">
-                <span>01:24</span><span>03:56</span>
+                <span id="p1MusicCur">01:24</span><span id="p1MusicTotal">03:56</span>
             </div>
             <div class="music-controls-mini">
                 <svg viewBox="0 0 24 24"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z" fill="var(--muted)"/></svg>
@@ -418,49 +434,49 @@ button.send{padding:0 16px;border-radius:20px;border:none;background:#007aff;col
         </div>
 
         <!-- 登机牌组件 -->
-        <div class="neo-card ticket-card">
+        <div class="neo-card ticket-card p1-card">
+            <div class="p1-edit-badge" onclick="openP1Editor('ticket')">✎</div>
             <div class="barcode"></div>
             <div class="neo-flex" style="font-size:12px; color:var(--muted); margin-bottom:5px;">
                 <svg style="width:16px;height:16px;fill:currentColor;margin-right:5px;" viewBox="0 0 24 24"><path d="M21 16v-2l-8-5V3.5c0-.83-.67-1.5-1.5-1.5S10 2.67 10 3.5V9l-8 5v2l8-2.5V19l-2 1.5V22l3.5-1 3.5 1v-1.5L13 19v-5.5l8 2.5z"/></svg> BOARDING PASS
             </div>
             <div class="ticket-route">
-                <span>JFK</span>
+                <span id="p1TicketFrom">JFK</span>
                 <svg viewBox="0 0 24 24"><path d="M21 16v-2l-8-5V3.5c0-.83-.67-1.5-1.5-1.5S10 2.67 10 3.5V9l-8 5v2l8-2.5V19l-2 1.5V22l3.5-1 3.5 1v-1.5L13 19v-5.5l8 2.5z"/></svg>
-                <span>LHR</span>
+                <span id="p1TicketTo">LHR</span>
             </div>
             <div class="ticket-details">
-                <div>DATE<span>12 JUN</span></div>
-                <div>SEAT<span>24A</span></div>
-                <div>GATE<span>B6</span></div>
-                <div>FLIGHT<span>BA178</span></div>
+                <div>DATE<span id="p1TicketDate">12 JUN</span></div>
+                <div>SEAT<span id="p1TicketSeat">24A</span></div>
+                <div>GATE<span id="p1TicketGate">B6</span></div>
+                <div>FLIGHT<span id="p1TicketFlight">BA178</span></div>
             </div>
         </div>
 
         <!-- VISA 卡 -->
-        <div class="neo-card visa-card" style="flex-direction:row; justify-content:space-between; align-items:flex-end;">
+        <div class="neo-card visa-card p1-card" style="flex-direction:row; justify-content:space-between; align-items:flex-end;">
+            <div class="p1-edit-badge" onclick="openP1Editor('visa')">✎</div>
             <div>
                 <div class="chip"></div>
-                <div class="visa-number">**** **** **** 4587</div>
+                <div class="visa-number" id="p1VisaNumber">**** **** **** 4587</div>
                 <div class="visa-details">
-                    <div>GOOD THRU<br>08/28</div>
+                    <div>GOOD THRU<br><span id="p1VisaThru">08/28</span></div>
                 </div>
             </div>
-            <div style="font-size:20px; font-weight:bold; font-style:italic;">VISA</div>
+            <div style="font-size:20px; font-weight:bold; font-style:italic;" id="p1VisaBrand">VISA</div>
         </div>
 
         <!-- 搜索栏 -->
-        <div class="search-bar">
+        <div class="search-bar p1-card" style="position:relative;">
+            <div class="p1-edit-badge" onclick="openP1Editor('search')">✎</div>
             <svg style="width:20px;height:20px;fill:var(--muted);" viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/></svg>
-            <span style="flex:1; font-size:14px;">Search...</span>
+            <span style="flex:1; font-size:14px;" id="p1SearchText">Search...</span>
             <svg style="width:20px;height:20px;fill:var(--muted);" viewBox="0 0 24 24"><path d="M12 14c1.66 0 2.99-1.34 2.99-3L15 5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3zm5.3-3c0 3-2.54 5.1-5.3 5.1S6.7 14 6.7 11H5c0 3.41 2.72 6.23 6 6.72V21h2v-3.28c3.28-.48 6-3.3 6-6.72h-1.7z"/></svg>
         </div>
         
-        <!-- 圆角图标按钮组 -->
-        <div style="display:flex; gap:12px; margin-top:5px;">
-            <div class="neo-card" style="flex:1; padding:15px; align-items:center; justify-content:center;"><svg style="width:24px;height:24px;fill:var(--text);" viewBox="0 0 24 24"><path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/></svg></div>
-            <div class="neo-card" style="flex:1; padding:15px; align-items:center; justify-content:center;"><svg style="width:24px;height:24px;fill:var(--text);" viewBox="0 0 24 24"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/></svg></div>
-            <div class="neo-card" style="flex:1; padding:15px; align-items:center; justify-content:center;"><svg style="width:24px;height:24px;fill:var(--text);" viewBox="0 0 24 24"><path d="M12 22c1.1 0 2-.9 2-2h-4c0 1.1.9 2 2 2zm6-6v-5c0-3.07-1.63-5.64-4.5-6.32V4c0-.83-.67-1.5-1.5-1.5s-1.5.67-1.5 1.5v.68C7.64 5.36 6 7.92 6 11v5l-2 2v1h16v-1l-2-2zm-2 1H8v-6c0-2.48 1.51-4.5 4-4.5s4 2.02 4 4.5v6z"/></svg></div>
-            <div class="neo-card" style="flex:1; padding:15px; align-items:center; justify-content:center;"><svg style="width:24px;height:24px;fill:var(--text);" viewBox="0 0 24 24"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg></div>
+        <!-- 快捷图标按钮组（可编辑） -->
+        <div class="p1-card" id="p1QuickRow" style="display:flex; gap:12px; margin-top:5px; position:relative;">
+            <div class="p1-edit-badge" onclick="openP1Editor('quick')">✎</div>
         </div>
     </div>
 
@@ -619,8 +635,8 @@ button.send{padding:0 16px;border-radius:20px;border:none;background:#007aff;col
 <div class="form-group"><label>已读不回 (<span id="ignoreLabel">20</span>%)</label><input type="range" id="settingIgnore" min="0" max="100" step="10"></div>
 <div class="form-group"><label>撤回消息 (<span id="recallLabel">10</span>%)</label><input type="range" id="settingRecall" min="0" max="100" step="5"></div>
 <div class="form-group"><label>主动发消息概率 (<span id="proactiveLabel">20</span>%)</label><input type="range" id="settingProactive" min="0" max="100" step="5"></div>
-<div class="form-group" style="margin-top:15px; border-top:1px dashed var(--border); padding-top:15px;"><label>最短回复延迟 (<span id="minDelayLabel">1</span> 秒)</label><input type="range" id="settingMinDelay" min="0.5" max="10" step="0.5"></div>
-<div class="form-group"><label>最长回复延迟 (<span id="maxDelayLabel">3</span> 秒)</label><input type="range" id="settingMaxDelay" min="1" max="30" step="0.5"></div>
+<div class="form-group" style="margin-top:15px; border-top:1px dashed var(--border); padding-top:15px;"><label>最短回复延迟 (<span id="minDelayLabel">1</span> 秒)</label><input type="range" id="settingMinDelay" min="0.5" max="300" step="0.5"></div>
+<div class="form-group"><label>最长回复延迟 (<span id="maxDelayLabel">3</span> 秒)</label><input type="range" id="settingMaxDelay" min="1" max="1800" step="0.5"></div>
 <div class="section-title">字数上限控制</div>
 <div class="form-group"><label>信箱字数上限 (<span id="mailLenLabel">50</span>字)</label><input type="range" id="settingMailLen" min="10" max="200" step="10"></div>
 <div class="form-group"><label>便签字数上限 (<span id="noteLenLabel">50</span>字)</label><input type="range" id="settingNoteLen" min="10" max="200" step="10"></div>
@@ -646,13 +662,57 @@ button.send{padding:0 16px;border-radius:20px;border:none;background:#007aff;col
 <div id="editContactModal"><div class="write-box"><h3 style="margin-top:0; color:var(--text)">修改对方信息</h3><input type="text" id="editContactName" placeholder="输入对方称呼"><label style="font-size:12px; color:var(--muted); margin-bottom:5px; display:block;">更换头像</label><input type="file" id="editContactAvatar" accept="image/*" style="margin-bottom:15px; font-size:14px; color:var(--text);"><div class="btns"><button class="cancel" onclick="document.getElementById('editContactModal').style.display='none'">取消</button><button class="confirm" onclick="saveContactInfo()">保存</button></div></div></div>
 <div id="decisionModal"><div class="write-box"><h3 style="margin-top:0; color:var(--text)">让对方做决定</h3><input type="text" id="decisionQuestion" placeholder="题目（如：今晚吃什么？）"><label style="font-size:12px; color:var(--muted);">选项 A</label><input type="text" id="decisionA" placeholder="例如：火锅"><label style="font-size:12px; color:var(--muted);">选项 B</label><input type="text" id="decisionB" placeholder="例如：烤肉"><label style="font-size:12px; color:var(--muted);">选项 C (可选)</label><input type="text" id="decisionC" placeholder="例如：随便吃点"><select id="decisionType"><option value="single">单选 (只抽1个)</option><option value="multiple">多选 (随机抽几个)</option></select><div class="btns"><button class="cancel" onclick="document.getElementById('decisionModal').style.display='none'">取消</button><button class="confirm" onclick="submitDecision()">发送</button></div></div></div>
 
+<div id="p1EditModal"><div class="write-box"><h3 id="p1EditTitle" style="margin-top:0; color:var(--text)">编辑组件</h3><div id="p1EditFields"></div><div class="btns"><button class="cancel" onclick="document.getElementById('p1EditModal').style.display='none'">取消</button><button class="confirm" onclick="saveP1Editor()">保存</button></div></div></div>
+
 <div id="profileModal" onclick="if(event.target===this) this.style.display='none'"><div class="profile-card"><div class="profile-cover" id="profileCover"></div><div class="profile-close" onclick="document.getElementById('profileModal').style.display='none'">✕</div><div class="profile-avatar" id="profileAvatar"></div><div class="profile-info"><div class="profile-name" id="profileName">名字</div><div class="profile-sign" id="profileSign">这个人很懒，什么都没有留下。</div><div class="profile-stats"><div class="stat-item"><div class="stat-num" id="statMsgCount">0</div><div class="stat-label">消息数</div></div><div class="stat-item"><div class="stat-num" id="statMomentCount">0</div><div class="stat-label">动态数</div></div></div><button class="profile-btn" onclick="document.getElementById('profileModal').style.display='none'; closeApp('app-contacts'); switchChat(currentChatId);">发消息</button></div></div></div>
 <div id="actionMenu"><button class="action-btn" id="actQuote">引用</button><button class="action-btn" id="actRecall">撤回</button></div>
 <div id="toast"></div>
 
 <script>
 (function() {
-const DEFAULT_SETTINGS={theme:"cute",ignoreRate:20,recallRate:10,proactiveRate:20,minReplyTime:1,maxReplyTime:3,mailMaxLen:50,noteMaxLen:50,splashBg:"",homeBg:"",chatBg:"",callBg:"",icons:{},widgets:[{img:"",textLg:"Hello",textSm:"今天也要开心哦"}],splashTexts:["正在连接梦境...","读取潜意识碎片...","命运正在编织...","准备好了吗？"],userProfile:{name:"梦主",avatar:"",cover:"",sign:"这个人很懒，什么都没有留下。"}};
+const DEFAULT_SETTINGS={theme:"cute",ignoreRate:20,recallRate:10,proactiveRate:20,minReplyTime:1,maxReplyTime:3,mailMaxLen:50,noteMaxLen:50,splashBg:"",homeBg:"",chatBg:"",callBg:"",icons:{},widgets:[{img:"",textLg:"Hello",textSm:"今天也要开心哦"}],splashTexts:["正在连接梦境...","读取潜意识碎片...","命运正在编织...","准备好了吗？"],userProfile:{name:"梦主",avatar:"",cover:"",sign:"这个人很懒，什么都没有留下。"},page1:null};
+
+// 第一页组件默认数据
+const DEFAULT_PAGE1={
+    music:{title:"Breath",sub:"James Blake",curTime:"01:24",totalTime:"03:56",progress:35,img:""},
+    ticket:{from:"JFK",to:"LHR",date:"12 JUN",seat:"24A",gate:"B6",flight:"BA178"},
+    visa:{number:"**** **** **** 4587",thru:"08/28",brand:"VISA"},
+    search:{text:"Search..."},
+    quick:[
+        {icon:"🏠",app:"app-moments"},
+        {icon:"📍",app:"app-archive"},
+        {icon:"🔔",app:"app-mail"},
+        {icon:"👤",app:"app-settings"}
+    ]
+};
+
+const P1_FIELDS={
+    music:[
+        {key:'title',label:'歌曲名称'},
+        {key:'sub',label:'歌手名'},
+        {key:'curTime',label:'当前时间（如 01:24）'},
+        {key:'totalTime',label:'总时长（如 03:56）'},
+        {key:'progress',label:'进度（0-100）',type:'number'},
+        {key:'img',label:'封面图片',type:'image'}
+    ],
+    ticket:[
+        {key:'from',label:'出发地'},
+        {key:'to',label:'目的地'},
+        {key:'date',label:'日期'},
+        {key:'seat',label:'座位'},
+        {key:'gate',label:'登机口'},
+        {key:'flight',label:'航班号'}
+    ],
+    visa:[
+        {key:'number',label:'卡号'},
+        {key:'thru',label:'有效期（GOOD THRU）'},
+        {key:'brand',label:'品牌文字（如 VISA）'}
+    ],
+    search:[
+        {key:'text',label:'搜索框占位文字'}
+    ]
+};
+
 const DEFAULT_POOLS={
     chat:{"默认":["顺其自然","我在听","确实如此","你觉得呢？"]},
     tarot:{"默认":[]},
@@ -681,10 +741,13 @@ const DEFAULT_EMOJIS=["😀","😅","😂","😍","😎","😭","😡","👍","�
 const PROACTIVE_MSGS=["在干嘛？","今天过得怎么样？","突然想见你。","怎么不理我？"];
 let currentChatId="c1",currentQuote=null,isWaitingForUser=false,selectedMsgId=null,statusInterval,playlist=[],currentSongIndex=-1,isPlaying=false,currentAudioUrl=null,settings,pools,contacts,chatRecords,customEmojis,userMails,noteHistory,moments,profileData;
 let callTimer=null,callTimeout=null,callSeconds=0,inCall=false,pendingMomentImgs=[];
+let p1EditingKey=null;
+
 function escapeHtml(s){return s===null||s===undefined?'':String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
 function safeText(text){if(typeof text!=='string')return '';const trimmed=text.trim();if(/^<img\s+src="data:image\/[^"]+"\s+style="[^"]*"\s*>$/.test(trimmed)){return trimmed;}return escapeHtml(text);}
 function genId(){return Date.now().toString()+Math.random().toString(36).slice(2,6);}
 function safeParse(key,defaultVal){try{const data=localStorage.getItem(key);if(!data)return defaultVal;const parsed=JSON.parse(data);if(typeof parsed==='object'&&!Array.isArray(parsed)&&defaultVal&&typeof defaultVal==='object'&&!Array.isArray(defaultVal)){return{...defaultVal,...parsed};}return parsed;}catch(e){return defaultVal;}}
+
 function initData(){
     settings=safeParse("os_settings",DEFAULT_SETTINGS);
     if(!settings.userProfile)settings.userProfile={name:"梦主",avatar:"",cover:"",sign:"这个人很懒，什么都没有留下。"};
@@ -712,6 +775,30 @@ function initData(){
         if(!pools[p]) pools[p] = JSON.parse(JSON.stringify(DEFAULT_POOLS[p]));
         if(Array.isArray(pools[p])){
             pools[p] = {"默认": pools[p]};
+        }
+    }
+
+    // 初始化第一页组件数据（兼容旧数据）
+    if(!settings.page1 || typeof settings.page1 !== 'object'){
+        settings.page1 = JSON.parse(JSON.stringify(DEFAULT_PAGE1));
+    } else {
+        ['music','ticket','visa','search'].forEach(function(k){
+            if(!settings.page1[k] || typeof settings.page1[k] !== 'object'){
+                settings.page1[k] = JSON.parse(JSON.stringify(DEFAULT_PAGE1[k]));
+            } else {
+                Object.keys(DEFAULT_PAGE1[k]).forEach(function(kk){
+                    if(settings.page1[k][kk] === undefined) settings.page1[k][kk] = DEFAULT_PAGE1[k][kk];
+                });
+            }
+        });
+        if(!Array.isArray(settings.page1.quick) || settings.page1.quick.length !== 4){
+            settings.page1.quick = JSON.parse(JSON.stringify(DEFAULT_PAGE1.quick));
+        } else {
+            settings.page1.quick.forEach(function(q, i){
+                if(!q || typeof q !== 'object') settings.page1.quick[i] = JSON.parse(JSON.stringify(DEFAULT_PAGE1.quick[i]));
+                if(!q.icon) q.icon = DEFAULT_PAGE1.quick[i].icon;
+                if(!q.app) q.app = DEFAULT_PAGE1.quick[i].app;
+            });
         }
     }
 }
@@ -783,6 +870,187 @@ function generatePuzzle(poolName,maxLen){
 
 function applyTheme(){document.documentElement.setAttribute('data-theme',settings.theme||'cute');const themeSel=document.getElementById("settingTheme");if(themeSel)themeSel.value=settings.theme||'cute';const homeBg=document.getElementById("homeBg");if(homeBg)homeBg.style.backgroundImage=settings.homeBg?`url(${settings.homeBg})`:'linear-gradient(135deg, #2b1055, #7597de)';const chatApp=document.getElementById("app-chat");if(chatApp)chatApp.style.backgroundImage=settings.chatBg?`url(${settings.chatBg})`:'none';}
 
+/* ====== 第一页组件渲染 ====== */
+function renderPage1(){
+    if(!settings.page1) return;
+    const p1 = settings.page1;
+    const setText = function(id, v){ const el = document.getElementById(id); if(el) el.textContent = (v===undefined||v===null) ? '' : v; };
+
+    // 音乐
+    setText('p1MusicTitle', p1.music.title);
+    setText('p1MusicSub', p1.music.sub);
+    setText('p1MusicCur', p1.music.curTime);
+    setText('p1MusicTotal', p1.music.totalTime);
+    const art = document.getElementById('p1MusicArt');
+    if(art){
+        if(p1.music.img){
+            art.style.backgroundImage = `url(${p1.music.img})`;
+            art.style.backgroundSize = 'cover';
+            art.style.backgroundPosition = 'center';
+        } else {
+            art.style.backgroundImage = 'linear-gradient(135deg, #a8edea 0%, #fed6e3 100%)';
+        }
+    }
+    const prog = document.getElementById('p1MusicProgress');
+    if(prog){
+        let pv = Number(p1.music.progress);
+        if(isNaN(pv)) pv = 0;
+        pv = Math.max(0, Math.min(100, pv));
+        prog.style.width = pv + '%';
+    }
+
+    // 登机牌
+    setText('p1TicketFrom', p1.ticket.from);
+    setText('p1TicketTo', p1.ticket.to);
+    setText('p1TicketDate', p1.ticket.date);
+    setText('p1TicketSeat', p1.ticket.seat);
+    setText('p1TicketGate', p1.ticket.gate);
+    setText('p1TicketFlight', p1.ticket.flight);
+
+    // VISA
+    setText('p1VisaNumber', p1.visa.number);
+    setText('p1VisaThru', p1.visa.thru);
+    setText('p1VisaBrand', p1.visa.brand);
+
+    // 搜索栏
+    setText('p1SearchText', p1.search.text);
+
+    // 快捷图标
+    const row = document.getElementById('p1QuickRow');
+    if(row){
+        let html = '<div class="p1-edit-badge" onclick="openP1Editor(\'quick\')">✎</div>';
+        p1.quick.forEach(function(q){
+            html += `<div class="neo-card" style="flex:1;padding:15px;align-items:center;justify-content:center;cursor:pointer;font-size:22px;line-height:1;" onclick="openApp('${q.app}')">${escapeHtml(q.icon)}</div>`;
+        });
+        row.innerHTML = html;
+    }
+}
+
+window.togglePage1Edit = function(){
+    document.body.classList.toggle('p1-editing');
+    if(document.body.classList.contains('p1-editing')){
+        showToast('编辑模式已开启，点击卡片右上角 ✎ 修改');
+    } else {
+        showToast('已退出编辑模式');
+    }
+};
+
+window.openP1Editor = function(key){
+    p1EditingKey = key;
+    const box = document.getElementById('p1EditFields');
+    const titleEl = document.getElementById('p1EditTitle');
+    if(!box || !titleEl) return;
+    const data = settings.page1[key];
+    if(!data) return;
+    box.innerHTML = '';
+
+    if(key === 'quick'){
+        titleEl.textContent = '编辑快捷图标';
+        data.forEach(function(item, i){
+            const wrap = document.createElement('div');
+            wrap.style.cssText = 'border:1px solid var(--border);border-radius:8px;padding:8px;margin-bottom:8px;';
+            const t = document.createElement('div');
+            t.style.cssText = 'font-size:12px;color:var(--muted);margin-bottom:4px;';
+            t.textContent = '图标 ' + (i+1);
+            wrap.appendChild(t);
+
+            const iconInp = document.createElement('input');
+            iconInp.type = 'text';
+            iconInp.className = 'p1-quick-icon';
+            iconInp.value = item.icon || '';
+            iconInp.placeholder = '输入 Emoji，如 🌙';
+            wrap.appendChild(iconInp);
+
+            const appSel = document.createElement('select');
+            appSel.className = 'p1-quick-app';
+            APP_CONFIG.forEach(function(a){
+                const o = document.createElement('option');
+                o.value = a.id;
+                o.textContent = a.name;
+                if(a.id === item.app) o.selected = true;
+                appSel.appendChild(o);
+            });
+            wrap.appendChild(appSel);
+            box.appendChild(wrap);
+        });
+    } else {
+        const names = {music:'音乐组件', ticket:'登机牌', visa:'VISA 卡', search:'搜索栏'};
+        titleEl.textContent = '编辑' + (names[key] || '组件');
+        (P1_FIELDS[key] || []).forEach(function(f){
+            const label = document.createElement('label');
+            label.style.cssText = 'font-size:12px;color:var(--muted);display:block;margin-bottom:4px;margin-top:8px;';
+            label.textContent = f.label;
+            box.appendChild(label);
+
+            if(f.type === 'image'){
+                if(data.img){
+                    const prev = document.createElement('img');
+                    prev.src = data.img;
+                    prev.className = 'p1-img-preview';
+                    prev.style.cssText = 'width:60px;height:60px;object-fit:cover;border-radius:8px;display:block;margin-bottom:6px;';
+                    box.appendChild(prev);
+                }
+                const inp = document.createElement('input');
+                inp.type = 'file';
+                inp.accept = 'image/*';
+                inp.style.cssText = 'width:100%;font-size:13px;color:var(--text);';
+                inp.onchange = function(e){
+                    const file = e.target.files[0];
+                    if(!file) return;
+                    compressImage(file, 300, function(b64){
+                        data.img = b64;
+                        const oldPrev = box.querySelector('.p1-img-preview');
+                        if(oldPrev) oldPrev.remove();
+                        const prev = document.createElement('img');
+                        prev.src = b64;
+                        prev.className = 'p1-img-preview';
+                        prev.style.cssText = 'width:60px;height:60px;object-fit:cover;border-radius:8px;display:block;margin-bottom:6px;';
+                        box.insertBefore(prev, inp);
+                    }, 'png');
+                    e.target.value = '';
+                };
+                box.appendChild(inp);
+            } else {
+                const inp = document.createElement('input');
+                inp.type = f.type === 'number' ? 'number' : 'text';
+                inp.className = 'p1-field';
+                inp.dataset.key = f.key;
+                inp.value = (data[f.key] !== undefined && data[f.key] !== null) ? data[f.key] : '';
+                box.appendChild(inp);
+            }
+        });
+    }
+    document.getElementById('p1EditModal').style.display = 'flex';
+};
+
+window.saveP1Editor = function(){
+    const key = p1EditingKey;
+    if(!key) return;
+    const data = settings.page1[key];
+    if(!data) return;
+
+    if(key === 'quick'){
+        const iconInps = document.querySelectorAll('#p1EditFields .p1-quick-icon');
+        const appSels = document.querySelectorAll('#p1EditFields .p1-quick-app');
+        iconInps.forEach(function(inp, i){ if(data[i]) data[i].icon = inp.value.trim() || '⭐'; });
+        appSels.forEach(function(sel, i){ if(data[i]) data[i].app = sel.value; });
+    } else {
+        document.querySelectorAll('#p1EditFields .p1-field').forEach(function(inp){
+            const k = inp.dataset.key;
+            if(k === 'progress'){
+                data[k] = parseInt(inp.value, 10) || 0;
+            } else {
+                data[k] = inp.value;
+            }
+        });
+    }
+
+    saveSettings();
+    renderPage1();
+    document.getElementById('p1EditModal').style.display = 'none';
+    showToast('组件已更新');
+};
+
 function renderHome() {
   const grid = document.getElementById("appGrid");
   if(!grid) return;
@@ -805,6 +1073,7 @@ function renderHome() {
   });
   
   renderWidgets();
+  renderPage1();
 
   const avatarBox = document.getElementById("homeAvatar");
   if(avatarBox) {
@@ -1044,7 +1313,7 @@ window.openEditContactModal=function(){const c=contacts.find(x=>x.id===currentCh
 window.saveContactInfo=function(){const c=contacts.find(x=>x.id===currentChatId);if(!c)return;const newName=document.getElementById("editContactName").value.trim();if(newName)c.name=newName;const applyChanges=()=>{document.getElementById("chatTitle").textContent=c.name;saveContacts();renderMessages();document.getElementById("editContactModal").style.display='none';showToast("对方信息已更新");};const fileInput=document.getElementById("editContactAvatar");if(fileInput.files&&fileInput.files[0]){compressImage(fileInput.files[0],200,(base64)=>{c.avatar=base64;applyChanges();},'png');}else{applyChanges();}};
 function renderMessages(){const box=document.getElementById("messages");if(!box)return;box.innerHTML="";const msgs=chatRecords[currentChatId]||[];const c=contacts.find(x=>x.id===currentChatId)||{name:"未知",avatar:""};msgs.forEach(m=>{if(!m)return;const row=document.createElement("div");if(m.isRecalled){row.className="msg-recalled";row.textContent=m.role==="user"?"你撤回了一条消息":"对方撤回了一条消息";}else{row.className=`msg-row ${m.role}`;let quoteHtml=m.quote?`<div class="quote-block">${escapeHtml(m.quote)}</div>`:"";let av=m.role==="oracle"?(c.avatar?`<img src="${c.avatar}">`:`<svg class="avatar-svg" viewBox="0 0 24 24"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>`):"";let avatarHtml=m.role==="oracle"?`<div class="avatar" onclick="openProfile('${c.id}')">${av}</div>`:"";row.innerHTML=`${avatarHtml}<div class="msg-content-wrapper"><div class="msg-bubble" data-id="${m.id}">${quoteHtml}${safeText(m.text)}</div><div class="msg-meta">${escapeHtml(m.time||'')} ${m.read?'已读':''}</div></div>`;}box.appendChild(row);});scrollToBottom();}
 function scrollToBottom(){setTimeout(()=>{const box=document.getElementById("messages");if(box)box.scrollTop=box.scrollHeight;},50);}
-function getRandomDelay(){const min=(settings.minReplyTime||1)*1000,max=(settings.maxReplyTime||3)*1000;return min+Math.random()*(max-min);}
+function getRandomDelay(){const min=(Number(settings.minReplyTime)||1)*1000,max=(Number(settings.maxReplyTime)||3)*1000;return min+Math.random()*Math.max(0,max-min);}
 function triggerAIReply(chatId){if(Math.random()*100>settings.ignoreRate){setTimeout(()=>{const aiId=genId();if(chatRecords[chatId]){let replyText="";if(customEmojis.length>0&&Math.random()<0.2){const emoji=customEmojis[Math.floor(Math.random()*customEmojis.length)];replyText=`<img src="${emoji}" style="max-width:80px;border-radius:8px;">`;}else{replyText=drawFromPool("chat");}chatRecords[chatId].push({id:aiId,role:"oracle",text:replyText,time:getTodayTimeStr()});saveChatRecords();if(chatId===currentChatId&&document.getElementById("app-chat").classList.contains("open"))renderMessages();if(Math.random()*100<settings.recallRate){setTimeout(()=>{if(!chatRecords[chatId])return;const idx=chatRecords[chatId].findIndex(m=>m.id===aiId);if(idx>-1){chatRecords[chatId][idx].isRecalled=true;saveChatRecords();if(chatId===currentChatId&&document.getElementById("app-chat").classList.contains("open"))renderMessages();}},2000);}}},getRandomDelay()+500);}else{isWaitingForUser=true;}}
 window.sendMessage=function(){try{const inputEl=document.getElementById("input");if(!inputEl)return;const val=inputEl.value.trim();if(!val)return;const chatId=currentChatId||"c1";if(!chatRecords[chatId])chatRecords[chatId]=[];isWaitingForUser=false;const timeStr=getTodayTimeStr(),msgId=genId();chatRecords[chatId].push({id:msgId,role:"user",text:val,time:timeStr,quote:currentQuote,read:false});saveChatRecords();renderMessages();inputEl.value="";clearQuote();document.getElementById("emojiPanel").classList.remove("show");setTimeout(()=>{if(chatRecords[chatId]){const idx=chatRecords[chatId].findIndex(m=>m.id===msgId);if(idx>-1){chatRecords[chatId][idx].read=true;saveChatRecords();if(chatId===currentChatId&&document.getElementById("app-chat").classList.contains("open"))renderMessages();}}},getRandomDelay());triggerAIReply(chatId);}catch(err){console.error(err);showToast("发送出错："+err.message);}};
 window.submitDecision=function(){const q=document.getElementById("decisionQuestion").value.trim(),a=document.getElementById("decisionA").value.trim(),b=document.getElementById("decisionB").value.trim(),c=document.getElementById("decisionC").value.trim(),type=document.getElementById("decisionType").value;if(!q||!a||!b)return showToast("题目和选项A/B不能为空");const options=[a,b];if(c)options.push(c);let optStr="";options.forEach((opt,i)=>{optStr+=`${String.fromCharCode(65+i)}. ${opt}\n`;});const fullText=`【向TA提问】\n题目：${q}\n${optStr.trim()}`;document.getElementById("decisionModal").style.display='none';document.getElementById("decisionQuestion").value="";document.getElementById("decisionA").value="";document.getElementById("decisionB").value="";document.getElementById("decisionC").value="";const chatId=currentChatId,timeStr=getTodayTimeStr(),msgId=genId();if(!chatRecords[chatId])chatRecords[chatId]=[];chatRecords[chatId].push({id:msgId,role:"user",text:fullText,time:timeStr,quote:null,read:false});saveChatRecords();renderMessages();scrollToBottom();setTimeout(()=>{if(!chatRecords[chatId])return;const idx=chatRecords[chatId].findIndex(m=>m.id===msgId);if(idx>-1){chatRecords[chatId][idx].read=true;saveChatRecords();if(chatId===currentChatId&&document.getElementById("app-chat").classList.contains("open"))renderMessages();}let selectedOpts=[];if(type==="single"){selectedOpts.push(options[Math.floor(Math.random()*options.length)]);}else{const count=Math.floor(Math.random()*options.length)+1,shuffled=[...options].sort(()=>Math.random()-0.5);selectedOpts=shuffled.slice(0,count);}const replyText=`我选：${selectedOpts.join('，')}`;setTimeout(()=>{if(!chatRecords[chatId])return;const aiId=genId();chatRecords[chatId].push({id:aiId,role:"oracle",text:replyText,time:getTodayTimeStr()});saveChatRecords();if(chatId===currentChatId&&document.getElementById("app-chat").classList.contains("open"))renderMessages();},getRandomDelay());},getRandomDelay());};
