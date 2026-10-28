@@ -1,5 +1,25 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
+    <script>
+(function() {
+  const PASSWORD = "mengzhan1716";   // ← 只改这里，换成你的密码
+  const KEY = "os_auth_ok";
+
+  // 如果这台设备已经验证过，直接放行
+  if (localStorage.getItem(KEY) === PASSWORD) return;
+
+  const input = prompt("请输入访问密码：");
+
+  if (input === PASSWORD) {
+    localStorage.setItem(KEY, PASSWORD); // 记住这台设备
+  } else {
+    // 密码错误或取消 → 页面清空，停止加载
+    document.documentElement.innerHTML =
+      '<body style="margin:0;height:100vh;display:flex;align-items:center;justify-content:center;background:#12101a;color:#e8e3f0;font-family:system-ui,sans-serif;font-size:18px;">访问受限</body>';
+    window.stop();
+  }
+})();
+</script>
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
