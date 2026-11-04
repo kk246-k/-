@@ -436,6 +436,27 @@ button.send{padding:0 16px;border-radius:20px;border:none;background:#007aff;col
 .del-photo-btn {position: absolute;top: 4px;right: 4px;background: rgba(224,83,83,0.9);color: #fff;border-radius: 50%;width: 20px;height: 20px;display: flex;justify-content: center;align-items: center;font-size: 10px;cursor: pointer;box-shadow: 0 2px 4px rgba(0,0,0,0.2);}
 .archive-textarea {width: 100%;min-height: 150px;background: transparent;border: none;color: var(--text);font-size: 15px;line-height: 1.6;resize: vertical;outline: none;font-family: inherit;}
 .archive-textarea::placeholder {color: var(--muted);}
+
+/* ====== 倒计时日历（新增） ====== */
+#countdownModal{position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,.5);z-index:10001;display:none;justify-content:center;align-items:center;}
+.write-box input[type="date"]{width:100%;padding:10px;border-radius:8px;border:1px solid var(--border);background:var(--bg);color:var(--text);font-size:15px;margin-bottom:10px;outline:none;font-family:inherit;}
+[data-theme="dark"] input[type="date"]{color-scheme:dark;}
+.p3-page-title{font-size:17px;font-weight:600;color:#fff;text-shadow:0 1px 3px rgba(0,0,0,.5);padding-left:4px;}
+[data-theme="light"] .p3-page-title,[data-theme="cute"] .p3-page-title,[data-theme="blue"] .p3-page-title,[data-theme="purple"] .p3-page-title,[data-theme="green"] .p3-page-title{color:var(--text);text-shadow:none;}
+.countdown-card{background:var(--card-bg);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);border-radius:20px;padding:14px 16px;box-shadow:var(--card-shadow);border:1px solid rgba(255,255,255,0.15);display:flex;align-items:center;gap:14px;position:relative;cursor:pointer;transition:transform .15s ease;}
+.countdown-card:active{transform:scale(0.98);}
+[data-theme="light"] .countdown-card,[data-theme="cute"] .countdown-card,[data-theme="blue"] .countdown-card,[data-theme="purple"] .countdown-card,[data-theme="green"] .countdown-card{border:1px solid rgba(255,255,255,0.6);}
+.cd-icon{width:46px;height:46px;border-radius:14px;display:flex;justify-content:center;align-items:center;font-size:24px;line-height:1;background:rgba(255,255,255,0.18);box-shadow:var(--inner-shadow);flex-shrink:0;}
+[data-theme="dark"] .cd-icon{background:rgba(255,255,255,0.05);}
+.cd-info{flex:1;min-width:0;}
+.cd-name{font-size:15px;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.cd-date{font-size:12px;color:var(--muted);margin-top:3px;}
+.cd-days{text-align:right;flex-shrink:0;padding-right:2px;}
+.cd-days-num{font-size:26px;font-weight:700;color:var(--accent);line-height:1;font-variant-numeric:tabular-nums;}
+.cd-days-label{font-size:11px;color:var(--muted);margin-top:4px;white-space:nowrap;}
+.cd-del{width:26px;height:26px;border-radius:50%;background:var(--danger);color:#fff;font-size:12px;line-height:1;justify-content:center;align-items:center;cursor:pointer;flex-shrink:0;display:none;box-shadow:0 2px 8px rgba(0,0,0,0.3);}
+body.p3-editing .cd-del{display:flex;}
+.cd-empty{text-align:center;color:var(--muted);font-size:14px;line-height:1.9;padding:36px 18px;}
 </style>
 </head>
 <body>
@@ -541,10 +562,23 @@ button.send{padding:0 16px;border-radius:20px;border:none;background:#007aff;col
         <div class="app-grid" id="appGrid"></div>
     </div>
 
+    <!-- 第三页：倒计时日历 -->
+    <div class="home-page" id="page3">
+        <div style="display:flex; justify-content:space-between; align-items:center;">
+            <div class="p3-page-title">纪念日倒计时</div>
+            <div style="display:flex; gap:8px;">
+                <div class="p1-edit-toggle" onclick="toggleP3Edit()" title="编辑模式（显示删除按钮）">✎</div>
+                <div class="p1-edit-toggle" onclick="openCountdownEditor()" title="添加倒计时">＋</div>
+            </div>
+        </div>
+        <div id="countdownList" style="display:flex; flex-direction:column; gap:12px;"></div>
+    </div>
+
     <!-- 底部指示器 -->
     <div class="page-indicator">
         <div class="dot active" id="dot1"></div>
         <div class="dot" id="dot2"></div>
+        <div class="dot" id="dot3"></div>
     </div>
 </div>
 
@@ -790,6 +824,8 @@ button.send{padding:0 16px;border-radius:20px;border:none;background:#007aff;col
 
 <div id="p1EditModal"><div class="write-box"><h3 id="p1EditTitle" style="margin-top:0; color:var(--text)">编辑组件</h3><div id="p1EditFields"></div><div class="btns"><button class="cancel" onclick="document.getElementById('p1EditModal').style.display='none'">取消</button><button class="confirm" onclick="saveP1Editor()">保存</button></div></div></div>
 
+<div id="countdownModal"><div class="write-box"><h3 id="cdModalTitle" style="margin-top:0; color:var(--text)">添加倒计时</h3><label style="font-size:12px; color:var(--muted); margin-bottom:5px; display:block;">名称</label><input type="text" id="cdName" placeholder="如：妈妈生日 / 在一起纪念日"><label style="font-size:12px; color:var(--muted); margin-bottom:5px; display:block;">日期</label><input type="date" id="cdDate"><label style="font-size:12px; color:var(--muted); margin-bottom:5px; display:block;">类型</label><select id="cdType"><option value="yearly">每年重复（生日 / 纪念日）</option><option value="once">仅一次</option></select><label style="font-size:12px; color:var(--muted); margin-bottom:5px; display:block;">图标（可留空）</label><input type="text" id="cdEmoji" placeholder="如 🎂 🎉 💝 ❤️"><div class="btns"><button class="cancel" onclick="closeCountdownEditor()">取消</button><button class="confirm" onclick="saveCountdown()">保存</button></div></div></div>
+
 <div id="profileModal" onclick="if(event.target===this) this.style.display='none'"><div class="profile-card"><div class="profile-cover" id="profileCover"></div><div class="profile-close" onclick="document.getElementById('profileModal').style.display='none'">✕</div><div class="profile-avatar" id="profileAvatar"></div><div class="profile-info"><div class="profile-name" id="profileName">名字</div><div class="profile-sign" id="profileSign">这个人很懒，什么都没有留下。</div><div class="profile-stats"><div class="stat-item"><div class="stat-num" id="statMsgCount">0</div><div class="stat-label">消息数</div></div><div class="stat-item"><div class="stat-num" id="statMomentCount">0</div><div class="stat-label">动态数</div></div></div><button class="profile-btn" onclick="document.getElementById('profileModal').style.display='none'; closeApp('app-contacts'); switchChat(currentChatId);">发消息</button></div></div></div>
 <div id="actionMenu"><button class="action-btn" id="actQuote">引用</button><button class="action-btn" id="actRecall">撤回</button></div>
 <div id="toast"></div>
@@ -870,6 +906,8 @@ let callTimer=null,callTimeout=null,callSeconds=0,inCall=false,pendingMomentImgs
 let p1EditingKey=null;
 let isAITyping = false;
 let isIncomingCall = false;
+let countdownEvents=[];
+let editingCountdownId=null;
 
 function escapeHtml(s){return s===null||s===undefined?'':String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
 function safeText(text){if(typeof text!=='string')return '';const trimmed=text.trim();if(/^<img\s+src="data:image\/[^"]+"\s+style="[^"]*"\s*>$/.test(trimmed)){return trimmed;}return escapeHtml(text);}
@@ -890,6 +928,8 @@ function initData(){
     noteHistory=safeParse("os_note_history",[]);
     moments=safeParse("os_moments",JSON.parse(JSON.stringify(DEFAULT_MOMENTS)));
     profileData=safeParse("os_profile_data",{photos:[],text:""});
+    countdownEvents=safeParse("os_countdown_events",[]);
+    if(!Array.isArray(countdownEvents))countdownEvents=[];
     
     if(typeof chatRecords!=='object'||Array.isArray(chatRecords)||chatRecords===null)chatRecords={"c1":[]};
     for(let key in chatRecords){if(!Array.isArray(chatRecords[key]))chatRecords[key]=[];chatRecords[key]=chatRecords[key].filter(m=>m&&typeof m==='object'&&m.id&&(m.text||m.isRecalled));}
@@ -1325,6 +1365,146 @@ window.saveArchiveText = function() {
     showToast("档案文本已保存");
 };
 
+// ====== 倒计时日历 ======
+function calcCountdown(ev){
+    if(!ev||!ev.date)return null;
+    const parts=String(ev.date).split('-');
+    if(parts.length!==3)return null;
+    const y=parseInt(parts[0],10),m=parseInt(parts[1],10),d=parseInt(parts[2],10);
+    if(!y||!m||!d)return null;
+    const today=new Date();today.setHours(0,0,0,0);
+    let target=new Date(y,m-1,d);
+    target.setHours(0,0,0,0);
+    if(isNaN(target.getTime()))return null;
+    if(ev.type==='yearly'){
+        target.setFullYear(today.getFullYear());
+        if(target.getTime()<today.getTime()){target.setFullYear(today.getFullYear()+1);}
+    }
+    const diff=Math.round((target.getTime()-today.getTime())/86400000);
+    return {diff:diff,target:target};
+}
+
+function renderCountdowns(){
+    const list=document.getElementById('countdownList');
+    if(!list)return;
+    list.innerHTML='';
+    if(!Array.isArray(countdownEvents))countdownEvents=[];
+    if(countdownEvents.length===0){
+        const empty=document.createElement('div');
+        empty.className='neo-card cd-empty';
+        empty.innerHTML='还没有添加倒计时<br><span style="font-size:12px;">点击右上角 ＋ 添加生日、纪念日…</span>';
+        list.appendChild(empty);
+        return;
+    }
+    const items=countdownEvents
+        .map(function(ev){return {ev:ev,calc:calcCountdown(ev)};})
+        .filter(function(x){return x.calc;})
+        .sort(function(a,b){return a.calc.diff-b.calc.diff;});
+    if(items.length===0){
+        const empty=document.createElement('div');
+        empty.className='neo-card cd-empty';
+        empty.textContent='暂无可用的倒计时';
+        list.appendChild(empty);
+        return;
+    }
+    items.forEach(function(item){
+        const ev=item.ev,calc=item.calc;
+        const card=document.createElement('div');
+        card.className='countdown-card';
+        let daysNum,daysLabel;
+        if(calc.diff===0){daysNum='🎉';daysLabel='就是今天';}
+        else if(calc.diff>0){daysNum=String(calc.diff);daysLabel='天后';}
+        else{daysNum=String(Math.abs(calc.diff));daysLabel='天前';}
+        const parts=String(ev.date).split('-');
+        const dateText=ev.type==='yearly'
+            ?(parseInt(parts[1],10)+'月'+parseInt(parts[2],10)+'日 · 每年')
+            :(parts[0]+'/'+parseInt(parts[1],10)+'/'+parseInt(parts[2],10));
+        const icon=ev.emoji||'📅';
+        const iconEl=document.createElement('div');iconEl.className='cd-icon';iconEl.textContent=icon;
+        const infoEl=document.createElement('div');infoEl.className='cd-info';
+        const nameEl=document.createElement('div');nameEl.className='cd-name';nameEl.textContent=ev.name||'未命名';
+        const dateEl=document.createElement('div');dateEl.className='cd-date';dateEl.textContent=dateText;
+        infoEl.appendChild(nameEl);infoEl.appendChild(dateEl);
+        const daysEl=document.createElement('div');daysEl.className='cd-days';
+        const numEl=document.createElement('div');numEl.className='cd-days-num';numEl.textContent=daysNum;
+        const labelEl=document.createElement('div');labelEl.className='cd-days-label';labelEl.textContent=daysLabel;
+        daysEl.appendChild(numEl);daysEl.appendChild(labelEl);
+        const delEl=document.createElement('div');delEl.className='cd-del';delEl.textContent='✕';
+        delEl.onclick=function(e){e.stopPropagation();deleteCountdown(ev.id);};
+        card.appendChild(iconEl);card.appendChild(infoEl);card.appendChild(daysEl);card.appendChild(delEl);
+        card.onclick=function(){openCountdownEditor(ev.id);};
+        list.appendChild(card);
+    });
+}
+
+window.toggleP3Edit=function(){
+    document.body.classList.toggle('p3-editing');
+    if(document.body.classList.contains('p3-editing')){
+        showToast('编辑模式已开启，点击卡片右侧 ✕ 删除');
+    }else{
+        showToast('已退出编辑模式');
+    }
+};
+
+window.openCountdownEditor=function(id){
+    editingCountdownId=id||null;
+    const modal=document.getElementById('countdownModal');
+    const titleEl=document.getElementById('cdModalTitle');
+    if(!modal||!titleEl)return;
+    if(id){
+        const ev=countdownEvents.find(function(e){return e.id===id;});
+        if(!ev)return;
+        titleEl.textContent='编辑倒计时';
+        document.getElementById('cdName').value=ev.name||'';
+        document.getElementById('cdDate').value=ev.date||'';
+        document.getElementById('cdType').value=ev.type||'yearly';
+        document.getElementById('cdEmoji').value=ev.emoji||'';
+    }else{
+        titleEl.textContent='添加倒计时';
+        document.getElementById('cdName').value='';
+        const now=new Date();
+        const mm=String(now.getMonth()+1).padStart(2,'0');
+        const dd=String(now.getDate()).padStart(2,'0');
+        document.getElementById('cdDate').value=now.getFullYear()+'-'+mm+'-'+dd;
+        document.getElementById('cdType').value='yearly';
+        document.getElementById('cdEmoji').value='';
+    }
+    modal.style.display='flex';
+};
+
+window.closeCountdownEditor=function(){
+    const modal=document.getElementById('countdownModal');
+    if(modal)modal.style.display='none';
+};
+
+window.saveCountdown=function(){
+    const name=document.getElementById('cdName').value.trim();
+    const date=document.getElementById('cdDate').value;
+    const type=document.getElementById('cdType').value;
+    const emoji=document.getElementById('cdEmoji').value.trim();
+    if(!name){showToast('请输入名称');return;}
+    if(!date){showToast('请选择日期');return;}
+    if(editingCountdownId){
+        const ev=countdownEvents.find(function(e){return e.id===editingCountdownId;});
+        if(ev){ev.name=name;ev.date=date;ev.type=type;ev.emoji=emoji;}
+    }else{
+        countdownEvents.push({id:genId(),name:name,date:date,type:type,emoji:emoji});
+    }
+    try{localStorage.setItem('os_countdown_events',JSON.stringify(countdownEvents));}
+    catch(e){showToast('保存失败，存储空间不足');}
+    renderCountdowns();
+    closeCountdownEditor();
+    showToast('倒计时已保存');
+};
+
+window.deleteCountdown=function(id){
+    if(!confirm('确定删除这个倒计时吗？'))return;
+    countdownEvents=countdownEvents.filter(function(e){return e.id!==id;});
+    try{localStorage.setItem('os_countdown_events',JSON.stringify(countdownEvents));}catch(e){}
+    renderCountdowns();
+    showToast('已删除');
+};
+
 // ====== 聊天顶部小组件逻辑 ======
 function renderChatBanner() {
     const c = contacts.find(x => x.id === currentChatId) || { name: "未知", avatar: "" };
@@ -1743,6 +1923,9 @@ setInterval(()=>{
         startCall(true);
     }
 },30000);
+
+// 定时刷新倒计时
+setInterval(function(){ renderCountdowns(); }, 60000);
 
 const messagesBox=document.getElementById("messages");messagesBox?.addEventListener("click",(e)=>{const bubble=e.target.closest(".msg-bubble");if(!bubble)return;selectedMsgId=bubble.getAttribute("data-id");const menu=document.getElementById("actionMenu");if(!menu)return;const menuW=130,menuH=44;let top=e.clientY+10,left=e.clientX+10;if(top+menuH>window.innerHeight)top=e.clientY-menuH-10;if(left+menuW>window.innerWidth)left=window.innerWidth-menuW-10;if(top<0)top=10;if(left<0)left=10;menu.style.top=top+"px";menu.style.left=left+"px";menu.classList.add("show");});
 document.addEventListener("click",(e)=>{const menu=document.getElementById("actionMenu");if(!menu||!menu.classList.contains("show"))return;if(menu.contains(e.target))return;if(e.target.closest(".msg-bubble"))return;menu.classList.remove("show");});
@@ -2180,8 +2363,8 @@ window.saveBatchCards=function(){
     showToast(`已保存到 ${groupName} 分组！`);
 };
 
-window.exportData=function(){const backupData={settings:localStorage.getItem("os_settings"),pools:localStorage.getItem("os_pools"),contacts:localStorage.getItem("os_contacts"),chatRecords:localStorage.getItem("os_chat_records"),emojis:localStorage.getItem("os_emojis"),userMails:localStorage.getItem("os_user_mails"),noteHistory:localStorage.getItem("os_note_history"),moments:localStorage.getItem("os_moments"),profileData:localStorage.getItem("os_profile_data")};const dataStr=JSON.stringify(backupData),blob=new Blob([dataStr],{type:"application/json"}),url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download=`梦占OS备份_${getTodayDateStr().replace(/\//g,'-')}.json`;document.body.appendChild(a);a.click();document.body.removeChild(a);showToast("备份文件已下载，请妥善保存！");};
-window.importData=function(event){const file=event.target.files[0];if(!file)return;const reader=new FileReader();reader.onload=function(e){try{const data=JSON.parse(e.target.result);if(data.settings)localStorage.setItem("os_settings",data.settings);if(data.pools)localStorage.setItem("os_pools",data.pools);if(data.contacts)localStorage.setItem("os_contacts",data.contacts);if(data.chatRecords)localStorage.setItem("os_chat_records",data.chatRecords);if(data.emojis)localStorage.setItem("os_emojis",data.emojis);if(data.userMails)localStorage.setItem("os_user_mails",data.userMails);if(data.noteHistory)localStorage.setItem("os_note_history",data.noteHistory);if(data.moments)localStorage.setItem("os_moments",data.moments);if(data.profileData)localStorage.setItem("os_profile_data",data.profileData);showToast("数据恢复成功！正在刷新页面...");setTimeout(()=>location.reload(),1500);}catch(err){alert("导入失败：文件格式不正确！");}};reader.readAsText(file);};
+window.exportData=function(){const backupData={settings:localStorage.getItem("os_settings"),pools:localStorage.getItem("os_pools"),contacts:localStorage.getItem("os_contacts"),chatRecords:localStorage.getItem("os_chat_records"),emojis:localStorage.getItem("os_emojis"),userMails:localStorage.getItem("os_user_mails"),noteHistory:localStorage.getItem("os_note_history"),moments:localStorage.getItem("os_moments"),profileData:localStorage.getItem("os_profile_data"),countdownEvents:localStorage.getItem("os_countdown_events")};const dataStr=JSON.stringify(backupData),blob=new Blob([dataStr],{type:"application/json"}),url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download=`梦占OS备份_${getTodayDateStr().replace(/\//g,'-')}.json`;document.body.appendChild(a);a.click();document.body.removeChild(a);showToast("备份文件已下载，请妥善保存！");};
+window.importData=function(event){const file=event.target.files[0];if(!file)return;const reader=new FileReader();reader.onload=function(e){try{const data=JSON.parse(e.target.result);if(data.settings)localStorage.setItem("os_settings",data.settings);if(data.pools)localStorage.setItem("os_pools",data.pools);if(data.contacts)localStorage.setItem("os_contacts",data.contacts);if(data.chatRecords)localStorage.setItem("os_chat_records",data.chatRecords);if(data.emojis)localStorage.setItem("os_emojis",data.emojis);if(data.userMails)localStorage.setItem("os_user_mails",data.userMails);if(data.noteHistory)localStorage.setItem("os_note_history",data.noteHistory);if(data.moments)localStorage.setItem("os_moments",data.moments);if(data.profileData)localStorage.setItem("os_profile_data",data.profileData);if(data.countdownEvents)localStorage.setItem("os_countdown_events",data.countdownEvents);showToast("数据恢复成功！正在刷新页面...");setTimeout(()=>location.reload(),1500);}catch(err){alert("导入失败：文件格式不正确！");}};reader.readAsText(file);};
 window.clearCurrentChat=function(){if(confirm("这会清空当前联系人的所有聊天记录。确定吗？")){chatRecords[currentChatId]=[];saveChatRecords();renderMessages();showToast("聊天记录已清空");}};
 window.saveSplashTexts=function(){const text=document.getElementById("splashTextsInput").value.trim();if(!text)return;settings.splashTexts=text.split("\n").map(s=>s.trim()).filter(s=>s);saveSettings();showToast("开屏文字已保存！下次刷新生效");};
 
@@ -2212,19 +2395,12 @@ window.addEventListener('DOMContentLoaded',()=>{
     setInterval(updateTime,1000);
     
     const wrapper = document.getElementById('homeScreenWrapper');
-    const dot1 = document.getElementById('dot1');
-    const dot2 = document.getElementById('dot2');
     if(wrapper) {
         wrapper.addEventListener('scroll', () => {
-            const scrollLeft = wrapper.scrollLeft;
-            const width = wrapper.clientWidth;
-            if(scrollLeft > width / 2) {
-                dot1.classList.remove('active');
-                dot2.classList.add('active');
-            } else {
-                dot2.classList.remove('active');
-                dot1.classList.add('active');
-            }
+            const idx = Math.round(wrapper.scrollLeft / wrapper.clientWidth);
+            document.querySelectorAll('.page-indicator .dot').forEach((d, i) => {
+                d.classList.toggle('active', i === idx);
+            });
         });
     }
 
@@ -2280,6 +2456,7 @@ window.addEventListener('DOMContentLoaded',()=>{
     }
 
     applyTheme();renderHome();updateGroupSelector();
+    renderCountdowns();
     const safeSet=(id,prop,val)=>{const el=document.getElementById(id);if(el){if(prop==='textContent')el.textContent=val;else el.value=val;}};
     safeSet("splashTextsInput","value",settings.splashTexts.join("\n"));
     safeSet("settingIgnore","value",settings.ignoreRate);safeSet("ignoreLabel","textContent",settings.ignoreRate);
